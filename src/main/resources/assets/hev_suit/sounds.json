@@ -14,6 +14,9 @@
   "blood_loss": {
     "sounds": [{"name": "hev_suit:blood_loss"}]
   },
+  "ammunition_depleted": {
+    "sounds": [{"name": "hev_suit:ammunition_depleted"}]
+  },
   "health_critical": {
     "sounds": [{"name": "hev_suit:health_critical"}]
   },
@@ -26,12 +29,6 @@
   "seek_medical": {
     "sounds": [{"name": "hev_suit:seek_medic"}]
   },
-  "warning": {
-  "sounds": [{"name": "hev_suit:warning"}]
-},
-"bio_reading": {
-  "sounds": [{"name": "hev_suit:bio_reading"}]
-},
   "near_death": {
     "sounds": [{"name": "hev_suit:near_death"}]
   },
@@ -49,6 +46,9 @@
   },
   "north": {
     "sounds": [{"name": "hev_suit:north"}]
+  },
+  "no_medical": {
+    "sounds": [{"name": "hev_suit:no_medical"}]
   },
   "south": {
     "sounds": [{"name":  "hev_suit:south"}]

@@ -64,8 +64,6 @@ public class Hev_suitClient implements ClientModInitializer {
     private static final long SOUND_COOLDOWN = 3000;
     private static final long MORPHINE_COOLDOWN = 90000;
     private static final long BURNING_COOLDOWN = 5000;
-    private static final long MAJOR_LACERATION_COOLDOWN = 15000;
-    private static final long MINOR_LACERATION_COOLDOWN = 15000;
     private static final long BLOOD_LOSS_COOLDOWN = 15000;
     private static final long NO_MEDICAL_ALERT_COOLDOWN = 30000; // 30 seconds without healing
     private static final long RADAR_COOLDOWN = 5000;
@@ -79,7 +77,9 @@ public class Hev_suitClient implements ClientModInitializer {
     // Snowball tracking
     private int lastSnowballCount = 0;
     private boolean wasHoldingSnowballItem = false;
-
+    // Eggs tracking
+    private boolean wasHoldingEgg = false;
+    private int lastEggCount = 0;
     // Elytra and fireworks tracking
     private int lastFireworkCount = 0;
     private boolean wasUsingElytra = false;
@@ -208,6 +208,7 @@ public class Hev_suitClient implements ClientModInitializer {
         int currentArrowCount = player.getInventory().count(Items.ARROW);
         int currentSpectralArrowCount = player.getInventory().count(Items.SPECTRAL_ARROW);
         int currentSnowballCount = player.getInventory().count(Items.SNOWBALL);
+        int currentEggCount = player.getInventory().count(Items.EGG);
         int currentFireworkCount = player.getInventory().count(Items.FIREWORK_ROCKET);
         boolean isUsingElytra = player.getEquippedStack(EquipmentSlot.CHEST).getItem() instanceof ElytraItem && player.isFallFlying();
 
@@ -229,7 +230,11 @@ public class Hev_suitClient implements ClientModInitializer {
             System.out.println("Snowballs depleted. Queueing sound.");
             queueSound("ammunition_depleted");
         }
-
+        // Egg depletion
+        if (wasHoldingEgg && currentSnowballCount == 0 && lastEggCount > 0) {
+            System.out.println("Eggs depleted. Queueing sound.");
+            queueSound("ammunition_depleted");
+        }
         // Firework depletion
         if (wasUsingElytra && isUsingElytra && currentFireworkCount == 0 && lastFireworkCount > 0) {
             System.out.println("Fireworks depleted during Elytra flight. Queueing sound.");
@@ -240,6 +245,7 @@ public class Hev_suitClient implements ClientModInitializer {
         lastArrowCount = currentArrowCount;
         lastSpectralArrowCount = currentSpectralArrowCount;
         lastSnowballCount = currentSnowballCount;
+        lastEggCount = currentEggCount;
         lastFireworkCount = currentFireworkCount;
 
         wasHoldingBow = player.getMainHandStack().getItem() instanceof BowItem;

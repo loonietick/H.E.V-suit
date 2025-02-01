@@ -31,6 +31,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
 import java.util.*;
+import com.mojang.brigadier.arguments.StringArgumentType;
 
 
 public class Hev_suitClient implements ClientModInitializer {
@@ -52,19 +53,36 @@ public class Hev_suitClient implements ClientModInitializer {
     private SoundInstance currentSound;
     private boolean wasPoisoned = false;
     private long lastMorphineTime = 0;
-    private long lastBurningTime = 0;
     private long lastLacerationTime = 0;
     private long lastBloodLossTime = 0;
     private static final Random RANDOM = new Random();
     private static final float MIN_PITCH = 0.98f;
     private static final float MAX_PITCH = 1.05f;
     private static final long MORPHINE_COOLDOWN = 90000;
-    private static final long BURNING_COOLDOWN = 5000;
     private static final long BLOOD_LOSS_COOLDOWN = 5000;
     private static final int AMBER_COLOR = 0xFFFFAE00;
     private static final int DARK_AMBER = 0xFF8B5E00;
     private final Queue<String> soundQueue = new LinkedList<>();
-
+    private boolean healthAlertsEnabled = true;
+    private boolean hudEnabled = true;
+    private boolean fracturesEnabled = true;
+    private boolean heatDamageEnabled = true;
+    private boolean bloodLossEnabled = true;
+    private boolean shockDamageEnabled = true;
+    private boolean chemicalDamageEnabled = true;
+    private boolean pvpModeEnabled = false;
+    private boolean morphineEnabled = true;
+    private long lastHeatDamageTime = 0;
+    private long lastShockDamageTime = 0;
+    private long lastChemicalDamageTime = 0;
+    private static final long HEAT_DAMAGE_COOLDOWN = 5000;
+    private static final long SHOCK_DAMAGE_COOLDOWN = 5000;
+    private static final long CHEMICAL_DAMAGE_COOLDOWN = 5000;
+    private long lastMajorLacerationTime = 0;
+    private long lastMinorLacerationTime = 0;
+    private static final long MAJOR_LACERATION_COOLDOWN = 5000;
+    private static final long MINOR_LACERATION_COOLDOWN = 5000;
+// alll of the shit that 
     @Override
     public void onInitializeClient() {
         registerSounds();
@@ -109,16 +127,71 @@ public class Hev_suitClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> resetTracking());
     }
-
+// commands
     private void registerToggleCommands() {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             dispatcher.register(ClientCommandManager.literal("hev")
                 .then(ClientCommandManager.literal("toggle")
+                    .then(ClientCommandManager.literal("health")
+                        .executes(context -> {
+                            healthAlertsEnabled = !healthAlertsEnabled;
+                            context.getSource().sendFeedback(Text.literal("Health alerts " + (healthAlertsEnabled ? "enabled" : "disabled")));
+                            return 1;
+                        })
+                    )
+                    .then(ClientCommandManager.literal("hud")
+                        .executes(context -> {
+                            hudEnabled = !hudEnabled;
+                            context.getSource().sendFeedback(Text.literal("HUD " + (hudEnabled ? "enabled" : "disabled")));
+                            return 1;
+                        })
+                    )
+                    .then(ClientCommandManager.literal("fractures")
+                        .executes(context -> {
+                            fracturesEnabled = !fracturesEnabled;
+                            context.getSource().sendFeedback(Text.literal("Fracture alerts " + (fracturesEnabled ? "enabled" : "disabled")));
+                            return 1;
+                        })
+                    )
+                    .then(ClientCommandManager.literal("heatdamage")
+                        .executes(context -> {
+                            heatDamageEnabled = !heatDamageEnabled;
+                            context.getSource().sendFeedback(Text.literal("Heat damage alerts " + (heatDamageEnabled ? "enabled" : "disabled")));
+                            return 1;
+                        })
+                    )
+                    .then(ClientCommandManager.literal("bloodloss")
+                        .executes(context -> {
+                            bloodLossEnabled = !bloodLossEnabled;
+                            context.getSource().sendFeedback(Text.literal("Blood loss alerts " + (bloodLossEnabled ? "enabled" : "disabled")));
+                            return 1;
+                        })
+                    )
+                    .then(ClientCommandManager.literal("shockdamage")
+                        .executes(context -> {
+                            shockDamageEnabled = !shockDamageEnabled;
+                            context.getSource().sendFeedback(Text.literal("Shock damage alerts " + (shockDamageEnabled ? "enabled" : "disabled")));
+                            return 1;
+                        })
+                    )
+                    .then(ClientCommandManager.literal("chemicaldamage")
+                        .executes(context -> {
+                            chemicalDamageEnabled = !chemicalDamageEnabled;
+                            context.getSource().sendFeedback(Text.literal("Chemical damage alerts " + (chemicalDamageEnabled ? "enabled" : "disabled")));
+                            return 1;
+                        })
+                    )
+                    .then(ClientCommandManager.literal("morphine")
+                        .executes(context -> {
+                            morphineEnabled = !morphineEnabled;
+                            context.getSource().sendFeedback(Text.literal("Morphine alerts " + (morphineEnabled ? "enabled" : "disabled")));
+                            return 1;
+                        })
+                    )
                     .executes(context -> {
                         hevSuitEnabled = !hevSuitEnabled;
                         String status = hevSuitEnabled ? "Activated" : "Deactivated";
-                        context.getSource().sendFeedback(Text.literal("Voice System " + status));
-                        queueSound(hevSuitEnabled ? "voice_on" : "voice_off");
+                        context.getSource().sendFeedback(Text.literal("Voice System " + status));                
                         return 1;
                     })
                 )
@@ -129,6 +202,49 @@ public class Hev_suitClient implements ClientModInitializer {
                         return 1;
                     })
                 )
+                .then(ClientCommandManager.literal("pvp")
+                    .executes(context -> {
+                        pvpModeEnabled = !pvpModeEnabled;
+                        if (pvpModeEnabled) {
+                            healthAlertsEnabled = true;
+                            hudEnabled = true;
+                            fracturesEnabled = false;
+                            heatDamageEnabled = false;
+                            bloodLossEnabled = false;
+                            shockDamageEnabled = false;
+                            chemicalDamageEnabled = false;
+                            morphineEnabled = false;
+                            hevSuitEnabled = false;
+                            context.getSource().sendFeedback(Text.literal("PVP mode activated: Only HUD and health alerts enabled."));
+                        } else {
+                            healthAlertsEnabled = true;
+                            hudEnabled = true;
+                            fracturesEnabled = true;
+                            heatDamageEnabled = true;
+                            bloodLossEnabled = true;
+                            shockDamageEnabled = true;
+                            chemicalDamageEnabled = true;
+                            morphineEnabled = true;
+                            hevSuitEnabled = true;
+                            context.getSource().sendFeedback(Text.literal("PVP mode deactivated: All features re-enabled."));
+                        }
+                        return 1;
+                    })
+                )
+                .then(ClientCommandManager.literal("queuesound")
+                    .then(ClientCommandManager.argument("sound", StringArgumentType.string())
+                        .executes(context -> {
+                            String soundName = StringArgumentType.getString(context, "sound");
+                            if (SOUND_EVENTS.containsKey(soundName)) {
+                                queueSound(soundName);
+                                context.getSource().sendFeedback(Text.literal("Queuing sound: " + soundName));
+                            } else {
+                                context.getSource().sendFeedback(Text.literal("Sound not found: " + soundName));
+                            }
+                            return 1;
+                        })
+                    )
+                )
             );
         });
     }
@@ -137,7 +253,6 @@ public class Hev_suitClient implements ClientModInitializer {
         lastHealth = 20.0f;
         lastArmorValue = -1;
         lastMorphineTime = 0;
-        lastBurningTime = 0;
         lastLacerationTime = 0;
         lastBloodLossTime = 0;
     }
@@ -151,8 +266,11 @@ public class Hev_suitClient implements ClientModInitializer {
         }
         return total;
     }
+    // hud
     private void registerHud() {
         HudRenderCallback.EVENT.register((graphics, tickDelta) -> {
+            if (!hudEnabled) return;
+
             MinecraftClient client = MinecraftClient.getInstance();
             PlayerEntity player = client.player;
     
@@ -160,7 +278,7 @@ public class Hev_suitClient implements ClientModInitializer {
     
             int width = client.getWindow().getScaledWidth();
             int height = client.getWindow().getScaledHeight();
-            int baseY = height - 32;
+            int baseY = height - 29;
             TextRenderer textRenderer = client.textRenderer;
     
             // Health and Armor display
@@ -193,9 +311,10 @@ public class Hev_suitClient implements ClientModInitializer {
         graphics.drawTextWithShadow(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, AMBER_COLOR);
         graphics.drawTextWithShadow(textRenderer, "AMMO", x, y - 10, DARK_AMBER);
     }
+   // client tick: contains power level and calls health alerts
     private void onClientTick(MinecraftClient client) {
         try {
-            if (!hevSuitEnabled) return;
+            if (!hevSuitEnabled && !pvpModeEnabled) return;
     
             PlayerEntity player = client.player;
             if (player == null) return;
@@ -244,7 +363,7 @@ public class Hev_suitClient implements ClientModInitializer {
             }
         }
     }
-
+    // health system
     private void handleHealthSystem(MinecraftClient client, PlayerEntity player) {
         float currentHealth = player.getHealth();
         long currentTime = System.currentTimeMillis();
@@ -255,9 +374,9 @@ public class Hev_suitClient implements ClientModInitializer {
             return;
         }
 
-        if (player.isOnFire() && currentTime - lastBurningTime >= BURNING_COOLDOWN) {
+        if (player.isOnFire() && heatDamageEnabled && currentTime - lastHeatDamageTime >= HEAT_DAMAGE_COOLDOWN) {
             queueSound("heat_damage");
-            lastBurningTime = currentTime;
+            lastHeatDamageTime = currentTime;
         }
 
         if (currentHealth < lastHealth) {
@@ -265,42 +384,55 @@ public class Hev_suitClient implements ClientModInitializer {
             handleDamage(client, damage, player.getRecentDamageSource());
         }
 
-        if (currentHealth <= 3.0 && lastHealth > 3.0) {
-            queueSound("near_death");
-        } else if (currentHealth <= 5.0 && lastHealth > 5.0) {
-            queueSound("health_critical");
-        } else if (currentHealth <= 10.0 && lastHealth > 10.0) {
-            queueSound("seek_medical");
-        } else if (currentHealth <= 17.0 && lastHealth > 17.0) {
-            queueSound("health_critical2");
+        if (healthAlertsEnabled) {
+            if (currentHealth <= 3.0 && lastHealth > 3.0) {
+                queueSound("near_death");
+            } else if (currentHealth <= 5.0 && lastHealth > 5.0) {
+                queueSound("health_critical");
+            } else if (currentHealth <= 10.0 && lastHealth > 10.0) {
+                queueSound("seek_medical");
+            } else if (currentHealth <= 17.0 && lastHealth > 17.0) {
+                queueSound("health_critical2");
+            }
         }
 
-        if (currentTime - lastMorphineTime >= MORPHINE_COOLDOWN && currentHealth < 20) {
+        if (morphineEnabled && currentTime - lastMorphineTime >= MORPHINE_COOLDOWN && currentHealth < 20) {
             queueSound("morphine_administered");
             lastMorphineTime = currentTime;
         }
 
         lastHealth = currentHealth;
     }
-
+    // has the fractures, eletric damage , chemical damage, blood loss, and lacerations systems
     private void handleDamage(MinecraftClient client, float damage, DamageSource damageSource) {
-        if (!hevSuitEnabled) return;
+        if (!hevSuitEnabled && !pvpModeEnabled) return;
         long currentTime = System.currentTimeMillis();
 
         if (damageSource != null) {
             if (damageSource.isOf(DamageTypes.FALL)) {
-                queueSound(damage >= 6 ? "major_fracture" : "minor_fracture");
+                if (fracturesEnabled) {
+                    queueSound(damage >= 6 ? "major_fracture" : "minor_fracture");
+                }
             }
             if (damageSource.isOf(DamageTypes.EXPLOSION) ||
                     damageSource.getSource() instanceof TntEntity ||
                     damageSource.getSource() instanceof CreeperEntity) {
-                queueSound("internal_bleeding");
+                if (bloodLossEnabled && currentTime - lastBloodLossTime >= BLOOD_LOSS_COOLDOWN) {
+                    queueSound("internal_bleeding");
+                    lastBloodLossTime = currentTime;
+                }
             }
             if (damageSource.isOf(DamageTypes.LIGHTNING_BOLT)) {
-                queueSound("shock_damage");
+                if (shockDamageEnabled && currentTime - lastShockDamageTime >= SHOCK_DAMAGE_COOLDOWN) {
+                    queueSound("shock_damage");
+                    lastShockDamageTime = currentTime;
+                }
             }
             if (client.player.hasStatusEffect(StatusEffects.POISON) && !wasPoisoned) {
-                queueSound("chemical");
+                if (chemicalDamageEnabled && currentTime - lastChemicalDamageTime >= CHEMICAL_DAMAGE_COOLDOWN) {
+                    queueSound("chemical");
+                    lastChemicalDamageTime = currentTime;
+                }
                 wasPoisoned = true;
             } else if (!client.player.hasStatusEffect(StatusEffects.POISON)) {
                 wasPoisoned = false;
@@ -308,18 +440,25 @@ public class Hev_suitClient implements ClientModInitializer {
 
             Entity damageEntity = damageSource.getSource();
             if (damageEntity instanceof ArrowEntity || damageEntity instanceof FireballEntity) {
-                if (currentTime - lastBloodLossTime >= BLOOD_LOSS_COOLDOWN) {
+                if (bloodLossEnabled && currentTime - lastBloodLossTime >= BLOOD_LOSS_COOLDOWN) {
                     queueSound("blood_loss");
                     lastBloodLossTime = currentTime;
                 }
-            } else if (damageEntity instanceof HostileEntity &&
-                    currentTime - lastLacerationTime >= BLOOD_LOSS_COOLDOWN) {
-                queueSound(damage >= 5 ? "major_laceration" : "minor_laceration");
+            } else if (damageEntity instanceof HostileEntity) {
+                if (fracturesEnabled) {
+                    if (damage >= 5 && currentTime - lastMajorLacerationTime >= MAJOR_LACERATION_COOLDOWN) {
+                        queueSound("major_laceration");
+                        lastMajorLacerationTime = currentTime;
+                    } else if (damage < 5 && currentTime - lastMinorLacerationTime >= MINOR_LACERATION_COOLDOWN) {
+                        queueSound("minor_laceration");
+                        lastMinorLacerationTime = currentTime;
+                    }
+                }
                 lastLacerationTime = currentTime;
             }
         }
     }
-
+// sound queue
     private void processSoundQueue(MinecraftClient client) {
         if (currentSound == null || !client.getSoundManager().isPlaying(currentSound)) {
             currentSound = null;

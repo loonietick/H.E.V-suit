@@ -4,6 +4,7 @@ import net.minecraft.client.sound.PositionedSoundInstance;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.client.MinecraftClient;
@@ -25,8 +26,12 @@ import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import net.minecraft.item.Item;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.item.ItemStack;
 import java.util.*;
+
 
 public class Hev_suitClient implements ClientModInitializer {
 
@@ -56,7 +61,8 @@ public class Hev_suitClient implements ClientModInitializer {
     private static final long MORPHINE_COOLDOWN = 90000;
     private static final long BURNING_COOLDOWN = 5000;
     private static final long BLOOD_LOSS_COOLDOWN = 5000;
-
+    private static final int AMBER_COLOR = 0xFFFFAE00;
+    private static final int DARK_AMBER = 0xFF8B5E00;
     private final Queue<String> soundQueue = new LinkedList<>();
 
     @Override
@@ -64,6 +70,7 @@ public class Hev_suitClient implements ClientModInitializer {
         registerSounds();
         registerEventListeners();
         registerToggleCommands();
+        registerHud();
     }
 
     private void registerSounds() {
@@ -104,8 +111,9 @@ public class Hev_suitClient implements ClientModInitializer {
     }
 
     private void registerToggleCommands() {
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> { // haha lambda error go brr
-            dispatcher.register(ClientCommandManager.literal("hev_suit")
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            dispatcher.register(ClientCommandManager.literal("hev")
+                .then(ClientCommandManager.literal("toggle")
                     .executes(context -> {
                         hevSuitEnabled = !hevSuitEnabled;
                         String status = hevSuitEnabled ? "Activated" : "Deactivated";
@@ -113,6 +121,14 @@ public class Hev_suitClient implements ClientModInitializer {
                         queueSound(hevSuitEnabled ? "voice_on" : "voice_off");
                         return 1;
                     })
+                )
+                .then(ClientCommandManager.literal("clearqueue")
+                    .executes(context -> {
+                        soundQueue.clear();
+                        context.getSource().sendFeedback(Text.literal("Queue cleared."));
+                        return 1;
+                    })
+                )
             );
         });
     }
@@ -125,8 +141,58 @@ public class Hev_suitClient implements ClientModInitializer {
         lastLacerationTime = 0;
         lastBloodLossTime = 0;
     }
-
-
+    private int calculateTotalAmmo(PlayerEntity player, Item item) {
+        int total = 0;
+        for (int i = 0; i < player.getInventory().size(); i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (stack.getItem() == item) {
+                total += stack.getCount();
+            }
+        }
+        return total;
+    }
+    private void registerHud() {
+        HudRenderCallback.EVENT.register((graphics, tickDelta) -> {
+            MinecraftClient client = MinecraftClient.getInstance();
+            PlayerEntity player = client.player;
+    
+            if (player == null || client.options.hudHidden) return;
+    
+            int width = client.getWindow().getScaledWidth();
+            int height = client.getWindow().getScaledHeight();
+            int baseY = height - 32;
+            TextRenderer textRenderer = client.textRenderer;
+    
+            // Health and Armor display
+            int scaledHealth = (int)((player.getHealth() / player.getMaxHealth()) * 100);
+            int scaledArmor = (int)((player.getArmor() / 20.0f) * 100);
+    
+            drawNumericDisplay(graphics, textRenderer, 10, baseY, scaledHealth, "HEALTH");
+            if (scaledArmor > 0) {
+                drawNumericDisplay(graphics, textRenderer, 10 + 100, baseY, scaledArmor, "ARMOR");
+            }
+    
+            // Ammo display
+            ItemStack mainHand = player.getMainHandStack();
+            if (!mainHand.isEmpty()) {
+                int currentAmmo = mainHand.getCount();
+                int totalAmmo = calculateTotalAmmo(player, mainHand.getItem());
+                drawAmmoDisplay(graphics, textRenderer, width - 110, baseY, currentAmmo, totalAmmo);
+            }
+        });
+    }
+    
+    private void drawNumericDisplay(DrawContext graphics, TextRenderer textRenderer, int x, int y, int value, String label) {
+        graphics.fill(x - 2, y - 2, x + 90, y + 12, 0x80000000);
+        graphics.drawTextWithShadow(textRenderer, String.format("%d", value), x, y, AMBER_COLOR);
+        graphics.drawTextWithShadow(textRenderer, label, x, y - 10, DARK_AMBER);
+    }
+    
+    private void drawAmmoDisplay(DrawContext graphics, TextRenderer textRenderer, int x, int y, int currentAmmo, int totalAmmo) {
+        graphics.fill(x - 2, y - 2, x + 90, y + 12, 0x80000000);
+        graphics.drawTextWithShadow(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, AMBER_COLOR);
+        graphics.drawTextWithShadow(textRenderer, "AMMO", x, y - 10, DARK_AMBER);
+    }
     private void onClientTick(MinecraftClient client) {
         try {
             if (!hevSuitEnabled) return;

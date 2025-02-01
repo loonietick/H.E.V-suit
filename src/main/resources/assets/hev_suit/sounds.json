@@ -59,8 +59,6 @@
   "east": {
     "sounds": [{"name":  "hev_suit:east"}]
   },
-
-
   "danger": {
     "sounds": [{"name":  "hev_suit:danger"}]
   },
@@ -81,6 +79,43 @@
   },
   "internal_bleeding": {
     "sounds": [{"name":  "hev_suit:internal_bleeding"}]
-  }
-
+  },
+  "power_level_is": {
+    "sounds": [{"name":  "hev_suit:power_level_is"}]
+  },
+  "power": {
+    "sounds": [{"name":  "hev_suit:power"}]
+  },
+  "percent": {
+    "sounds": [{"name":  "hev_suit:percent"}]
+  },
+  "1": {"sounds": [{"name": "hev_suit:1"}]},
+  "2": {"sounds": [{"name": "hev_suit:2"}]},
+  "3": {"sounds": [{"name": "hev_suit:3"}]},
+  "4": {"sounds": [{"name": "hev_suit:4"}]},
+  "5": {"sounds": [{"name": "hev_suit:5"}]},
+  "6": {"sounds": [{"name": "hev_suit:6"}]},
+  "7": {"sounds": [{"name": "hev_suit:7"}]},
+  "8": {"sounds": [{"name": "hev_suit:8"}]},
+  "9": {"sounds": [{"name": "hev_suit:9"}]},
+  "10": {"sounds": [{"name": "hev_suit:10"}]},
+  "11": {"sounds": [{"name": "hev_suit:11"}]},
+  "12": {"sounds": [{"name": "hev_suit:12"}]},
+  "13": {"sounds": [{"name": "hev_suit:13"}]},
+  "14": {"sounds": [{"name": "hev_suit:14"}]},
+  "15": {"sounds": [{"name": "hev_suit:15"}]},
+  "16": {"sounds": [{"name": "hev_suit:16"}]},
+  "17": {"sounds": [{"name": "hev_suit:17"}]},
+  "18": {"sounds": [{"name": "hev_suit:18"}]},
+  "19": {"sounds": [{"name": "hev_suit:19"}]},
+  "20": {"sounds": [{"name": "hev_suit:20"}]},
+  "25": {"sounds": [{"name": "hev_suit:25"}]},
+  "30": {"sounds": [{"name": "hev_suit:30"}]},
+  "40": {"sounds": [{"name": "hev_suit:40"}]},
+  "50": {"sounds": [{"name": "hev_suit:50"}]},
+  "60": {"sounds": [{"name": "hev_suit:60"}]},
+  "70": {"sounds": [{"name": "hev_suit:70"}]},
+  "80": {"sounds": [{"name": "hev_suit:80"}]},
+  "90": {"sounds": [{"name": "hev_suit:90"}]},
+  "100": {"sounds": [{"name": "hev_suit:100"}]}
 }

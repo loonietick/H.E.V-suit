@@ -130,33 +130,36 @@ public class Hev_suitClient implements ClientModInitializer {
     private void onClientTick(MinecraftClient client) {
         try {
             if (!hevSuitEnabled) return;
-
+    
             PlayerEntity player = client.player;
             if (player == null) return;
-
+    
             // Armor percentage system
             int currentArmor = player.getArmor();
             if (currentArmor != lastArmorValue) {
-                int percent = currentArmor * 5;
-
-                if (percent > 0) {
-                    List<String> components = new ArrayList<>();
-
-                    if (percent == 100) {
-                        components.add("power_level_is");
-                        components.add("100");
+                // Only play sound when armor increases
+                if (currentArmor > lastArmorValue) {
+                    int percent = currentArmor * 5;
+    
+                    if (percent > 0) {
+                        List<String> components = new ArrayList<>();
+    
+                        if (percent == 100) {
+                            components.add("power_level_is");
+                            components.add("100");
+                        } else {
+                            components.add("power");
+                            decomposePercentage(percent, components);
+                        }
                         components.add("percent");
-                    } else {
-                        components.add("power");
-                        decomposePercentage(percent, components);
+    
+                        components.forEach(this::queueSound);
                     }
-                    components.add("percent");
-
-                    components.forEach(this::queueSound);
                 }
+                // Update lastArmorValue regardless of increase or decrease
                 lastArmorValue = currentArmor;
             }
-
+    
             handleHealthSystem(client, player);
             processSoundQueue(client);
         } catch (Exception e) {

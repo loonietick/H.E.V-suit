@@ -89,6 +89,39 @@
   "percent": {
     "sounds": [{"name":  "hev_suit:percent"}]
   },
+  "bm_major_lacerations": {
+    "sounds": [{"name": "hev_suit:bm_major_lacerations"}]
+  },
+  "bm_minor_fracture": {
+    "sounds": [{"name": "hev_suit:bm_minor_fracture"}]
+  },
+  "bm_minor_lacerations": {
+    "sounds": [{"name": "hev_suit:bm_minor_lacerations"}]
+  },
+  "bm_morphine_system": {
+    "sounds": [{"name": "hev_suit:bm_morphine_system"}]
+  },
+  "bm_near_death": {
+    "sounds": [{"name": "hev_suit:bm_near_death"}]
+  },
+  "bm_seek_medical": {
+    "sounds": [{"name": "hev_suit:bm_seek_medic"}]
+  },
+  "bm_health_critical": {
+    "sounds": [{"name": "hev_suit:bm_health_critical"}]
+  },
+  "bm_health_critical2": {
+    "sounds": [{"name": "hev_suit:bm_health_critical2"}]
+  },
+  "bm_chemical": {
+    "sounds": [{"name": "hev_suit:bm_chemical"}]
+  },
+  "bm_major_fracture": {
+    "sounds": [{"name": "hev_suit:bm_major_fracture"}]
+  },
+  "bm_blood_loss": {
+    "sounds": [{"name": "hev_suit:bm_blood_loss"}]
+  },
   "1": {"sounds": [{"name": "hev_suit:1"}]},
   "2": {"sounds": [{"name": "hev_suit:2"}]},
   "3": {"sounds": [{"name": "hev_suit:3"}]},

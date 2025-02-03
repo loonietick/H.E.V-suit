@@ -10,13 +10,13 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.TntEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.CreeperEntity;
-import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.mob.*;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.ArrowEntity;
+import net.minecraft.entity.projectile.FireballEntity;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
@@ -63,8 +63,7 @@ public class Hev_suitClient implements ClientModInitializer {
     private static final Random RANDOM = new Random();
     private static final float MIN_PITCH = 0.98f;
     private static final float MAX_PITCH = 1.05f;
-    private static final long MORPHINE_COOLDOWN = 90000;
-    private static final long BLOOD_LOSS_COOLDOWN = 5000;
+    private static final long MORPHINE_COOLDOWN = 300000;
     private static final int AMBER_COLOR = 0xFFFFAE00;
     private static final int DARK_AMBER = 0xFF8B5E00;
     private final Queue<String> soundQueue = new LinkedList<>();
@@ -81,17 +80,23 @@ public class Hev_suitClient implements ClientModInitializer {
     private long lastShockDamageTime = 0;
 
     private static final long HEAT_DAMAGE_COOLDOWN = 5000;
-    private static final long SHOCK_DAMAGE_COOLDOWN = 5000;
-    private static final long CHEMICAL_DAMAGE_COOLDOWN = 5000;
-
-    private static final long MAJOR_LACERATION_COOLDOWN = 5000;
-    private static final long MINOR_LACERATION_COOLDOWN = 5000;
     private boolean healthCritical2Enabled = true;
     private boolean seekMedicalEnabled = true;
     private boolean healthCriticalEnabled = true;
     private boolean nearDeathEnabled = true;
     private boolean useBlackMesaSFX = false;
-// alll of the shit that 
+
+    // Add new cooldown constants
+    private static final long GENERAL_COOLDOWN = 5000; // 5 seconds
+    private static final long FRACTURE_COOLDOWN = 5000;
+    private static final long LACERATION_COOLDOWN = 5000;
+    
+    // Add cooldown tracking fields
+    private long lastFractureTime = 0;
+    private long lastMajorLacerationTime = 0;
+    private long lastMinorLacerationTime = 0;
+    private long lastGeneralAlertTime = 0;
+
     @Override
     public void onInitializeClient() {
         LOGGER.debug("Initializing HEV Suit Client");
@@ -171,9 +176,8 @@ public class Hev_suitClient implements ClientModInitializer {
                 // Black Mesa HEV suit sounds
                 "bm_major_laceration", "bm_minor_laceration", "bm_major_fracture", "bm_blood_loss",
                 "bm_health_critical", "bm_health_critical2", "bm_morphine_system", "bm_seek_medical",
-                "bm_near_death", "bm_chemical"
-
-
+                "bm_near_death", "bm_chemical",
+                "bm_minor_fracture"
         };
 
         for (String soundName : soundNames) {
@@ -422,6 +426,12 @@ public class Hev_suitClient implements ClientModInitializer {
         lastMorphineTime = 0;
         lastLacerationTime = 0;
         lastBloodLossTime = 0;
+        lastFractureTime = 0;
+        lastGeneralAlertTime = 0;
+        lastHeatDamageTime = 0;
+        lastShockDamageTime = 0;
+        lastMajorLacerationTime = 0;
+        lastMinorLacerationTime = 0;
     }
     private int calculateTotalAmmo(PlayerEntity player, Item item) {
         int total = 0;
@@ -551,7 +561,6 @@ public class Hev_suitClient implements ClientModInitializer {
             handleDamage(client, damage, player.getRecentDamageSource());
         }
 
-        // Fix health alerts by removing unnecessary conditions
         if (healthAlertsEnabled) {
             String prefix = useBlackMesaSFX ? "bm_" : "";
             if (currentHealth <= 3.0 && lastHealth > 3.0 && nearDeathEnabled) {
@@ -560,12 +569,12 @@ public class Hev_suitClient implements ClientModInitializer {
                 queueSound(prefix + "health_critical");
             } else if (currentHealth <= 10.0 && lastHealth > 10.0 && seekMedicalEnabled) {
                 queueSound(prefix + "seek_medical");
-            } else if (currentHealth <= 17.0 && lastHealth > 17.0 && healthCritical2Enabled) {
+            } else if (currentHealth <= 15.0 && lastHealth > 15.0 && healthCritical2Enabled) {
                 queueSound(prefix + "health_critical2");
             }
         }
 
-        // Fix morphine system
+       
         if (morphineEnabled && currentTime - lastMorphineTime >= MORPHINE_COOLDOWN && currentHealth < 20) {
             queueSound(useBlackMesaSFX ? "bm_morphine_system" : "morphine_administered");
             lastMorphineTime = currentTime;
@@ -579,51 +588,55 @@ public class Hev_suitClient implements ClientModInitializer {
         long currentTime = System.currentTimeMillis();
         String prefix = useBlackMesaSFX ? "bm_" : "";
 
-        // Fix fall damage detection and fractures
-        if (damageSource.isOf(DamageTypes.FALL) && fracturesEnabled) {
+        // Fall damage and fractures with cooldown
+        if (damageSource.isOf(DamageTypes.FALL) && fracturesEnabled && currentTime - lastFractureTime >= FRACTURE_COOLDOWN) {
             if (damage >= 6) {
                 queueSound(prefix + "major_fracture");
+                lastFractureTime = currentTime;
             } else if (damage >= 3) {
                 queueSound(prefix + "minor_fracture");
+                lastFractureTime = currentTime;
             }
         }
 
-        // Fix blood loss detection
-        if (bloodLossEnabled && currentTime - lastBloodLossTime >= BLOOD_LOSS_COOLDOWN) {
-            if (damageSource.isOf(DamageTypes.EXPLOSION) || 
-                damageSource.getSource() instanceof TntEntity || 
-                damageSource.getSource() instanceof CreeperEntity) {
-                queueSound(prefix + "blood_loss");
-                lastBloodLossTime = currentTime;
+        // Chemical damage with cooldown
+        if (chemicalDamageEnabled && currentTime - lastGeneralAlertTime >= GENERAL_COOLDOWN) {
+            if (client.player.hasStatusEffect(StatusEffects.POISON) && !wasPoisoned) {
+                queueSound(prefix + "chemical");
+                wasPoisoned = true;
+                lastGeneralAlertTime = currentTime;
+            } else if (!client.player.hasStatusEffect(StatusEffects.POISON)) {
+                wasPoisoned = false;
             }
         }
 
-        // Fix chemical damage detection
-        if (chemicalDamageEnabled && client.player.hasStatusEffect(StatusEffects.POISON) && !wasPoisoned) {
-            queueSound(prefix + "chemical");
-            wasPoisoned = true;
-        } else if (!client.player.hasStatusEffect(StatusEffects.POISON)) {
-            wasPoisoned = false;
-        }
-
-        // Fix shock damage
+        // Shock damage with cooldown
         if (shockDamageEnabled && damageSource.isOf(DamageTypes.LIGHTNING_BOLT) && 
-            currentTime - lastShockDamageTime >= SHOCK_DAMAGE_COOLDOWN) {
+            currentTime - lastShockDamageTime >= GENERAL_COOLDOWN) {
             queueSound(prefix + "shock_damage");
             lastShockDamageTime = currentTime;
         }
 
-        // Fix laceration detection
         Entity damageEntity = damageSource.getSource();
-        if (damageEntity instanceof HostileEntity && fracturesEnabled) {
-            if (damage >= 5) {
-                queueSound(prefix + "major_laceration");
-            } else {
-                queueSound(prefix + "minor_laceration");
+        if (damageEntity instanceof ArrowEntity || damageEntity instanceof FireballEntity) {
+            if (bloodLossEnabled && currentTime - lastBloodLossTime >= GENERAL_COOLDOWN) {
+                queueSound(useBlackMesaSFX ? "bm_blood_loss" : "blood_loss");
+                lastBloodLossTime = currentTime;
             }
+        } else if (damageEntity instanceof HostileEntity && !(damageEntity instanceof CreeperEntity)) {
+            if (fracturesEnabled) {
+                if (damage >= 5 && currentTime - lastMajorLacerationTime >= LACERATION_COOLDOWN) {
+                    queueSound(prefix + "major_laceration");
+                    lastMajorLacerationTime = currentTime;
+                } else if (damage < 5 && currentTime - lastMinorLacerationTime >= LACERATION_COOLDOWN) {
+                    queueSound(prefix + "minor_laceration");
+                    lastMinorLacerationTime = currentTime;
+                }
+            }
+            lastLacerationTime = currentTime;
         }
     }
-// sound queue
+
     private void processSoundQueue(MinecraftClient client) {
         if (currentSound == null || !client.getSoundManager().isPlaying(currentSound)) {
             currentSound = null;

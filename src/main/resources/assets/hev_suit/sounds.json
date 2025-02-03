@@ -89,13 +89,13 @@
   "percent": {
     "sounds": [{"name":  "hev_suit:percent"}]
   },
-  "bm_major_lacerations": {
+  "bm_major_laceration": {
     "sounds": [{"name": "hev_suit:bm_major_lacerations"}]
   },
   "bm_minor_fracture": {
     "sounds": [{"name": "hev_suit:bm_minor_fracture"}]
   },
-  "bm_minor_lacerations": {
+  "bm_minor_laceration": {
     "sounds": [{"name": "hev_suit:bm_minor_lacerations"}]
   },
   "bm_morphine_system": {

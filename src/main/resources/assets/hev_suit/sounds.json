@@ -147,6 +147,7 @@
   "bm_100": {"sounds": [{"name": "hev_suit:bm_100"}]},
   "5": {"sounds": [{"name": "hev_suit:5"}]},
   "10": {"sounds": [{"name": "hev_suit:10"}]},
+  "15": {"sounds": [{"name": "hev_suit:15"}]},
   "20": {"sounds": [{"name": "hev_suit:20"}]},
   "25": {"sounds": [{"name": "hev_suit:25"}]},
   "30": {"sounds": [{"name": "hev_suit:30"}]},

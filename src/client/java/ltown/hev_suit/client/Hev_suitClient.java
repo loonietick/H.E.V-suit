@@ -47,9 +47,7 @@ public class Hev_suitClient implements ClientModInitializer {
     // Armor tracking
     private int lastArmorValue = -1;
     private static final List<Integer> PROTECTION_SOUNDS = Arrays.asList(
-            100, 90, 80, 70, 60, 50, 40, 30, 25,
-            20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10,
-            9, 8, 7, 6, 5, 4, 3, 2, 1
+            100, 90, 80, 70, 60, 50, 40, 30, 25, 20, 15, 10, 5
     );
 
     // Original tracking fields
@@ -169,15 +167,18 @@ public class Hev_suitClient implements ClientModInitializer {
                 "ammunition_depleted", "morphine_system", "no_medical",
 
                 // Half-Life 1 hev suit armor percentage sfx
-                "power", "power_level_is", "percent", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-                "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "25", "30",
+                "power", "power_level_is", "percent", "5","10", "20", "25", "30",
                 "40", "50", "60", "70", "80", "90", "100",
                 
                 // Black Mesa HEV suit sounds
                 "bm_major_laceration", "bm_minor_laceration", "bm_major_fracture", "bm_blood_loss",
                 "bm_health_critical", "bm_health_critical2", "bm_morphine_system", "bm_seek_medical",
                 "bm_near_death", "bm_chemical",
-                "bm_minor_fracture"
+                "bm_minor_fracture",
+                
+                // Black Mesa Armor percentage sfx
+                "bm_power", "bm_power_level_is", "bm_percent", "bm_5", "bm_10", "bm_15", "bm_20", "bm_25",
+                "bm_30", "bm_40", "bm_50", "bm_60", "bm_70", "bm_80", "bm_90", "bm_100"
         };
 
         for (String soundName : soundNames) {
@@ -507,13 +508,13 @@ public class Hev_suitClient implements ClientModInitializer {
                         List<String> components = new ArrayList<>();
     
                         if (percent == 100) {
-                            components.add("power_level_is");
-                            components.add("100");
+                            components.add(useBlackMesaSFX ? "bm_power_level_is" : "power_level_is");
+                            components.add(useBlackMesaSFX ? "bm_100" : "100");
                         } else {
-                            components.add("power");
+                            components.add(useBlackMesaSFX ? "bm_power" : "power");
                             decomposePercentage(percent, components);
                         }
-                        components.add("percent");
+                        components.add(useBlackMesaSFX ? "bm_percent" : "percent");
     
                         components.forEach(this::queueSound);
                     }
@@ -533,10 +534,9 @@ public class Hev_suitClient implements ClientModInitializer {
         for (int num : PROTECTION_SOUNDS) {
             if (remaining <= 0) break;
 
-            while (remaining >= num) {
-                components.add(String.valueOf(num));
+            if (remaining >= num) {
+                components.add((useBlackMesaSFX ? "bm_" : "") + num);
                 remaining -= num;
-                if (remaining == 0) break;
             }
         }
     }

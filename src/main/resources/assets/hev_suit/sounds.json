@@ -122,25 +122,31 @@
   "bm_blood_loss": {
     "sounds": [{"name": "hev_suit:bm_blood_loss"}]
   },
-  "1": {"sounds": [{"name": "hev_suit:1"}]},
-  "2": {"sounds": [{"name": "hev_suit:2"}]},
-  "3": {"sounds": [{"name": "hev_suit:3"}]},
-  "4": {"sounds": [{"name": "hev_suit:4"}]},
+  "bm_power_level_is": {
+    "sounds": [{"name": "hev_suit:bm_power_level_is"}]
+  },
+  "bm_power": {
+    "sounds": [{"name": "hev_suit:bm_power"}]
+  },
+  "bm_percent": {
+    "sounds": [{"name": "hev_suit:bm_percent"}]
+  },
+ 
+  "bm_5": {"sounds": [{"name": "hev_suit:bm_5"}]},
+  "bm_10": {"sounds": [{"name": "hev_suit:bm_10"}]},
+  "bm_15": {"sounds": [{"name": "hev_suit:bm_15"}]},
+  "bm_20": {"sounds": [{"name": "hev_suit:bm_20"}]},
+  "bm_25": {"sounds": [{"name": "hev_suit:bm_25"}]},
+  "bm_30": {"sounds": [{"name": "hev_suit:bm_30"}]},
+  "bm_40": {"sounds": [{"name": "hev_suit:bm_40"}]},
+  "bm_50": {"sounds": [{"name": "hev_suit:bm_50"}]},
+  "bm_60": {"sounds": [{"name": "hev_suit:bm_60"}]},
+  "bm_70": {"sounds": [{"name": "hev_suit:bm_70"}]},
+  "bm_80": {"sounds": [{"name": "hev_suit:bm_80"}]},
+  "bm_90": {"sounds": [{"name": "hev_suit:bm_90"}]},
+  "bm_100": {"sounds": [{"name": "hev_suit:bm_100"}]},
   "5": {"sounds": [{"name": "hev_suit:5"}]},
-  "6": {"sounds": [{"name": "hev_suit:6"}]},
-  "7": {"sounds": [{"name": "hev_suit:7"}]},
-  "8": {"sounds": [{"name": "hev_suit:8"}]},
-  "9": {"sounds": [{"name": "hev_suit:9"}]},
   "10": {"sounds": [{"name": "hev_suit:10"}]},
-  "11": {"sounds": [{"name": "hev_suit:11"}]},
-  "12": {"sounds": [{"name": "hev_suit:12"}]},
-  "13": {"sounds": [{"name": "hev_suit:13"}]},
-  "14": {"sounds": [{"name": "hev_suit:14"}]},
-  "15": {"sounds": [{"name": "hev_suit:15"}]},
-  "16": {"sounds": [{"name": "hev_suit:16"}]},
-  "17": {"sounds": [{"name": "hev_suit:17"}]},
-  "18": {"sounds": [{"name": "hev_suit:18"}]},
-  "19": {"sounds": [{"name": "hev_suit:19"}]},
   "20": {"sounds": [{"name": "hev_suit:20"}]},
   "25": {"sounds": [{"name": "hev_suit:25"}]},
   "30": {"sounds": [{"name": "hev_suit:30"}]},

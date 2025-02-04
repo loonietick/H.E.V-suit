@@ -32,7 +32,6 @@ public class EventManager {
     private static float lastHealth = 20.0f;
     private static boolean wasPoisoned = false;
     private static long lastMorphineTime = 0;
-    private static long lastLacerationTime = 0;
     private static long lastBloodLossTime = 0;
     private static long lastFractureTime = 0;
     private static long lastGeneralAlertTime = 0;
@@ -56,7 +55,6 @@ public class EventManager {
         lastHealth = 20.0f;
         lastArmorValue = -1;
         lastMorphineTime = 0;
-        lastLacerationTime = 0;
         lastBloodLossTime = 0;
         lastFractureTime = 0;
         lastGeneralAlertTime = 0;
@@ -210,7 +208,7 @@ public class EventManager {
                     lastMinorLacerationTime = currentTime;
                 }
             }
-            lastLacerationTime = currentTime;
+          
         }
     }
 }

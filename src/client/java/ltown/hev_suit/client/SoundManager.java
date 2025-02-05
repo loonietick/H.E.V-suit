@@ -84,6 +84,8 @@ public class SoundManager {
                         MIN_PITCH + RANDOM.nextFloat() * (MAX_PITCH - MIN_PITCH)
                 );
                 client.getSoundManager().play(currentSound);
+                LOGGER.debug("Displaying caption for: " + soundName + ", captions enabled: " + SettingsManager.captionsEnabled);
+                SubtitleManager.displayCaption(soundName);
             } catch (Exception e) {
                 LOGGER.error("Error playing sound: {}", soundName, e);
                 currentSound = null;

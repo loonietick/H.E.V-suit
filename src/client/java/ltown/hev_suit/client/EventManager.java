@@ -200,10 +200,10 @@ public class EventManager {
 
         if (damageEntity instanceof HostileEntity && !(damageEntity instanceof CreeperEntity)) {
             if (SettingsManager.fracturesEnabled) {
-                if (damage >= 5 && currentTime - lastMajorLacerationTime >= LACERATION_COOLDOWN) {
+                if (damage >= 4 && currentTime - lastMajorLacerationTime >= LACERATION_COOLDOWN) {
                     SoundManager.queueSound(prefix + "major_laceration");
                     lastMajorLacerationTime = currentTime;
-                } else if (damage < 5 && currentTime - lastMinorLacerationTime >= LACERATION_COOLDOWN) {
+                } else if (damage < 3 && currentTime - lastMinorLacerationTime >= LACERATION_COOLDOWN) {
                     SoundManager.queueSound(prefix + "minor_laceration");
                     lastMinorLacerationTime = currentTime;
                 }

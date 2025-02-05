@@ -226,6 +226,14 @@ public class CommandManager {
                         return 1;
                     })
                 )
+                .then(ClientCommandManager.literal("captions")
+                    .executes(context -> {
+                        SubtitleManager.toggleCaptions();
+                        context.getSource().sendFeedback(Text.literal("HEV Suit captions " + 
+                            (SubtitleManager.areCaptionsEnabled() ? "enabled" : "disabled")));
+                        return 1;
+                    })
+                )
             );
         });
     }

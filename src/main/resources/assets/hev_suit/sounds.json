@@ -131,7 +131,12 @@
   "bm_percent": {
     "sounds": [{"name": "hev_suit:bm_percent"}]
   },
- 
+  "armor_gone": {
+    "sounds": [{"name": "hev_suit:armor_gone"}]
+  },
+  "hev_damage": {
+    "sounds": [{"name": "hev_suit:hev_damage"}]
+  },
   "bm_5": {"sounds": [{"name": "hev_suit:bm_5"}]},
   "bm_10": {"sounds": [{"name": "hev_suit:bm_10"}]},
   "bm_15": {"sounds": [{"name": "hev_suit:bm_15"}]},

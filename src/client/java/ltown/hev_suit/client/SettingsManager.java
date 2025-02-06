@@ -16,6 +16,7 @@ public class SettingsManager {
     private static final Gson GSON = new Gson();
 
     public static boolean hevSuitEnabled = true;
+    public static boolean armorDurabilityEnabled = true;  // Add this line
     public static boolean healthAlertsEnabled = true;
     public static boolean hudEnabled = true;
     public static boolean fracturesEnabled = true;
@@ -37,6 +38,7 @@ public class SettingsManager {
             try (FileReader reader = new FileReader(CONFIG_FILE)) {
                 JsonObject json = GSON.fromJson(reader, JsonObject.class);
                 hevSuitEnabled = getOrDefault(json, "hevSuitEnabled", true);
+                armorDurabilityEnabled = getOrDefault(json, "armorDurabilityEnabled", true);  // Add this line
                 healthAlertsEnabled = getOrDefault(json, "healthAlertsEnabled", true);
                 hudEnabled = getOrDefault(json, "hudEnabled", true);
                 fracturesEnabled = getOrDefault(json, "fracturesEnabled", true);
@@ -65,6 +67,7 @@ public class SettingsManager {
     public static void saveSettings() {
         JsonObject json = new JsonObject();
         json.addProperty("hevSuitEnabled", hevSuitEnabled);
+        json.addProperty("armorDurabilityEnabled", armorDurabilityEnabled);  // Add this line
         json.addProperty("healthAlertsEnabled", healthAlertsEnabled);
         json.addProperty("hudEnabled", hudEnabled);
         json.addProperty("fracturesEnabled", fracturesEnabled);

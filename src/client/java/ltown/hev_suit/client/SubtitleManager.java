@@ -19,7 +19,7 @@ public class SubtitleManager {
         CAPTIONS.put("minor_fracture", "Minor Fracture Detected");
         CAPTIONS.put("blood_loss", "Blood Loss Detected");
         CAPTIONS.put("health_critical", "Vital Signs Critical");
-        CAPTIONS.put("health_critical2", "Viatal Signs are Dropping");
+        CAPTIONS.put("health_critical2", "Vital Signs are Dropping");
         CAPTIONS.put("morphine_administered", "Morphine Administered");
         CAPTIONS.put("seek_medical", "Seek Medical Attention");
         CAPTIONS.put("near_death", "Emergency! User Death Imminent");
@@ -27,6 +27,8 @@ public class SubtitleManager {
         CAPTIONS.put("shock_damage", "Warning: Eletrical Damage Detected");
         CAPTIONS.put("chemical", "Warning: Hazardous Chemical Detected");
         CAPTIONS.put("ammunition_depleted", "Ammunition Depleted");
+        CAPTIONS.put("armor_gone", "Armor Compromised");
+        CAPTIONS.put("hev_damage", "HEV Damage Sustained");
         
         // Black Mesa captions
         CAPTIONS.put("bm_major_laceration", "Major Lacerations Detected");

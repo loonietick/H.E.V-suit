@@ -149,6 +149,18 @@ public class CommandManager {
                             return 1;
                         })
                     )
+                    // Add armordurability as part of toggle commands
+                    .then(ClientCommandManager.literal("armordurability")
+                        .executes(context -> {
+                            if (!SettingsManager.useBlackMesaSFX) {
+                                SettingsManager.armorDurabilityEnabled = !SettingsManager.armorDurabilityEnabled;
+                                context.getSource().sendFeedback(Text.literal("Armor durability monitoring " + 
+                                    (SettingsManager.armorDurabilityEnabled ? "enabled" : "disabled")));
+                                SettingsManager.saveSettings();
+                            }
+                            return 1;
+                        })
+                    )
                     .executes(context -> {
                         if (!SettingsManager.useBlackMesaSFX) {
                             SettingsManager.hevSuitEnabled = !SettingsManager.hevSuitEnabled;
@@ -181,6 +193,7 @@ public class CommandManager {
                                 SettingsManager.morphineEnabled = false;
                                 SettingsManager.hevSuitEnabled = false;
                                 SettingsManager.healthCritical2Enabled = false;
+                                SettingsManager.armorDurabilityEnabled = true;  // Enable for PVP mode
                                 context.getSource().sendFeedback(Text.literal("PVP mode activated: Only HUD and health alerts enabled."));
                             } else {
                                 SettingsManager.healthAlertsEnabled = true;

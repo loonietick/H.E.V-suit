@@ -18,9 +18,22 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 public class EventManager {
     private static final Logger LOGGER = LogManager.getLogger("EventManager");
+
+    // Update durability tracking fields
+    private static final List<Double> DURABILITY_THRESHOLDS = Arrays.asList(
+        0.50, 0.35, 0.25, 0.10, 0.05
+    );
+    private static final Map<Integer, Double> lastArmorThresholds = new HashMap<>();
+    private static final Set<Integer> equippedArmorSlots = new HashSet<>();  // Add this line
+    private static final Set<Integer> brokenArmor = new HashSet<>();
+    private static final Map<Integer, Double> lastKnownDurability = new HashMap<>(); // Add this line
 
     // Armor tracking
     private static int lastArmorValue = -1;
@@ -62,6 +75,10 @@ public class EventManager {
         lastShockDamageTime = 0;
         lastMajorLacerationTime = 0;
         lastMinorLacerationTime = 0;
+        lastArmorThresholds.clear();
+        equippedArmorSlots.clear();  // Add this line
+        brokenArmor.clear();
+        lastKnownDurability.clear(); // Add this line
     }
 
     private static void onClientTick(MinecraftClient client) {
@@ -70,6 +87,9 @@ public class EventManager {
 
             PlayerEntity player = client.player;
             if (player == null) return;
+
+            // Add armor durability check
+            checkArmorDurability(player);
 
             // Armor percentage system
             int currentArmor = player.getArmor();
@@ -210,5 +230,63 @@ public class EventManager {
             }
           
         }
+    }
+
+    private static void checkArmorDurability(PlayerEntity player) {
+        if (!SettingsManager.armorDurabilityEnabled || SettingsManager.useBlackMesaSFX) return;
+        
+        int slot = 0;
+        boolean playedThresholdSound = false;
+        Set<Integer> currentEquipped = new HashSet<>();
+        
+        for (var stack : player.getArmorItems()) {
+            if (!stack.isEmpty()) {
+                currentEquipped.add(slot);
+                if (!equippedArmorSlots.contains(slot)) {
+                    // New piece of armor equipped
+                    equippedArmorSlots.add(slot);
+                }
+                
+                int maxDurability = stack.getMaxDamage();
+                int currentDamage = stack.getDamage();
+                
+                if (maxDurability > 0) {
+                    double durabilityPercent = (maxDurability - currentDamage) / (double)maxDurability;
+                    lastKnownDurability.put(slot, durabilityPercent);
+                    
+                    // Check thresholds if we haven't played a threshold sound yet
+                    if (!playedThresholdSound) {
+                        double lastThreshold = lastArmorThresholds.getOrDefault(slot, 1.0);
+                        
+                        for (double threshold : DURABILITY_THRESHOLDS) {
+                            if (durabilityPercent <= threshold && lastThreshold > threshold) {
+                                SoundManager.queueSound("hev_damage");
+                                playedThresholdSound = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    lastArmorThresholds.put(slot, durabilityPercent);
+                }
+            }
+            slot++;
+        }
+        
+        // Check for armor pieces that disappeared (broken)
+        for (Integer equippedSlot : equippedArmorSlots) {
+            if (!currentEquipped.contains(equippedSlot) && !brokenArmor.contains(equippedSlot)) {
+                // Only play armor_gone if the last known durability was very low
+                Double lastDurability = lastKnownDurability.get(equippedSlot);
+                if (lastDurability != null && lastDurability <= 0.05) {
+                    SoundManager.queueSound("armor_gone");
+                    brokenArmor.add(equippedSlot);
+                }
+            }
+        }
+        
+        // Update equipped slots
+        equippedArmorSlots.clear();
+        equippedArmorSlots.addAll(currentEquipped);
     }
 }

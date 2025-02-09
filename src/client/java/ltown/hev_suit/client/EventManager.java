@@ -57,7 +57,7 @@ public class EventManager {
     private static final long GENERAL_COOLDOWN = 5000;
     private static final long FRACTURE_COOLDOWN = 5000;
     private static final long LACERATION_COOLDOWN = 5000;
-    private static final long MORPHINE_COOLDOWN = 300000;
+    private static final long MORPHINE_COOLDOWN = 1800000;
 
     public static void registerEventListeners() {
         ClientTickEvents.END_CLIENT_TICK.register(EventManager::onClientTick);

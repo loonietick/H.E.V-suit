@@ -1,6 +1,7 @@
-package ltown.hev_suit.client;
+package ltown.hev_suit.client.managers;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.text.Text;

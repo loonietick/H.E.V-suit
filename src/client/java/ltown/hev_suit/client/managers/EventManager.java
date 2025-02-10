@@ -1,4 +1,4 @@
-package ltown.hev_suit.client;
+package ltown.hev_suit.client.managers;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -16,8 +16,11 @@ import net.minecraft.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,7 +99,7 @@ public class EventManager {
                 // Only play sound when armor increases
                 if (currentArmor > lastArmorValue) {
                     double durabilityMultiplier = calculateArmorDurabilityMultiplier(player);
-                    int adjustedPercent = (int)(currentArmor * durabilityMultiplier * 5); // Same calculation as HUD
+                    int adjustedPercent = (int)(currentArmor * durabilityMultiplier * 5);
 
                     if (adjustedPercent > 0) {
                         List<String> components = new ArrayList<>();
@@ -106,9 +109,11 @@ public class EventManager {
                             components.add(SettingsManager.useBlackMesaSFX ? "bm_100" : "100");
                         } else {
                             components.add(SettingsManager.useBlackMesaSFX ? "bm_power" : "power");
-                            // Find closest available percentage sound
-                            int closestPercent = findClosestPercentage(adjustedPercent);
-                            components.add(SettingsManager.useBlackMesaSFX ? "bm_" + closestPercent : String.valueOf(closestPercent));
+                            // Get split percentage announcements
+                            List<Integer> percentages = getSplitPercentageAnnouncement(adjustedPercent);
+                            for (int percent : percentages) {
+                                components.add(SettingsManager.useBlackMesaSFX ? "bm_" + percent : String.valueOf(percent));
+                            }
                         }
                         components.add(SettingsManager.useBlackMesaSFX ? "bm_percent" : "percent");
 
@@ -125,17 +130,33 @@ public class EventManager {
         }
     }
 
-    private static int findClosestPercentage(int value) {
-        int[] availablePercentages = {5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100};
-        int closest = availablePercentages[0];
-        
-        for (int percent : availablePercentages) {
-            if (Math.abs(value - percent) < Math.abs(value - closest)) {
-                closest = percent;
-            }
+  private static int findClosestPercentage(int value) {
+        // Direct mapping for values that have their own sound files
+        if (value >= 95) return 100;
+        if (value >= 85) return 90;
+        if (value >= 75) return 80;
+        if (value >= 65) return 70;
+        if (value >= 55) return 60;
+        if (value >= 45) return 50;
+        if (value >= 35) return 40;
+        if (value >= 25) return 25; // Keep original 25
+        if (value >= 15) return 15; // Keep original 15
+        if (value >= 8) return 10;
+        return 5;
+    }
+
+    private static List<Integer> getSplitPercentageAnnouncement(int value) {
+        // Handle special cases that should be split
+        switch (value) {
+            case 45: return Arrays.asList(40, 5);
+            case 35: return Arrays.asList(30, 5);
+            case 55: return Arrays.asList(50, 5);
+            case 65: return Arrays.asList(60, 5);
+            case 75: return Arrays.asList(70, 5);
+            case 85: return Arrays.asList(80, 5);
+            case 95: return Arrays.asList(90, 5);
+            default: return Collections.singletonList(findClosestPercentage(value));
         }
-        
-        return closest;
     }
 
     // Move calculateArmorDurabilityMultiplier from HudManager to here to avoid duplication
@@ -157,7 +178,6 @@ public class EventManager {
 
         return armorPieces > 0 ? totalDurability / armorPieces : 1.0;
     }
-
     private static void handleHealthSystem(MinecraftClient client, PlayerEntity player) {
         float currentHealth = player.getHealth();
         long currentTime = System.currentTimeMillis();
@@ -302,7 +322,8 @@ public class EventManager {
                 // Only play armor_gone if the last known durability was very low
                 Double lastDurability = lastKnownDurability.get(equippedSlot);
                 if (lastDurability != null && lastDurability <= 0.05) {
-                    SoundManager.queueSound("armor_gone");
+                    // just print in console that we think an armor is gone, im not gonna make it queue a sound, its buggy atm
+                    LOGGER.info("Armor piece in slot " + equippedSlot + " is broken");
                     brokenArmor.add(equippedSlot);
                 }
             }

@@ -1,4 +1,4 @@
-package ltown.hev_suit.client;
+package ltown.hev_suit.client.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

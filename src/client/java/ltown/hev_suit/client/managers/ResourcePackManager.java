@@ -1,4 +1,4 @@
-package ltown.hev_suit.client;
+package ltown.hev_suit.client.managers;
 
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;

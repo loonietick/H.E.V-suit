@@ -1,4 +1,4 @@
-package ltown.hev_suit.client;
+package ltown.hev_suit.client.managers;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.PositionedSoundInstance;

@@ -12,6 +12,7 @@ import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.FireballEntity;
+import net.minecraft.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,9 +38,7 @@ public class EventManager {
 
     // Armor tracking
     private static int lastArmorValue = -1;
-    private static final List<Integer> PROTECTION_SOUNDS = Arrays.asList(
-            100, 90, 80, 70, 60, 50, 40, 30, 25, 20, 15, 10, 5
-    );
+    
 
     // Original tracking fields
     private static float lastHealth = 20.0f;
@@ -91,29 +90,31 @@ public class EventManager {
             // Add armor durability check
             checkArmorDurability(player);
 
-            // Armor percentage system
+            // Armor percentage system with durability consideration
             int currentArmor = player.getArmor();
             if (currentArmor != lastArmorValue) {
                 // Only play sound when armor increases
                 if (currentArmor > lastArmorValue) {
-                    int percent = currentArmor * 5;
+                    double durabilityMultiplier = calculateArmorDurabilityMultiplier(player);
+                    int adjustedPercent = (int)(currentArmor * durabilityMultiplier * 5); // Same calculation as HUD
 
-                    if (percent > 0) {
+                    if (adjustedPercent > 0) {
                         List<String> components = new ArrayList<>();
 
-                        if (percent == 100) {
+                        if (adjustedPercent == 100) {
                             components.add(SettingsManager.useBlackMesaSFX ? "bm_power_level_is" : "power_level_is");
                             components.add(SettingsManager.useBlackMesaSFX ? "bm_100" : "100");
                         } else {
                             components.add(SettingsManager.useBlackMesaSFX ? "bm_power" : "power");
-                            decomposePercentage(percent, components);
+                            // Find closest available percentage sound
+                            int closestPercent = findClosestPercentage(adjustedPercent);
+                            components.add(SettingsManager.useBlackMesaSFX ? "bm_" + closestPercent : String.valueOf(closestPercent));
                         }
                         components.add(SettingsManager.useBlackMesaSFX ? "bm_percent" : "percent");
 
                         components.forEach(SoundManager::queueSound);
                     }
                 }
-                // Update lastArmorValue regardless of increase or decrease
                 lastArmorValue = currentArmor;
             }
 
@@ -124,15 +125,37 @@ public class EventManager {
         }
     }
 
-    private static void decomposePercentage(int remaining, List<String> components) {
-        for (int num : PROTECTION_SOUNDS) {
-            if (remaining <= 0) break;
-
-            if (remaining >= num) {
-                components.add((SettingsManager.useBlackMesaSFX ? "bm_" : "") + num);
-                remaining -= num;
+    private static int findClosestPercentage(int value) {
+        int[] availablePercentages = {5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100};
+        int closest = availablePercentages[0];
+        
+        for (int percent : availablePercentages) {
+            if (Math.abs(value - percent) < Math.abs(value - closest)) {
+                closest = percent;
             }
         }
+        
+        return closest;
+    }
+
+    // Move calculateArmorDurabilityMultiplier from HudManager to here to avoid duplication
+    private static double calculateArmorDurabilityMultiplier(PlayerEntity player) {
+        double totalDurability = 0;
+        int armorPieces = 0;
+
+        for (ItemStack armorPiece : player.getArmorItems()) {
+            if (!armorPiece.isEmpty()) {
+                int maxDurability = armorPiece.getMaxDamage();
+                if (maxDurability > 0) {
+                    int currentDamage = armorPiece.getDamage();
+                    double pieceDurability = (maxDurability - currentDamage) / (double)maxDurability;
+                    totalDurability += pieceDurability;
+                    armorPieces++;
+                }
+            }
+        }
+
+        return armorPieces > 0 ? totalDurability / armorPieces : 1.0;
     }
 
     private static void handleHealthSystem(MinecraftClient client, PlayerEntity player) {

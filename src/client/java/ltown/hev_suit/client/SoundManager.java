@@ -24,26 +24,24 @@ public class SoundManager {
     public static void registerSounds() {
         String[] soundNames = {
                 // Half-Life 1 HEV suit sounds
-                "major_laceration", "minor_laceration", "major_fracture", "blood_loss",
-                "health_critical", "health_critical2", "morphine_administered", "seek_medical",
-                "near_death", "heat_damage", "warning", "bio_reading", "danger", "evacuate_area",
-                "immediately", "north", "south", "east", "west", "voice_on", "voice_off",
-                "shock_damage", "internal_bleeding", "minor_fracture", "chemical",
-                "ammunition_depleted", "morphine_system", "no_medical", "armor_gone", "hev_damage",
+                "major_laceration", "minor_laceration", "major_fracture", "minor_fracture",
+                "blood_loss", "health_critical", "health_critical2", "morphine_administered",
+                "seek_medical", "near_death", "heat_damage", "shock_damage", "chemical",
+                "armor_gone", "hev_damage",
 
                 // Half-Life 1 hev suit armor percentage sfx
-                "power", "power_level_is", "percent", "5","10", "15", "20", "25", "30",
-                "40", "50", "60", "70", "80", "90", "100",
+                "power", "power_level_is", "percent",
+                "5", "10", "15", "20", "25", "30", "40", "50", "60", "70", "80", "90", "100",
                 
                 // Black Mesa HEV suit sounds
-                "bm_major_laceration", "bm_minor_laceration", "bm_major_fracture", "bm_blood_loss",
-                "bm_health_critical", "bm_health_critical2", "bm_morphine_system", "bm_seek_medical",
-                "bm_near_death", "bm_chemical",
-                "bm_minor_fracture",
+                "bm_major_laceration", "bm_minor_laceration", "bm_major_fracture",
+                "bm_minor_fracture", "bm_blood_loss", "bm_health_critical", "bm_health_critical2",
+                "bm_morphine_system", "bm_seek_medical", "bm_near_death", "bm_chemical",
                 
                 // Black Mesa Armor percentage sfx
-                "bm_power", "bm_power_level_is", "bm_percent", "bm_5", "bm_10", "bm_15", "bm_20", "bm_25",
-                "bm_30", "bm_40", "bm_50", "bm_60", "bm_70", "bm_80", "bm_90", "bm_100"
+                "bm_power", "bm_power_level_is", "bm_percent",
+                "bm_5", "bm_10", "bm_15", "bm_20", "bm_25", "bm_30", "bm_40", "bm_50",
+                "bm_60", "bm_70", "bm_80", "bm_90", "bm_100"
         };
 
         for (String soundName : soundNames) {
@@ -108,5 +106,34 @@ public class SoundManager {
 
     public static void clearQueue() {
         clearSoundQueue();
+    }
+
+    // Add this method to peek at the next N sounds in queue
+    public static List<String> peekNextSounds(int count) {
+        return ((LinkedList<String>) soundQueue).stream()
+               .limit(count)
+               .toList();
+    }
+
+    // Add this method to get the complete power level announcement
+    public static String getPowerLevelFromQueue() {
+        List<String> upcoming = peekNextSounds(5); // Peek at next 5 sounds
+        int totalPercent = 0;
+        
+        for (String sound : upcoming) {
+            if (sound.contains("percent")) break;
+            try {
+                String numStr = sound.replace("bm_", "");
+                totalPercent += Integer.parseInt(numStr); // Add the numbers together
+            } catch (NumberFormatException e) {
+                continue;
+            }
+        }
+        
+        return totalPercent > 0 ? String.valueOf(totalPercent) : null;
+    }
+
+    public static List<String> getQueuedSounds() {
+        return new ArrayList<>(soundQueue);
     }
 }

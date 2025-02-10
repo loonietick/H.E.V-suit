@@ -14,9 +14,6 @@
   "blood_loss": {
     "sounds": [{"name": "hev_suit:blood_loss"}]
   },
-  "ammunition_depleted": {
-    "sounds": [{"name": "hev_suit:ammunition_depleted"}]
-  },
   "health_critical": {
     "sounds": [{"name": "hev_suit:health_critical"}]
   },
@@ -37,42 +34,6 @@
   },
   "chemical": {
     "sounds": [{"name": "hev_suit:chemical"}]
-  },
-  "morphine_system": {
-    "sounds": [{"name": "hev_suit:morphine_system"}]
-  },
-  "radiation": {
-    "sounds": [{"name": "hev_suit:radiation_detected"}]
-  },
-  "north": {
-    "sounds": [{"name": "hev_suit:north"}]
-  },
-  "no_medical": {
-    "sounds": [{"name": "hev_suit:no_medical"}]
-  },
-  "south": {
-    "sounds": [{"name":  "hev_suit:south"}]
-  },
-  "west": {
-    "sounds": [{"name":  "hev_suit:west"}]
-  },
-  "east": {
-    "sounds": [{"name":  "hev_suit:east"}]
-  },
-  "danger": {
-    "sounds": [{"name":  "hev_suit:danger"}]
-  },
-  "evacuate_area": {
-    "sounds": [{"name":  "hev_suit:evacuate_area"}]
-  },
-  "immediately": {
-    "sounds": [{"name":  "hev_suit:immediately"}]
-  },
-  "voice_on": {
-    "sounds": [{"name":  "hev_suit:voice_on"}]
-  },
-  "voice_off": {
-    "sounds": [{"name":  "hev_suit:voice_off"}]
   },
   "shock_damage": {
     "sounds": [{"name":  "hev_suit:shock_damage"}]

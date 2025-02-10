@@ -12,6 +12,7 @@ public class HudManager {
 
     private static final int AMBER_COLOR = 0xFFFFAE00;
     private static final int DARK_AMBER = 0xFF8B5E00;
+    private static final int RED_COLOR = 0xFFFF0000;
 
     public static void registerHud() {
         HudRenderCallback.EVENT.register((graphics, tickDelta) -> {
@@ -27,12 +28,15 @@ public class HudManager {
             int baseY = height - 29;
             TextRenderer textRenderer = client.textRenderer;
 
-            // Health and Armor display
+            // Health display
             int scaledHealth = (int)((player.getHealth() / player.getMaxHealth()) * 100);
-            int scaledArmor = (int)((player.getArmor() / 20.0f) * 100);
-
             drawNumericDisplay(graphics, textRenderer, 10, baseY, scaledHealth, "HEALTH");
-            if (scaledArmor > 0) {
+
+            // Armor display with durability calculation
+            int baseArmor = player.getArmor();
+            if (baseArmor > 0) {
+                double durabilityMultiplier = calculateArmorDurabilityMultiplier(player);
+                int scaledArmor = (int)(baseArmor * durabilityMultiplier * 5); // Multiply by 5 to get percentage
                 drawNumericDisplay(graphics, textRenderer, 10 + 100, baseY, scaledArmor, "ARMOR");
             }
 
@@ -48,8 +52,43 @@ public class HudManager {
 
     private static void drawNumericDisplay(DrawContext graphics, TextRenderer textRenderer, int x, int y, int value, String label) {
         graphics.fill(x - 2, y - 2, x + 90, y + 12, 0x80000000);
-        graphics.drawTextWithShadow(textRenderer, String.format("%d", value), x, y, AMBER_COLOR);
+        
+        int displayColor;
+        if (label.equals("HEALTH")) {
+            // Start transitioning to red at 85% health (17 hearts)
+            displayColor = getTransitionColor(value, 85, AMBER_COLOR, RED_COLOR);
+        } else if (label.equals("ARMOR")) {
+            // Start transitioning to red at 50% armor durability
+            displayColor = getTransitionColor(value, 50, AMBER_COLOR, RED_COLOR);
+        } else {
+            displayColor = AMBER_COLOR;
+        }
+
+        graphics.drawTextWithShadow(textRenderer, String.format("%d", value), x, y, displayColor);
         graphics.drawTextWithShadow(textRenderer, label, x, y - 10, DARK_AMBER);
+    }
+
+    private static int getTransitionColor(int value, int threshold, int startColor, int endColor) {
+        if (value >= threshold) return startColor;
+        
+        // Calculate transition progress (0.0 to 1.0)
+        float progress = value / (float)threshold;
+        
+        // Extract color components
+        int startR = (startColor >> 16) & 0xFF;
+        int startG = (startColor >> 8) & 0xFF;
+        int startB = startColor & 0xFF;
+        
+        int endR = (endColor >> 16) & 0xFF;
+        int endG = (endColor >> 8) & 0xFF;
+        int endB = endColor & 0xFF;
+        
+        // Interpolate between colors
+        int r = (int)(startR + (endR - startR) * (1 - progress));
+        int g = (int)(startG + (endG - startG) * (1 - progress));
+        int b = (int)(startB + (endB - startB) * (1 - progress));
+        
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
     private static void drawAmmoDisplay(DrawContext graphics, TextRenderer textRenderer, int x, int y, int currentAmmo, int totalAmmo) {
@@ -67,5 +106,24 @@ public class HudManager {
             }
         }
         return total;
+    }
+
+    private static double calculateArmorDurabilityMultiplier(PlayerEntity player) {
+        double totalDurability = 0;
+        int armorPieces = 0;
+
+        for (ItemStack armorPiece : player.getArmorItems()) {
+            if (!armorPiece.isEmpty()) {
+                int maxDurability = armorPiece.getMaxDamage();
+                if (maxDurability > 0) {
+                    int currentDamage = armorPiece.getDamage();
+                    double pieceDurability = (maxDurability - currentDamage) / (double)maxDurability;
+                    totalDurability += pieceDurability;
+                    armorPieces++;
+                }
+            }
+        }
+
+        return armorPieces > 0 ? totalDurability / armorPieces : 1.0;
     }
 }

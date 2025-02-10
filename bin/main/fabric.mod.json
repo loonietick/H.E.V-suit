@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "hev_suit",
+  "version": "0.2.0",
+  "name": "HEV Suit Sound System",
+  "description": "A mod that lets you hear hev suit sounds",
+  "authors": ["ltown1"],
+  "contact": {},
+  "license": "MIT",
+
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "ltown.hev_suit.client.Hev_suitClient"
+    ]
+  },
+  "mixins": [
+    "hev_suit.mixins.json",
+    {
+      "config": "hev_suit.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": "*",
+    "fabric": "*",
+    "minecraft": "*"
+  }
+}

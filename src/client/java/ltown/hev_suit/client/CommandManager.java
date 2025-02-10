@@ -289,26 +289,6 @@ public class CommandManager {
                         })
                     )
                 )
-                .then(ClientCommandManager.literal("blackmesasfx")
-                    .executes(context -> {
-                        SettingsManager.useBlackMesaSFX = !SettingsManager.useBlackMesaSFX;
-                        LOGGER.debug("Toggled Black Mesa SFX: " + SettingsManager.useBlackMesaSFX);
-                        // Remove the feature toggling, just switch sound sets
-                        context.getSource().sendFeedback(Text.literal(SettingsManager.useBlackMesaSFX ? 
-                            "Black Mesa SFX enabled" : 
-                            "Half-Life 1 SFX enabled").setStyle(Style.EMPTY.withColor(Formatting.GOLD)));
-                        SettingsManager.saveSettings();
-                        return 1;
-                    })
-                )
-                .then(ClientCommandManager.literal("captions")
-                    .executes(context -> {
-                        SubtitleManager.toggleCaptions();
-                        context.getSource().sendFeedback(Text.literal("HEV Suit captions " + 
-                            (SubtitleManager.areCaptionsEnabled() ? "enabled" : "disabled")).setStyle(Style.EMPTY.withColor(Formatting.GOLD)));
-                        return 1;
-                    })
-                )
             );
         });
     }

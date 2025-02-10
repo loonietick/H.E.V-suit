@@ -11,6 +11,7 @@ public class Hev_suitClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         LOGGER.debug("Initializing HEV Suit Client");
+        ResourcePackManager.registerBuiltInResourcePack();
         SettingsManager.loadSettings();
         SoundManager.registerSounds();
         EventManager.registerEventListeners();

@@ -15,7 +15,7 @@ import net.minecraft.entity.projectile.FireballEntity;
 import net.minecraft.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import net.minecraft.util.math.Vec3d; // Add this import
 
 
 import java.util.ArrayList;
@@ -223,6 +223,33 @@ public class EventManager {
         if (damageSource == null) return;
         long currentTime = System.currentTimeMillis();
         String prefix = SettingsManager.useBlackMesaSFX ? "bm_" : "";
+
+        // Add damage indicator if feature is enabled and we have a damage source entity or position
+        if (SettingsManager.damageIndicatorsEnabled && client.player != null) {
+            Vec3d damagePos = null;
+
+            Entity attacker = damageSource.getAttacker();
+            if (attacker != null) {
+                // Get position from attacker
+                damagePos = attacker.getPos();
+                LOGGER.debug("Damage from attacker: " + attacker); // Debug log
+            } else {
+                LOGGER.debug("Damage source has no attacker."); // Debug log
+            }
+
+            if (damagePos != null) {
+                Vec3d playerPos = client.player.getPos();
+                float playerYaw = client.player.getYaw();
+                float playerPitch = client.player.getPitch();
+
+                HudManager.addDamageIndicator(
+                    damagePos,
+                    playerPos,
+                    playerYaw,
+                    playerPitch
+                );
+            }
+        }
 
         // Fall damage and fractures with cooldown
         if (damageSource.isOf(DamageTypes.FALL) && SettingsManager.fracturesEnabled && currentTime - lastFractureTime >= FRACTURE_COOLDOWN) {

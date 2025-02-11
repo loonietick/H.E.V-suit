@@ -193,6 +193,20 @@ public class CommandManager {
                             return 1;
                         })
                     )
+                    // Add damageindicators as part of toggle commands
+                    .then(ClientCommandManager.literal("damageindicators")
+                        .executes(context -> {
+                            if (!SettingsManager.useBlackMesaSFX) {
+                                SettingsManager.damageIndicatorsEnabled = !SettingsManager.damageIndicatorsEnabled;
+                                context.getSource().sendFeedback(
+                                    Text.literal("Damage indicators " + (SettingsManager.damageIndicatorsEnabled ? "enabled" : "disabled"))
+                                        .setStyle(Style.EMPTY.withColor(Formatting.GOLD))
+                                );
+                                SettingsManager.saveSettings();
+                            }
+                            return 1;
+                        })
+                    )
                     .executes(context -> {
                         if (!SettingsManager.useBlackMesaSFX) {
                             SettingsManager.hevSuitEnabled = !SettingsManager.hevSuitEnabled;

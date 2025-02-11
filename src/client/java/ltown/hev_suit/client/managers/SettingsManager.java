@@ -32,6 +32,7 @@ public class SettingsManager {
     public static boolean nearDeathEnabled = true;
     public static boolean useBlackMesaSFX = false;
     public static boolean captionsEnabled = false;  // Add this line
+    public static boolean damageIndicatorsEnabled = true;
 
     public static void loadSettings() {
         if (CONFIG_FILE.exists()) {
@@ -53,6 +54,7 @@ public class SettingsManager {
                 nearDeathEnabled = getOrDefault(json, "nearDeathEnabled", true);
                 useBlackMesaSFX = getOrDefault(json, "useBlackMesaSFX", false);
                 captionsEnabled = getOrDefault(json, "captionsEnabled", false);  // Add this line
+                damageIndicatorsEnabled = getOrDefault(json, "damageIndicatorsEnabled", true);
                 LOGGER.debug("Settings loaded: useBlackMesaSFX = " + useBlackMesaSFX);
             } catch (IOException e) {
                 LOGGER.error("Failed to load settings", e);
@@ -82,6 +84,7 @@ public class SettingsManager {
         json.addProperty("nearDeathEnabled", nearDeathEnabled);
         json.addProperty("useBlackMesaSFX", useBlackMesaSFX);
         json.addProperty("captionsEnabled", captionsEnabled);  // Add this line
+        json.addProperty("damageIndicatorsEnabled", damageIndicatorsEnabled);
 
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(json, writer);

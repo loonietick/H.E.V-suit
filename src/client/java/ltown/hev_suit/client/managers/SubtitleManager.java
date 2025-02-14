@@ -23,8 +23,8 @@ public class SubtitleManager {
         CAPTIONS.put("morphine_administered", "Morphine Administered");
         CAPTIONS.put("seek_medical", "Seek Medical Attention");
         CAPTIONS.put("near_death", "Emergency! User Death Imminent");
-        CAPTIONS.put("heat_damage", "Warning: Heat Damage Detected");
-        CAPTIONS.put("shock_damage", "Warning: Eletrical Damage Detected");
+        CAPTIONS.put("heat_damage", "Extreme Heat Damage Detected");
+        CAPTIONS.put("shock_damage", "Electrical Damage Detected");
         CAPTIONS.put("chemical", "Warning: Hazardous Chemical Detected");
         CAPTIONS.put("ammunition_depleted", "Ammunition Depleted");
         CAPTIONS.put("armor_gone", "Armor Compromised");

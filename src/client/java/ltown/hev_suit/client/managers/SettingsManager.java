@@ -33,6 +33,10 @@ public class SettingsManager {
     public static boolean useBlackMesaSFX = false;
     public static boolean captionsEnabled = false;  // Add this line
     public static boolean damageIndicatorsEnabled = true;
+    public static boolean hudHealthEnabled = true;  // Add this line
+    public static boolean hudArmorEnabled = true;  // Add this line
+    public static boolean hudHungerEnabled = true;  // Add this line
+    public static boolean hudAmmoEnabled = true;  // Add this line
 
     public static void loadSettings() {
         if (CONFIG_FILE.exists()) {
@@ -55,6 +59,10 @@ public class SettingsManager {
                 useBlackMesaSFX = getOrDefault(json, "useBlackMesaSFX", false);
                 captionsEnabled = getOrDefault(json, "captionsEnabled", false);  // Add this line
                 damageIndicatorsEnabled = getOrDefault(json, "damageIndicatorsEnabled", true);
+                hudHealthEnabled = getOrDefault(json, "hudHealthEnabled", true);  // Add this line
+                hudArmorEnabled = getOrDefault(json, "hudArmorEnabled", true);  // Add this line
+                hudHungerEnabled = getOrDefault(json, "hudHungerEnabled", true);  // Add this line
+                hudAmmoEnabled = getOrDefault(json, "hudAmmoEnabled", true);  // Add this line
                 LOGGER.debug("Settings loaded: useBlackMesaSFX = " + useBlackMesaSFX);
             } catch (IOException e) {
                 LOGGER.error("Failed to load settings", e);
@@ -85,6 +93,10 @@ public class SettingsManager {
         json.addProperty("useBlackMesaSFX", useBlackMesaSFX);
         json.addProperty("captionsEnabled", captionsEnabled);  // Add this line
         json.addProperty("damageIndicatorsEnabled", damageIndicatorsEnabled);
+        json.addProperty("hudHealthEnabled", hudHealthEnabled);  // Add this line
+        json.addProperty("hudArmorEnabled", hudArmorEnabled);  // Add this line
+        json.addProperty("hudHungerEnabled", hudHungerEnabled);  // Add this line
+        json.addProperty("hudAmmoEnabled", hudAmmoEnabled);  // Add this line
 
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(json, writer);

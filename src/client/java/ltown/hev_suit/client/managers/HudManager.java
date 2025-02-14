@@ -24,8 +24,6 @@ public class HudManager {
     private static final float INDICATOR_DURATION = 15.0f;
 
     private static final float ANIMATION_SPEED = 0.2f;
-    private static float healthAnimation = 0;
-    private static float armorAnimation = 0;
     private static float hungerAnimation = 0;
     private static float ammoVisibility = 0;
     private static float hungerYOffset = 0;
@@ -62,19 +60,18 @@ public class HudManager {
     }
 
     private static void updateAnimations(final PlayerEntity player, final ItemStack mainHand) {
-        float targetHealth = (player.getHealth() / player.getMaxHealth()) * 100;
-        float targetArmor = (float)(player.getArmor() * calculateArmorDurabilityMultiplier(player) * 5);
         float targetHunger = (player.getHungerManager().getFoodLevel() / 20.0f) * 100;
-        boolean hasAmmo = !mainHand.isEmpty();
+        targetHunger = Math.min(targetHunger, 100);
 
-        healthAnimation = lerp(healthAnimation, targetHealth, ANIMATION_SPEED);
-        armorAnimation = lerp(armorAnimation, targetArmor, ANIMATION_SPEED);
-        hungerAnimation = lerp(hungerAnimation, targetHunger, ANIMATION_SPEED);
-        ammoVisibility = lerp(ammoVisibility, hasAmmo ? 1.0f : 0.0f, ANIMATION_SPEED);
-        
-        // Move hunger up when ammo is visible (changed from -15 to -25)
-        float targetYOffset = hasAmmo ? -20 : 0;
+        // Only show ammo if HUD is enabled and there's an item
+        boolean showAmmoHud = SettingsManager.hudAmmoEnabled && !mainHand.isEmpty();
+        ammoVisibility = lerp(ammoVisibility, showAmmoHud ? 1.0f : 0.0f, ANIMATION_SPEED);
+
+        // Move hunger up only if ammo HUD is visible
+        float targetYOffset = showAmmoHud ? -20 : 0;
         hungerYOffset = lerp(hungerYOffset, targetYOffset, ANIMATION_SPEED);
+
+        hungerAnimation = lerp(hungerAnimation, targetHunger, ANIMATION_SPEED);
     }
 
     public static void registerHud() {
@@ -94,45 +91,44 @@ public class HudManager {
 
             // Update all animations
             updateAnimations(player, mainHand);
-            // Determine if ammo hud is active
             boolean ammoActive = ammoVisibility > 0.01f && !mainHand.isEmpty();
-            // Update hunger bar width and height with smooth transition based on ammo hud
             int targetBarWidth = ammoActive ? NORMAL_BAR_WIDTH : FULL_BAR_WIDTH;
             currentHungerBarWidth = lerp(currentHungerBarWidth, targetBarWidth, ANIMATION_SPEED);
             int targetBarHeight = ammoActive ? COMPACT_BAR_HEIGHT : FULL_BAR_HEIGHT;
             currentBarHeight = lerp(currentBarHeight, targetBarHeight, ANIMATION_SPEED);
-            
-            // Adjust vertical margin: add extra 6 if ammo hud is active
             float extraMargin = ammoActive ? 6 : 0;
-            // Calculate right-aligned position
             int rightAlignX = width - RIGHT_MARGIN - HUD_ELEMENT_WIDTH;
 
             // Draw Health and Armor (left side stays the same)
-            int scaledHealth = (int) healthAnimation;
-            drawNumericDisplay(graphics, textRenderer, 10, baseY, scaledHealth, "HEALTH", 1.0f);
+            if (SettingsManager.hudHealthEnabled) {
+                int scaledHealth = (int) ((player.getHealth() / player.getMaxHealth()) * 100);
+                drawNumericDisplay(graphics, textRenderer, 10, baseY, scaledHealth, "HEALTH", 1.0f);
+            }
 
-            if (player.getArmor() > 0) {
-                int scaledArmor = (int) armorAnimation;
+            if (SettingsManager.hudArmorEnabled && player.getArmor() > 0) {
+                double durabilityMultiplier = calculateArmorDurabilityMultiplier(player);
+                int scaledArmor = (int) (player.getArmor() * durabilityMultiplier * 5);
                 drawNumericDisplay(graphics, textRenderer, 10 + 100, baseY, scaledArmor, "ARMOR", 1.0f);
             }
 
-            // Calculate positions for right side elements with conditional hunger offset
             float hungerY = baseY + hungerYOffset + (player.getArmor() > 0 ? hungerBaseOffset : 0) + extraMargin;
             int ammoY = baseY;
-            
-            // Draw right side elements
-            if (ammoVisibility > 0.01f && !mainHand.isEmpty()) {
+
+            if (SettingsManager.hudAmmoEnabled && ammoVisibility > 0.01f && !mainHand.isEmpty()) {
                 int currentAmmo = mainHand.getCount();
                 int totalAmmo = calculateTotalAmmo(player, mainHand.getItem());
                 drawAmmoDisplay(graphics, textRenderer, rightAlignX, ammoY, currentAmmo, totalAmmo, ammoVisibility);
+            } else {
+                // Ensure hunger bar is full width if no ammo HUD is displayed
+                currentHungerBarWidth = FULL_BAR_WIDTH;
+                currentBarHeight = FULL_BAR_HEIGHT;
             }
 
-            // Draw Hunger using currentHungerBarWidth in drawCompactHungerDisplay
-            int scaledHunger = (int) hungerAnimation;
-            drawCompactHungerDisplay(graphics, textRenderer, rightAlignX, (int)hungerY, scaledHunger, 1.0f);
+            if (SettingsManager.hudHungerEnabled) {
+                int scaledHunger = (int) hungerAnimation;
+                drawCompactHungerDisplay(graphics, textRenderer, rightAlignX, (int)hungerY, scaledHunger, 1.0f);
+            }
 
-       
-            // Render damage indicators
             if (SettingsManager.damageIndicatorsEnabled) {
                 renderDamageIndicators(graphics, client);
             }

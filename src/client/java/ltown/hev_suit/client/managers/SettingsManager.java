@@ -16,7 +16,7 @@ public class SettingsManager {
     private static final Gson GSON = new Gson();
 
     public static boolean hevSuitEnabled = true;
-    public static boolean armorDurabilityEnabled = true;  // Add this line
+    public static boolean armorDurabilityEnabled = true;
     public static boolean healthAlertsEnabled = true;
     public static boolean hudEnabled = true;
     public static boolean fracturesEnabled = true;
@@ -31,19 +31,18 @@ public class SettingsManager {
     public static boolean healthCriticalEnabled = true;
     public static boolean nearDeathEnabled = true;
     public static boolean useBlackMesaSFX = false;
-    public static boolean captionsEnabled = false;  // Add this line
+    public static boolean captionsEnabled = false;
     public static boolean damageIndicatorsEnabled = true;
-    public static boolean hudHealthEnabled = true;  // Add this line
-    public static boolean hudArmorEnabled = true;  // Add this line
-    public static boolean hudHungerEnabled = true;  // Add this line
-    public static boolean hudAmmoEnabled = true;  // Add this line
+    public static boolean hudHealthEnabled = true;
+    public static boolean hudArmorEnabled = true;
+    public static boolean hudAmmoEnabled = true;
 
     public static void loadSettings() {
         if (CONFIG_FILE.exists()) {
             try (FileReader reader = new FileReader(CONFIG_FILE)) {
                 JsonObject json = GSON.fromJson(reader, JsonObject.class);
                 hevSuitEnabled = getOrDefault(json, "hevSuitEnabled", true);
-                armorDurabilityEnabled = getOrDefault(json, "armorDurabilityEnabled", true);  // Add this line
+                armorDurabilityEnabled = getOrDefault(json, "armorDurabilityEnabled", true);
                 healthAlertsEnabled = getOrDefault(json, "healthAlertsEnabled", true);
                 hudEnabled = getOrDefault(json, "hudEnabled", true);
                 fracturesEnabled = getOrDefault(json, "fracturesEnabled", true);
@@ -57,12 +56,11 @@ public class SettingsManager {
                 healthCriticalEnabled = getOrDefault(json, "healthCriticalEnabled", true);
                 nearDeathEnabled = getOrDefault(json, "nearDeathEnabled", true);
                 useBlackMesaSFX = getOrDefault(json, "useBlackMesaSFX", false);
-                captionsEnabled = getOrDefault(json, "captionsEnabled", false);  // Add this line
+                captionsEnabled = getOrDefault(json, "captionsEnabled", false);
                 damageIndicatorsEnabled = getOrDefault(json, "damageIndicatorsEnabled", true);
-                hudHealthEnabled = getOrDefault(json, "hudHealthEnabled", true);  // Add this line
-                hudArmorEnabled = getOrDefault(json, "hudArmorEnabled", true);  // Add this line
-                hudHungerEnabled = getOrDefault(json, "hudHungerEnabled", true);  // Add this line
-                hudAmmoEnabled = getOrDefault(json, "hudAmmoEnabled", true);  // Add this line
+                hudHealthEnabled = getOrDefault(json, "hudHealthEnabled", true);
+                hudArmorEnabled = getOrDefault(json, "hudArmorEnabled", true);
+                hudAmmoEnabled = getOrDefault(json, "hudAmmoEnabled", true);
                 LOGGER.debug("Settings loaded: useBlackMesaSFX = " + useBlackMesaSFX);
             } catch (IOException e) {
                 LOGGER.error("Failed to load settings", e);
@@ -77,7 +75,7 @@ public class SettingsManager {
     public static void saveSettings() {
         JsonObject json = new JsonObject();
         json.addProperty("hevSuitEnabled", hevSuitEnabled);
-        json.addProperty("armorDurabilityEnabled", armorDurabilityEnabled);  // Add this line
+        json.addProperty("armorDurabilityEnabled", armorDurabilityEnabled);
         json.addProperty("healthAlertsEnabled", healthAlertsEnabled);
         json.addProperty("hudEnabled", hudEnabled);
         json.addProperty("fracturesEnabled", fracturesEnabled);
@@ -91,12 +89,11 @@ public class SettingsManager {
         json.addProperty("healthCriticalEnabled", healthCriticalEnabled);
         json.addProperty("nearDeathEnabled", nearDeathEnabled);
         json.addProperty("useBlackMesaSFX", useBlackMesaSFX);
-        json.addProperty("captionsEnabled", captionsEnabled);  // Add this line
+        json.addProperty("captionsEnabled", captionsEnabled);
         json.addProperty("damageIndicatorsEnabled", damageIndicatorsEnabled);
-        json.addProperty("hudHealthEnabled", hudHealthEnabled);  // Add this line
-        json.addProperty("hudArmorEnabled", hudArmorEnabled);  // Add this line
-        json.addProperty("hudHungerEnabled", hudHungerEnabled);  // Add this line
-        json.addProperty("hudAmmoEnabled", hudAmmoEnabled);  // Add this line
+        json.addProperty("hudHealthEnabled", hudHealthEnabled);
+        json.addProperty("hudArmorEnabled", hudArmorEnabled);
+        json.addProperty("hudAmmoEnabled", hudAmmoEnabled);
 
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(json, writer);

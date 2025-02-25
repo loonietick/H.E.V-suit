@@ -265,17 +265,6 @@ public class CommandManager {
                                 return 1;
                             })
                         )
-                        .then(ClientCommandManager.literal("hunger")
-                            .executes(context -> {
-                                SettingsManager.hudHungerEnabled = !SettingsManager.hudHungerEnabled;
-                                context.getSource().sendFeedback(
-                                    Text.literal("HUD Hunger " + (SettingsManager.hudHungerEnabled ? "enabled" : "disabled"))
-                                        .setStyle(Style.EMPTY.withColor(Formatting.GOLD))
-                                );
-                                SettingsManager.saveSettings();
-                                return 1;
-                            })
-                        )
                         .then(ClientCommandManager.literal("ammo")
                             .executes(context -> {
                                 SettingsManager.hudAmmoEnabled = !SettingsManager.hudAmmoEnabled;

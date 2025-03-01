@@ -1,0 +1,17 @@
+[
+	{
+		"modid": "hev_suit",
+		"name": "HEV Suit Voice System",
+		"description": "Adds the half life hev suit sound effects and more.",
+		"version": "${version}",
+		"mcversion": "1.12.2",
+		"url": "",
+		"updateUrl": "",
+		"authorList": ["loonietick"],
+		"credits": "",
+		"logoFile": "",
+		"screenshots": [],
+		"dependencies": []
+	}
+]
+ 

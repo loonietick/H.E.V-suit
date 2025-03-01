@@ -12,12 +12,9 @@ import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.FireballEntity;
-import net.minecraft.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import net.minecraft.util.math.Vec3d; // Add this import
-
-
+import net.minecraft.util.math.Vec3d;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +27,7 @@ import java.util.HashSet;
 public class EventManager {
     private static final Logger LOGGER = LogManager.getLogger("EventManager");
 
-    // Update durability tracking fields
+
     private static final List<Double> DURABILITY_THRESHOLDS = Arrays.asList(
         0.50, 0.35, 0.25, 0.10, 0.05
     );
@@ -39,11 +36,8 @@ public class EventManager {
     private static final Set<Integer> brokenArmor = new HashSet<>();
     private static final Map<Integer, Double> lastKnownDurability = new HashMap<>(); // Add this line
 
-    // Armor tracking
+ 
     private static int lastArmorValue = -1;
-    
-
-    // Original tracking fields
     private static float lastHealth = 20.0f;
     private static boolean wasPoisoned = false;
     private static long lastMorphineTime = 0;
@@ -55,13 +49,15 @@ public class EventManager {
     private static long lastMajorLacerationTime = 0;
     private static long lastMinorLacerationTime = 0;
 
-    private static final long HEAT_DAMAGE_COOLDOWN = 5000;
+    private static final long HEAT_DAMAGE_COOLDOWN = 8000;
     private static final long GENERAL_COOLDOWN = 5000;
+    private static final long BLOOD_LOSS_COOLDOWN = 8000;
     private static final long FRACTURE_COOLDOWN = 5000;
     private static final long LACERATION_COOLDOWN = 5000;
     private static final long MORPHINE_COOLDOWN = 1800000;
 
     public static void registerEventListeners() {
+       
         ClientTickEvents.END_CLIENT_TICK.register(EventManager::onClientTick);
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> resetTracking());
     }
@@ -90,16 +86,13 @@ public class EventManager {
             PlayerEntity player = client.player;
             if (player == null) return;
 
-            // Add armor durability check
+
             checkArmorDurability(player);
 
-            // Armor percentage system with durability consideration
             int currentArmor = player.getArmor();
             if (currentArmor != lastArmorValue) {
-                // Only play sound when armor increases
                 if (currentArmor > lastArmorValue) {
-                    double durabilityMultiplier = calculateArmorDurabilityMultiplier(player);
-                    int adjustedPercent = (int)(currentArmor * durabilityMultiplier * 5);
+                    int adjustedPercent = HudManager.getScaledArmorValue(player);
 
                     if (adjustedPercent > 0) {
                         List<String> components = new ArrayList<>();
@@ -109,10 +102,8 @@ public class EventManager {
                             components.add(SettingsManager.useBlackMesaSFX ? "bm_100" : "100");
                         } else {
                             components.add(SettingsManager.useBlackMesaSFX ? "bm_power" : "power");
-                            // Get split percentage announcements
-                            List<Integer> percentages = getSplitPercentageAnnouncement(adjustedPercent);
-                            for (int percent : percentages) {
-                                components.add(SettingsManager.useBlackMesaSFX ? "bm_" + percent : String.valueOf(percent));
+                            for (int part : getArmorAnnouncement(adjustedPercent)) {
+                                components.add(SettingsManager.useBlackMesaSFX ? "bm_" + part : String.valueOf(part));
                             }
                         }
                         components.add(SettingsManager.useBlackMesaSFX ? "bm_percent" : "percent");
@@ -130,54 +121,29 @@ public class EventManager {
         }
     }
 
-  private static int findClosestPercentage(int value) {
-        // Direct mapping for values that have their own sound files
-        if (value >= 95) return 100;
-        if (value >= 85) return 90;
-        if (value >= 75) return 80;
-        if (value >= 65) return 70;
-        if (value >= 55) return 60;
-        if (value >= 45) return 50;
-        if (value >= 35) return 40;
-        if (value >= 25) return 25; // Keep original 25
-        if (value >= 15) return 15; // Keep original 15
-        if (value >= 8) return 10;
-        return 5;
-    }
-
-    private static List<Integer> getSplitPercentageAnnouncement(int value) {
-        // Handle special cases that should be split
-        switch (value) {
+    private static List<Integer> getArmorAnnouncement(int value) {
+        if (value == 100) {
+            // Exactly 100 remains as-is
+            return Collections.singletonList(100);
+        }
+        // Round to closest multiple of 5
+        int remainder = value % 5;
+        int rounded = (remainder >= 3) ? (value + (5 - remainder)) : (value - remainder);
+        // Handle "missing" multiples like 95, 85, etc.
+        switch (rounded) {
+            case 95: return Arrays.asList(90, 5);
+            case 85: return Arrays.asList(80, 5);
+            case 75: return Arrays.asList(70, 5);
+            case 65: return Arrays.asList(60, 5);
+            case 55: return Arrays.asList(50, 5);
             case 45: return Arrays.asList(40, 5);
             case 35: return Arrays.asList(30, 5);
-            case 55: return Arrays.asList(50, 5);
-            case 65: return Arrays.asList(60, 5);
-            case 75: return Arrays.asList(70, 5);
-            case 85: return Arrays.asList(80, 5);
-            case 95: return Arrays.asList(90, 5);
-            default: return Collections.singletonList(findClosestPercentage(value));
+            default:
+                // If it's 25, 15, or 5, we have direct files; otherwise it's fine as a single segment
+                return Collections.singletonList(rounded);
         }
     }
 
-    // Move calculateArmorDurabilityMultiplier from HudManager to here to avoid duplication
-    private static double calculateArmorDurabilityMultiplier(PlayerEntity player) {
-        double totalDurability = 0;
-        int armorPieces = 0;
-
-        for (ItemStack armorPiece : player.getArmorItems()) {
-            if (!armorPiece.isEmpty()) {
-                int maxDurability = armorPiece.getMaxDamage();
-                if (maxDurability > 0) {
-                    int currentDamage = armorPiece.getDamage();
-                    double pieceDurability = (maxDurability - currentDamage) / (double)maxDurability;
-                    totalDurability += pieceDurability;
-                    armorPieces++;
-                }
-            }
-        }
-
-        return armorPieces > 0 ? totalDurability / armorPieces : 1.0;
-    }
     private static void handleHealthSystem(MinecraftClient client, PlayerEntity player) {
         float currentHealth = player.getHealth();
         long currentTime = System.currentTimeMillis();
@@ -282,7 +248,7 @@ public class EventManager {
 
         Entity damageEntity = damageSource.getSource();
         if (damageEntity instanceof ArrowEntity || damageEntity instanceof FireballEntity) {
-            if (SettingsManager.bloodLossEnabled && currentTime - lastBloodLossTime >= GENERAL_COOLDOWN) {
+            if (SettingsManager.bloodLossEnabled && currentTime - lastBloodLossTime >= BLOOD_LOSS_COOLDOWN) {
                 SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_blood_loss" : "blood_loss");
                 lastBloodLossTime = currentTime;
             }
@@ -343,21 +309,6 @@ public class EventManager {
             slot++;
         }
         
-        // Check for armor pieces that disappeared (broken)
-        for (Integer equippedSlot : equippedArmorSlots) {
-            if (!currentEquipped.contains(equippedSlot) && !brokenArmor.contains(equippedSlot)) {
-                // Only play armor_gone if the last known durability was very low
-                Double lastDurability = lastKnownDurability.get(equippedSlot);
-                if (lastDurability != null && lastDurability <= 0.05) {
-                    // just print in console that we think an armor is gone, im not gonna make it queue a sound, its buggy atm
-                    LOGGER.info("Armor piece in slot " + equippedSlot + " is broken");
-                    brokenArmor.add(equippedSlot);
-                }
-            }
-        }
-        
-        // Update equipped slots
-        equippedArmorSlots.clear();
-        equippedArmorSlots.addAll(currentEquipped);
+
     }
 }

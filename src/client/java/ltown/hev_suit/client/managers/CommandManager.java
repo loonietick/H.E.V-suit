@@ -175,7 +175,7 @@ public class CommandManager {
                         .executes(context -> {
                             SettingsManager.morphineEnabled = !SettingsManager.morphineEnabled;
                             context.getSource().sendFeedback(
-                                Text.literal("Morphine usage " + (SettingsManager.morphineEnabled ? "enabled" : "disabled"))
+                                Text.literal("Morphine sound effects " + (SettingsManager.morphineEnabled ? "enabled" : "disabled"))
                                 .setStyle(Style.EMPTY.withColor(Formatting.GOLD))
                             );
                             SettingsManager.saveSettings();
@@ -187,7 +187,7 @@ public class CommandManager {
                         .executes(context -> {
                             SettingsManager.armorDurabilityEnabled = !SettingsManager.armorDurabilityEnabled;
                             context.getSource().sendFeedback(
-                                Text.literal("Armor durability monitoring " + 
+                                Text.literal("Armor durability sound effects " + 
                                     (SettingsManager.armorDurabilityEnabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(Formatting.GOLD))
                             );
@@ -219,12 +219,12 @@ public class CommandManager {
                             // Inform about resourcepack settings as before
                             if (SettingsManager.hudEnabled) {
                                 context.getSource().sendFeedback(
-                                    Text.literal("Notice: Please go into the Minecraft settings to enable the resourcepack that hides the hearts and hunger icons.")
+                                    Text.literal("Notice: If you want to hide the vanilla minecraft hearts and armor icons make sure you enable the resourcepack that does so.")
                                         .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                 );
                             } else {
                                 context.getSource().sendFeedback(
-                                    Text.literal("Notice: Please go into the Minecraft settings to disable the resourcepack that hides the hearts and hunger icons.")
+                                    Text.literal("Notice: Please go into the Minecraft settings to disable the resourcepack that hides the hearts and armor icons.")
                                         .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                 );
                             }
@@ -254,17 +254,6 @@ public class CommandManager {
                                 return 1;
                             })
                         )
-                        .then(ClientCommandManager.literal("damageindicators")
-                            .executes(context -> {
-                                SettingsManager.damageIndicatorsEnabled = !SettingsManager.damageIndicatorsEnabled;
-                                context.getSource().sendFeedback(
-                                    Text.literal("Damage indicators " + (SettingsManager.damageIndicatorsEnabled ? "enabled" : "disabled"))
-                                        .setStyle(Style.EMPTY.withColor(Formatting.GOLD))
-                                );
-                                SettingsManager.saveSettings();
-                                return 1;
-                            })
-                        )
                         .then(ClientCommandManager.literal("ammo")
                             .executes(context -> {
                                 SettingsManager.hudAmmoEnabled = !SettingsManager.hudAmmoEnabled;
@@ -276,13 +265,35 @@ public class CommandManager {
                                 return 1;
                             })
                         )
+                        .then(ClientCommandManager.literal("damageindicators")
+                            .executes(context -> {
+                                SettingsManager.damageIndicatorsEnabled = !SettingsManager.damageIndicatorsEnabled;
+                                context.getSource().sendFeedback(
+                                    Text.literal("Damage indicators " + (SettingsManager.damageIndicatorsEnabled ? "enabled" : "disabled"))
+                                        .setStyle(Style.EMPTY.withColor(Formatting.GOLD))
+                                );
+                                SettingsManager.saveSettings();
+                                return 1;
+                            })
+                        )
+                        .then(ClientCommandManager.literal("mobindicators")
+                            .executes(context -> {
+                                SettingsManager.threatIndicatorsEnabled = !SettingsManager.threatIndicatorsEnabled;
+                                context.getSource().sendFeedback(
+                                    Text.literal("Hostile MOB indicators " + (SettingsManager.threatIndicatorsEnabled ? "enabled" : "disabled"))
+                                        .setStyle(Style.EMPTY.withColor(Formatting.GOLD))
+                                );
+                                SettingsManager.saveSettings();
+                                return 1;
+                            })
+                        )
                     )
                     // Voice system toggle (HEV suit)
                     .executes(context -> {
                         SettingsManager.hevSuitEnabled = !SettingsManager.hevSuitEnabled;
-                        String status = SettingsManager.hevSuitEnabled ? "Activated" : "Deactivated";
+                        String status = SettingsManager.hevSuitEnabled ? "Enabled" : "Disabled";
                         context.getSource().sendFeedback(
-                            Text.literal("Voice System " + status)
+                            Text.literal("The HEV Suit is now: " + status)
                                 .setStyle(Style.EMPTY.withColor(Formatting.GOLD))
                         );
                         SettingsManager.saveSettings();
@@ -339,8 +350,8 @@ public class CommandManager {
                                 SettingsManager.morphineEnabled = false;
                                 SettingsManager.hevSuitEnabled = false;
                                 SettingsManager.healthCritical2Enabled = false;
-                                SettingsManager.armorDurabilityEnabled = true;  // Enable for PVP mode
-                                context.getSource().sendFeedback(Text.literal("PVP mode activated: Only HUD and health alerts enabled.").setStyle(Style.EMPTY.withColor(Formatting.GOLD)));
+                                SettingsManager.armorDurabilityEnabled = true; 
+                                context.getSource().sendFeedback(Text.literal("PvP mode has been enabled, All hev suit features besides the hud, health alerts and armor durability tracking are disabled.").setStyle(Style.EMPTY.withColor(Formatting.GOLD)));
                             } else {
                                 SettingsManager.healthAlertsEnabled = true;
                                 SettingsManager.hudEnabled = true;
@@ -353,6 +364,39 @@ public class CommandManager {
                                 SettingsManager.hevSuitEnabled = true;
                                 SettingsManager.healthCritical2Enabled = true;
                                 context.getSource().sendFeedback(Text.literal("PVP mode deactivated: All features re-enabled.").setStyle(Style.EMPTY.withColor(Formatting.GOLD)));
+                            }
+                            SettingsManager.saveSettings();
+                            } else {
+                            SettingsManager.pvpModeEnabled = !SettingsManager.pvpModeEnabled;
+                            if (SettingsManager.pvpModeEnabled) {
+                                SettingsManager.fracturesEnabled = false;
+                                SettingsManager.bloodLossEnabled = false;
+                                SettingsManager.chemicalDamageEnabled = false;
+                                SettingsManager.morphineEnabled = false;
+                                SettingsManager.healthCritical2Enabled = false;
+                                SettingsManager.nearDeathEnabled = false;
+                                SettingsManager.hevSuitEnabled = false;
+                                SettingsManager.healthAlertsEnabled = true;
+                                SettingsManager.hudEnabled = true;
+                                SettingsManager.armorDurabilityEnabled = true;
+                                context.getSource().sendFeedback(
+                                    Text.literal("PvP mode has been enabled, All hev suit features besides the hud and health alerts are disabled.")
+                                        .setStyle(Style.EMPTY.withColor(Formatting.GOLD))
+                                );
+                            } else {
+                                SettingsManager.fracturesEnabled = true;
+                                SettingsManager.bloodLossEnabled = true;
+                                SettingsManager.chemicalDamageEnabled = true;
+                                SettingsManager.morphineEnabled = true;
+                                SettingsManager.healthCritical2Enabled = true;
+                                SettingsManager.nearDeathEnabled = true;
+                                SettingsManager.hevSuitEnabled = true;
+                                SettingsManager.healthAlertsEnabled = true;
+                                SettingsManager.hudEnabled = true;
+                                context.getSource().sendFeedback(
+                                    Text.literal("PVP mode deactivated: All features re-enabled.")
+                                        .setStyle(Style.EMPTY.withColor(Formatting.GOLD))
+                                );
                             }
                             SettingsManager.saveSettings();
                         }

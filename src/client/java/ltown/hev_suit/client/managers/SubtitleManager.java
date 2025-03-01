@@ -20,7 +20,7 @@ public class SubtitleManager {
         CAPTIONS.put("blood_loss", "Blood Loss Detected");
         CAPTIONS.put("health_critical", "Vital Signs Critical");
         CAPTIONS.put("health_critical2", "Vital Signs are Dropping");
-        CAPTIONS.put("morphine_administered", "Morphine Administered");
+        CAPTIONS.put("morphine_administered", "Automatic Medical Systems Engaged. Morphine Administered.");
         CAPTIONS.put("seek_medical", "Seek Medical Attention");
         CAPTIONS.put("near_death", "Emergency! User Death Imminent");
         CAPTIONS.put("heat_damage", "Extreme Heat Damage Detected");
@@ -38,7 +38,7 @@ public class SubtitleManager {
         CAPTIONS.put("bm_blood_loss", "Blood Loss Detected");
         CAPTIONS.put("bm_health_critical", "Vital Signs Critical");
         CAPTIONS.put("bm_health_critical2", "Vital Signs are Dropping");
-        CAPTIONS.put("bm_morphine_system", "Morphine Administered");
+        CAPTIONS.put("bm_morphine_system", "Automatic Medical Systems Engaged. Morphine Administered.");
         CAPTIONS.put("bm_seek_medical", "Seek Medical Attention");
         CAPTIONS.put("bm_near_death", "Emergency! User Death Imminent");
         CAPTIONS.put("bm_chemical", "Warning: Hazardous Chemical Detected");

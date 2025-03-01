@@ -36,6 +36,7 @@ public class SettingsManager {
     public static boolean hudHealthEnabled = true;
     public static boolean hudArmorEnabled = true;
     public static boolean hudAmmoEnabled = true;
+    public static boolean threatIndicatorsEnabled = false;
 
     public static void loadSettings() {
         if (CONFIG_FILE.exists()) {
@@ -61,6 +62,7 @@ public class SettingsManager {
                 hudHealthEnabled = getOrDefault(json, "hudHealthEnabled", true);
                 hudArmorEnabled = getOrDefault(json, "hudArmorEnabled", true);
                 hudAmmoEnabled = getOrDefault(json, "hudAmmoEnabled", true);
+                threatIndicatorsEnabled = getOrDefault(json, "threatIndicatorsEnabled", false);
                 LOGGER.debug("Settings loaded: useBlackMesaSFX = " + useBlackMesaSFX);
             } catch (IOException e) {
                 LOGGER.error("Failed to load settings", e);
@@ -94,6 +96,7 @@ public class SettingsManager {
         json.addProperty("hudHealthEnabled", hudHealthEnabled);
         json.addProperty("hudArmorEnabled", hudArmorEnabled);
         json.addProperty("hudAmmoEnabled", hudAmmoEnabled);
+        json.addProperty("threatIndicatorsEnabled", threatIndicatorsEnabled);
 
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(json, writer);

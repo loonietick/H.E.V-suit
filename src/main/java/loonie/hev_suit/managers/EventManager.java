@@ -17,7 +17,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.PotionEvent;
 import java.util.*;
 
 public class EventManager {
@@ -33,7 +34,6 @@ public class EventManager {
 
     private static int lastArmorValue = -1;
     private static float lastHealth = 20.0f;
-    private static boolean wasPoisoned = false;
     private static long lastMorphineTime = 0;
     private static long lastBloodLossTime = 0;
     private static long lastFractureTime = 0;
@@ -119,15 +119,50 @@ public class EventManager {
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         resetTracking();
     }
-
+    @SubscribeEvent
+    public void onLivingHurt(LivingHurtEvent event) {
+        if (event.getEntity() instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) event.getEntity();
+            Minecraft client = Minecraft.getMinecraft();
+            if (client.player != null && client.player.equals(player)) {
+                handleDamage(client, event.getAmount(), event.getSource());
+            }
+        }
+    }
+    @SubscribeEvent
+    public void onPotionAdded(PotionEvent.PotionAddedEvent event) {
+        if (event.getEntity() instanceof EntityPlayer && event.getPotionEffect().getPotion() == MobEffects.POISON) {
+            EntityPlayer player = (EntityPlayer) event.getEntity();
+            Minecraft client = Minecraft.getMinecraft();
+            if (client.player != null && client.player.equals(player) && SettingsManager.chemicalDamageEnabled) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastGeneralAlertTime >= GENERAL_COOLDOWN) {
+                    String prefix = SettingsManager.useBlackMesaSFX ? "bm_" : "";
+                    SoundManager.queueSound(prefix + "chemical");
+                    lastGeneralAlertTime = currentTime;
+                }
+         }
+        }
+    }
     private static void handleDamage(Minecraft client, float damage, DamageSource damageSource) {
         if (damageSource == null) return;
         long currentTime = System.currentTimeMillis();
         String prefix = SettingsManager.useBlackMesaSFX ? "bm_" : "";
-
-        // Update damage checks for 1.12.2
-        if (damageSource == DamageSource.FALL && SettingsManager.fracturesEnabled && 
-            currentTime - lastFractureTime >= FRACTURE_COOLDOWN) {
+    
+        Entity immediateSource = damageSource.getImmediateSource();
+        Entity trueSource = damageSource.getTrueSource();
+    
+        // Blood loss check (projectiles)
+        if (immediateSource instanceof EntityArrow || immediateSource instanceof EntityFireball) {
+            if (SettingsManager.bloodLossEnabled && currentTime - lastBloodLossTime >= BLOOD_LOSS_COOLDOWN) {
+                SoundManager.queueSound(prefix + "blood_loss");
+                lastBloodLossTime = currentTime;
+            }
+        }
+    
+        // Fractures (fall damage)
+        if (damageSource == DamageSource.FALL && SettingsManager.fracturesEnabled) {
+            if (currentTime - lastFractureTime >= FRACTURE_COOLDOWN) {
                 if (damage >= 6) {
                     SoundManager.queueSound(prefix + "major_fracture");
                     lastFractureTime = currentTime;
@@ -135,43 +170,28 @@ public class EventManager {
                     SoundManager.queueSound(prefix + "minor_fracture");
                     lastFractureTime = currentTime;
                 }
-        }
-
-        if (SettingsManager.chemicalDamageEnabled && 
-            currentTime - lastGeneralAlertTime >= GENERAL_COOLDOWN) {
-            if (client.player.isPotionActive(MobEffects.POISON) && !wasPoisoned) {
-                SoundManager.queueSound(prefix + "chemical");
-                wasPoisoned = true;
-                lastGeneralAlertTime = currentTime;
-            } else if (!client.player.isPotionActive(MobEffects.POISON)) {
-                wasPoisoned = false;
             }
         }
-
-        if (SettingsManager.shockDamageEnabled && damageSource == DamageSource.LIGHTNING_BOLT && 
-            currentTime - lastShockDamageTime >= GENERAL_COOLDOWN) {
-                SoundManager.queueSound(prefix + "shock_damage");
-                lastShockDamageTime = currentTime;
-        }
-
-        Entity damageEntity = damageSource.getTrueSource();
-        if (damageEntity instanceof EntityArrow || damageEntity instanceof EntityFireball) {
-            if (SettingsManager.bloodLossEnabled && currentTime - lastBloodLossTime >= BLOOD_LOSS_COOLDOWN) {
-                SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_blood_loss" : "blood_loss");
-                lastBloodLossTime = currentTime;
-            }
-        }
-
-        if (damageEntity instanceof EntityMob && !(damageEntity instanceof EntityCreeper)) {
-            if (SettingsManager.fracturesEnabled) {
+    
+        // Lacerations (melee mob attacks)
+        if (trueSource instanceof EntityMob && !(trueSource instanceof EntityCreeper)) {
+            // Check if it's a direct melee attack (source and immediate source are same)
+            if (trueSource == immediateSource && SettingsManager.fracturesEnabled) {
                 if (damage >= 4 && currentTime - lastMajorLacerationTime >= LACERATION_COOLDOWN) {
                     SoundManager.queueSound(prefix + "major_laceration");
                     lastMajorLacerationTime = currentTime;
-                } else if (damage < 3 && currentTime - lastMinorLacerationTime >= LACERATION_COOLDOWN) {
+                } else if (damage < 4 && currentTime - lastMinorLacerationTime >= LACERATION_COOLDOWN) {
                     SoundManager.queueSound(prefix + "minor_laceration");
                     lastMinorLacerationTime = currentTime;
                 }
             }
+        }
+    
+        // Shock damage
+        if (SettingsManager.shockDamageEnabled && damageSource == DamageSource.LIGHTNING_BOLT && 
+            currentTime - lastShockDamageTime >= GENERAL_COOLDOWN) {
+                SoundManager.queueSound(prefix + "shock_damage");
+                lastShockDamageTime = currentTime;
         }
     }
 
@@ -243,7 +263,6 @@ public class EventManager {
 
         if (currentHealth <= 0) {
             SoundManager.clearSoundQueue();
-            wasPoisoned = false;
             return;
         }
 
@@ -251,11 +270,6 @@ public class EventManager {
             currentTime - lastHeatDamageTime >= HEAT_DAMAGE_COOLDOWN) {
             SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_heat_damage" : "heat_damage");
             lastHeatDamageTime = currentTime;
-        }
-
-        if (currentHealth < lastHealth) {
-            float damage = lastHealth - currentHealth;
-            handleDamage(client, damage, player.getLastDamageSource());
         }
 
         if (SettingsManager.healthAlertsEnabled) {

@@ -24,11 +24,11 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
 public class HudManager {
 
-    private static final int AMBER_COLOR = 0xFFFFAE00;
-    private static final int DARK_AMBER = 0xFF8B5E00;
-    private static final int RED_COLOR = 0xFFFF0000;
+    // These colors will remain fixed
     private static final int DAMAGE_INDICATOR_COLOR = 0x77FF0000;
-    private static final int THREAT_INDICATOR_COLOR = 0x77FFA500; // Orange with transparency
+    private static final int THREAT_INDICATOR_COLOR = 0x77FFA500; 
+    private static final int RED_COLOR = 0xFFFF0000;
+    
     private static final int INDICATOR_SIZE = 80; // width
     private static final int INDICATOR_MARGIN = 60; // margin
     private static final int INDICATOR_LENGTH = 15; // triangle width
@@ -182,16 +182,16 @@ public class HudManager {
         int displayColor;
         if (label.equals("HEALTH")) {
             // Start transitioning to red at 85% health (17 hearts)
-            displayColor = getTransitionColor(value, 85, AMBER_COLOR, RED_COLOR);
+            displayColor = getTransitionColor(value, 85, SettingsManager.hudPrimaryColor, RED_COLOR);
         } else if (label.equals("ARMOR")) {
             // Start transitioning to red at 50% armor durability
-            displayColor = getTransitionColor(value, 50, AMBER_COLOR, RED_COLOR);
+            displayColor = getTransitionColor(value, 50, SettingsManager.hudPrimaryColor, RED_COLOR);
         } else {
-            displayColor = AMBER_COLOR;
+            displayColor = SettingsManager.hudPrimaryColor;
         }
 
         graphics.drawTextWithShadow(textRenderer, String.format("%d", value), x, y, displayColor);
-        graphics.drawTextWithShadow(textRenderer, label, x, y - 10, DARK_AMBER);
+        graphics.drawTextWithShadow(textRenderer, label, x, y - 10, SettingsManager.hudSecondaryColor);
     }
 
     private static int getTransitionColor(int value, int threshold, int startColor, int endColor) {
@@ -219,8 +219,8 @@ public class HudManager {
 
     private static void drawAmmoDisplay(DrawContext graphics, TextRenderer textRenderer, int x, int y, int currentAmmo, int totalAmmo) {
         graphics.fill(x - 2, y - 2, x + 90, y + 12, 0x80000000);
-        graphics.drawTextWithShadow(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, AMBER_COLOR);
-        graphics.drawTextWithShadow(textRenderer, "AMMO", x, y - 10, DARK_AMBER);
+        graphics.drawTextWithShadow(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, SettingsManager.hudPrimaryColor);
+        graphics.drawTextWithShadow(textRenderer, "AMMO", x, y - 10, SettingsManager.hudSecondaryColor);
     }
 
     private static int calculateTotalAmmo(PlayerEntity player, Item item) {
@@ -258,9 +258,8 @@ public class HudManager {
         int height = client.getWindow().getScaledHeight();
         int centerX = width / 2;
         int centerY = height / 2;
-        // Removed unused variable: PlayerEntity player = client.player;
 
-        // Update and remove expired indicators
+
         activeIndicators.removeIf(indicator -> {
             indicator.timeLeft -= 1f/20f; // Assuming 20 TPS
             return indicator.timeLeft <= 0;
@@ -270,19 +269,19 @@ public class HudManager {
             float alpha = Math.min(1.0f, indicator.timeLeft / (INDICATOR_DURATION * 0.5f));
             int color = (((int)(alpha * 0x77)) << 24) | (DAMAGE_INDICATOR_COLOR & 0x00FFFFFF);
 
-            // Calculate indicator position based on damage direction
+   
             Vec3d dir = indicator.direction.normalize();
 
-            // Determine dominant direction based on player's view
+
             String dominantDirection = getDominantDirection(dir);
 
-            // Draw triangle based on dominant direction
+
             int[] xPoints = new int[3];
             int[] yPoints = new int[3];
 
             switch (dominantDirection) {
                 case "FRONT":
-                    // Inverted: apex at crosshair; base shifted upward
+   
                     xPoints[0] = centerX;
                     yPoints[0] = centerY - INDICATOR_MARGIN; // apex at center edge
                     xPoints[1] = centerX - INDICATOR_SIZE/2;
@@ -316,7 +315,7 @@ public class HudManager {
                     break;
             }
 
-            // Draw filled triangle
+   
             fillTriangle(graphics, xPoints, yPoints, color);
         }
     }
@@ -326,7 +325,7 @@ public class HudManager {
         if (player == null) return;
 
         Vec3d playerPos = player.getPos();
-        // Create a bounding box using the new horizontal radius and y buffer
+
         Box detectionBox = new Box(
             playerPos.x - THREAT_HORIZONTAL_RADIUS,
             playerPos.y - THREAT_Y_BUFFER,
@@ -343,7 +342,6 @@ public class HudManager {
             entity -> (entity instanceof HostileEntity || entity instanceof Monster) &&
                       !entity.isRemoved() &&
                       entity.isAlive() &&
-                      // Only add if horizontal distance and y difference are within the allowed range
                       Math.sqrt(Math.pow(entity.getX() - playerPos.x, 2) + Math.pow(entity.getZ() - playerPos.z, 2)) <= THREAT_HORIZONTAL_RADIUS &&
                       Math.abs(entity.getY() - playerPos.y) <= THREAT_Y_BUFFER
         );
@@ -374,8 +372,7 @@ public class HudManager {
             Map.Entry<Integer, ThreatIndicator> entry = it.next();
             ThreatIndicator indicator = entry.getValue();
             // Remove if the entity is outside the allowed horizontal or y-range
-            double horizontalDistance = Math.sqrt(Math.pow(indicator.entity.getX() - playerPos.x, 2) +
-                                                   Math.pow(indicator.entity.getZ() - playerPos.z, 2));
+            double horizontalDistance = Math.sqrt(Math.pow(indicator.entity.getX() - playerPos.x, 2) + Math.pow(indicator.entity.getZ() - playerPos.z, 2));
             double yDiff = Math.abs(indicator.entity.getY() - playerPos.y);
             if (!indicator.isActive || indicator.entity.isRemoved() || isEntityDead(indicator.entity) ||
                 horizontalDistance > THREAT_HORIZONTAL_RADIUS || yDiff > THREAT_Y_BUFFER) {

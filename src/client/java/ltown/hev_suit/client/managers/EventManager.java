@@ -230,11 +230,11 @@ public class EventManager {
 
         // Chemical damage with cooldown
         if (SettingsManager.chemicalDamageEnabled && currentTime - lastGeneralAlertTime >= GENERAL_COOLDOWN) {
-            if (client.player.hasStatusEffect(StatusEffects.POISON) && !wasPoisoned) {
+            if ((client.player.hasStatusEffect(StatusEffects.POISON) || client.player.hasStatusEffect(StatusEffects.WITHER)) && !wasPoisoned) {
                 SoundManager.queueSound(prefix + "chemical");
                 wasPoisoned = true;
                 lastGeneralAlertTime = currentTime;
-            } else if (!client.player.hasStatusEffect(StatusEffects.POISON)) {
+            } else if (!client.player.hasStatusEffect(StatusEffects.POISON) && !client.player.hasStatusEffect(StatusEffects.WITHER)) {
                 wasPoisoned = false;
             }
         }

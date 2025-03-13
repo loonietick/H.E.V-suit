@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "id": "hev_suit",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "name": "HEV Suit Sound System",
-  "description": "A mod that lets you hear hev suit sounds",
+  "description": "Adds reactive sound effects from Half-Life and Black Mesa to Minecraft. also adds a neat hud.",
   "authors": ["ltown1"],
   "contact": {},
   "license": "MIT",

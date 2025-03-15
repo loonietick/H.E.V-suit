@@ -3,7 +3,6 @@ package ltown.hev_suit.client.managers;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.text.Style;
-import net.minecraft.util.Formatting;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,18 +71,17 @@ public class SubtitleManager {
             String powerLevel = SoundManager.getPowerLevelFromQueue();
             if (powerLevel != null) {
                 Text message = Text.literal("HEV Suit: Power: " + powerLevel + "%")
-                    .setStyle(Style.EMPTY.withColor(Formatting.GOLD));
+                    .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF));
                 client.player.sendMessage(message, false);
             }
             return;
         }
 
-        // Only show regular captions for non-power-related sounds
         if (!isPowerNumber(soundName) && !soundName.contains("percent")) {
             String caption = CAPTIONS.get(soundName);
             if (caption != null) {
                 Text message = Text.literal("HEV Suit: " + caption)
-                    .setStyle(Style.EMPTY.withColor(Formatting.GOLD));
+                    .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF));
                 client.player.sendMessage(message, false);
             }
         }

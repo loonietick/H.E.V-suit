@@ -39,7 +39,7 @@ public class SettingsManager {
     public static boolean threatIndicatorsEnabled = false;
     
     public static int hudPrimaryColor = 0xFFFFAE00; 
-    public static int hudSecondaryColor = 0xFF8B5E00; 
+    public static int hudSecondaryColor = 0xFF8B5E00;
 
     public static void loadSettings() {
         if (CONFIG_FILE.exists()) {

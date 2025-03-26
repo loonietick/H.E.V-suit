@@ -217,13 +217,21 @@ public class HudManager {
         return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
-    private static void drawAmmoDisplay(DrawContext graphics, TextRenderer textRenderer, int x, int y, int currentAmmo, int totalAmmo) {
-        graphics.fill(x - 2, y - 2, x + 90, y + 12, 0x80000000);
-        graphics.drawTextWithShadow(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, SettingsManager.hudPrimaryColor);
-        graphics.drawTextWithShadow(textRenderer, "AMMO", x, y - 10, SettingsManager.hudSecondaryColor);
-    }
-
     private static int calculateTotalAmmo(PlayerEntity player, Item item) {
+        // Special handling for bows and crossbows - count arrows instead
+        if (item instanceof net.minecraft.item.BowItem || 
+            item instanceof net.minecraft.item.CrossbowItem) {
+            int total = 0;
+            for (int i = 0; i < player.getInventory().size(); i++) {
+                ItemStack stack = player.getInventory().getStack(i);
+                if (stack.getItem() instanceof net.minecraft.item.ArrowItem) {
+                    total += stack.getCount();
+                }
+            }
+            return total;
+        }
+        
+        // Default behavior for other items
         int total = 0;
         for (int i = 0; i < player.getInventory().size(); i++) {
             ItemStack stack = player.getInventory().getStack(i);
@@ -232,6 +240,21 @@ public class HudManager {
             }
         }
         return total;
+    }
+
+    private static void drawAmmoDisplay(DrawContext graphics, TextRenderer textRenderer, int x, int y, int currentAmmo, int totalAmmo) {
+        graphics.fill(x - 2, y - 2, x + 90, y + 12, 0x80000000);
+        
+        // For bows and crossbows, show only total arrows
+        if (MinecraftClient.getInstance().player != null && 
+            (MinecraftClient.getInstance().player.getMainHandStack().getItem() instanceof net.minecraft.item.BowItem ||
+             MinecraftClient.getInstance().player.getMainHandStack().getItem() instanceof net.minecraft.item.CrossbowItem)) {
+            graphics.drawTextWithShadow(textRenderer, String.format("%d", totalAmmo), x, y, SettingsManager.hudPrimaryColor);
+        } else {
+            graphics.drawTextWithShadow(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, SettingsManager.hudPrimaryColor);
+        }
+        
+        graphics.drawTextWithShadow(textRenderer, "AMMO", x, y - 10, SettingsManager.hudSecondaryColor);
     }
 
     private static double calculateArmorDurabilityMultiplier(PlayerEntity player) {

@@ -17,7 +17,7 @@ public class SubtitleManager {
         CAPTIONS.put("major_fracture", "Major Fracture Detected");
         CAPTIONS.put("minor_fracture", "Minor Fracture Detected");
         CAPTIONS.put("blood_loss", "Blood Loss Detected");
-        CAPTIONS.put("health_critical", "Vital Signs Critical");
+        CAPTIONS.put("health_critical", "Warning: Vital Signs Critical");
         CAPTIONS.put("health_critical2", "Vital Signs are Dropping");
         CAPTIONS.put("morphine_administered", "Automatic Medical Systems Engaged. Morphine Administered.");
         CAPTIONS.put("seek_medical", "Seek Medical Attention");
@@ -35,7 +35,7 @@ public class SubtitleManager {
         CAPTIONS.put("bm_major_fracture", "Major Fracture Detected");
         CAPTIONS.put("bm_minor_fracture", "Minor Fracture Detected");
         CAPTIONS.put("bm_blood_loss", "Blood Loss Detected");
-        CAPTIONS.put("bm_health_critical", "Vital Signs Critical");
+        CAPTIONS.put("bm_health_critical", "Warning: Vital Signs Critical");
         CAPTIONS.put("bm_health_critical2", "Vital Signs are Dropping");
         CAPTIONS.put("bm_morphine_system", "Automatic Medical Systems Engaged. Morphine Administered.");
         CAPTIONS.put("bm_seek_medical", "Seek Medical Attention");

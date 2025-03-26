@@ -50,6 +50,12 @@
   "percent": {
     "sounds": [{"name":  "hev_suit:percent"}]
   },
+  "ammunition_depleted": {
+    "sounds": [{"name": "hev_suit:ammunition_depleted"}]
+  },
+  "bm_ammunition_depleted": {
+    "sounds": [{"name": "hev_suit:bm_ammunition_depleted"}]
+  },
   "bm_major_laceration": {
     "sounds": [{"name": "hev_suit:bm_major_lacerations"}]
   },
@@ -98,6 +104,7 @@
   "hev_damage": {
     "sounds": [{"name": "hev_suit:hev_damage"}]
   },
+  
   "bm_5": {"sounds": [{"name": "hev_suit:bm_5"}]},
   "bm_10": {"sounds": [{"name": "hev_suit:bm_10"}]},
   "bm_15": {"sounds": [{"name": "hev_suit:bm_15"}]},

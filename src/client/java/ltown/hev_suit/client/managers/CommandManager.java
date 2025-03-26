@@ -320,6 +320,16 @@ public class CommandManager {
                                 return 1;
                             })
                         )
+                        .then(ClientCommandManager.literal("captions")
+                            .executes(context -> {
+                                SubtitleManager.toggleCaptions();
+                                context.getSource().sendFeedback(
+                                    Text.literal("Captions " + (SubtitleManager.areCaptionsEnabled() ? "enabled" : "disabled"))
+                                .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
+                            );
+                            return 1;
+                        })
+                    )
                         .then(ClientCommandManager.literal("all")
                             .executes(context -> {
                                 boolean newState = !SettingsManager.hudEnabled;

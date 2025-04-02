@@ -28,6 +28,10 @@ public class SubtitleManager {
         CAPTIONS.put("ammunition_depleted", "Ammunition Depleted");
         CAPTIONS.put("armor_gone", "Armor Compromised");
         CAPTIONS.put("hev_damage", "HEV Damage Sustained");
+        CAPTIONS.put("hev_general_fail", "HEV General Failure");
+        CAPTIONS.put("hev_logon", "Welcome to the HEV Mark IV Protective System, for use in hazardous environment conditions.");
+        CAPTIONS.put("weapon_pickup", "Weapon Acquired");
+        CAPTIONS.put("ammo_pickup", "Ammunition Acquired");
         
         // Black Mesa captions
         CAPTIONS.put("bm_major_laceration", "Major Lacerations Detected");

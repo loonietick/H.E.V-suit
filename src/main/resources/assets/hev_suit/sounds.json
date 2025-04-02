@@ -2,6 +2,18 @@
   "minor_laceration": {
     "sounds": [{"name": "hev_suit:minor_lacerations"}]
   },
+  "hev_logon": {
+    "sounds": [{"name": "hev_suit:hev_logon"}]
+  },
+  "weapon_pickup": {
+    "sounds": [{"name": "hev_suit:weapon_pickup"}]
+  },
+  "ammo_pickup": {
+    "sounds": [{"name": "hev_suit:ammo_pickup"}]
+  },
+  "hev_general_fail": {
+    "sounds": [{"name": "hev_suit:hev_general_fail"}]
+  },
   "major_laceration": {
     "sounds": [{"name": "hev_suit:major_lacerations"}]
   },

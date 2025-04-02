@@ -27,7 +27,8 @@ public class SoundManager {
                 "major_laceration", "minor_laceration", "major_fracture", "minor_fracture",
                 "blood_loss", "health_critical", "health_critical2", "morphine_administered",
                 "seek_medical", "near_death", "heat_damage", "shock_damage", "chemical",
-                "armor_gone", "hev_damage", "ammunition_depleted",
+                "armor_gone", "hev_damage", "ammunition_depleted", "hev_general_fail",
+                "hev_logon", "weapon_pickup", "ammo_pickup",
 
                 // Half-Life 1 hev suit armor percentage sfx
                 "power", "power_level_is", "percent",
@@ -37,7 +38,7 @@ public class SoundManager {
                 "bm_major_laceration", "bm_minor_laceration", "bm_major_fracture",
                 "bm_minor_fracture", "bm_blood_loss", "bm_health_critical", "bm_health_critical2",
                 "bm_morphine_system", "bm_seek_medical", "bm_near_death", "bm_chemical", 
-                "bm_ammunition_depleted",
+                "bm_ammunition_depleted", 
                 
                 // Black Mesa Armor percentage sfx
                 "bm_power", "bm_power_level_is", "bm_percent",

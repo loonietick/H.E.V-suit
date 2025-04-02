@@ -94,7 +94,7 @@ public class EventManager {
                 if (currentArmor > lastArmorValue) {
                     int adjustedPercent = HudManager.getScaledArmorValue(player);
 
-                    if (adjustedPercent > 0) {
+                    if (adjustedPercent > 0 && adjustedPercent <= 100) { 
                         List<String> components = new ArrayList<>();
 
                         if (adjustedPercent == 100) {
@@ -109,6 +109,8 @@ public class EventManager {
                         components.add(SettingsManager.useBlackMesaSFX ? "bm_percent" : "percent");
 
                         components.forEach(SoundManager::queueSound);
+                    } else if (adjustedPercent > 100) { 
+                        SoundManager.queueSound("hev_general_fail");
                     }
                 }
                 lastArmorValue = currentArmor;

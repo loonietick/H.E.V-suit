@@ -36,6 +36,8 @@ public class EventManager {
     private static final Set<Integer> equippedArmorSlots = new HashSet<>();  // Add this line
     private static final Set<Integer> brokenArmor = new HashSet<>();
     private static final Map<Integer, Double> lastKnownDurability = new HashMap<>(); // Add this line
+    private static String lastChestName = "";
+    private static String lastChestItemId = "";
 
  
     private static int lastArmorValue = -1;
@@ -50,7 +52,6 @@ public class EventManager {
     private static long lastMajorLacerationTime = 0;
     private static long lastMinorLacerationTime = 0;
     private static long lastHealthCritical2Time = 0;
-    private static net.minecraft.item.ItemStack lastChestItem = net.minecraft.item.ItemStack.EMPTY;
     private static final long HEALTH_CRITICAL2_COOLDOWN = 5000; // 5 seconds
     private static boolean lastChestHadElytra = false;
 
@@ -94,16 +95,24 @@ public class EventManager {
             // Elytra/chestplate equip detection
             net.minecraft.item.ItemStack currentChest = player.getEquippedStack(EquipmentSlot.CHEST);
             boolean currentChestIsElytra = !currentChest.isEmpty() && currentChest.getItem().getTranslationKey().toLowerCase().contains("elytra");
-            if (!net.minecraft.item.ItemStack.areEqual(currentChest, lastChestItem)) {
-                // Elytra equip (only on first equip)
-                if (currentChestIsElytra && !lastChestHadElytra) {
+            String currentChestName = currentChest.isEmpty() ? "" : currentChest.getName().getString();
+            String currentChestId = currentChest.isEmpty() ? "" : currentChest.getItem().getTranslationKey();
+            boolean chestNameChanged = !currentChestName.equals(lastChestName) || !currentChestId.equals(lastChestItemId);
+            if (chestNameChanged) {
+                // Elytra equip (only on first equip, and only if Black Mesa SFX is NOT enabled)
+                if (currentChestIsElytra && !lastChestHadElytra && !SettingsManager.useBlackMesaSFX) {
                     SoundManager.queueSound("powermove_on");
                 }
-                // HEV chestplate equip
-                if (!currentChest.isEmpty() && currentChest.getName().getString().toUpperCase().startsWith("HEV")) {
-                    SoundManager.queueSound("hev_logon");
+                // HEV chestplate equip (only on first equip, and only if name starts with HEV)
+                if (!currentChest.isEmpty() && currentChestName.toUpperCase().startsWith("HEV")) {
+                    if (SettingsManager.useBlackMesaSFX) {
+                        SoundManager.queueSound("bm_hev_logon");
+                    } else {
+                        SoundManager.queueSound("hev_logon");
+                    }
                 }
-                lastChestItem = currentChest.copy();
+                lastChestName = currentChestName;
+                lastChestItemId = currentChestId;
             }
             lastChestHadElytra = currentChestIsElytra;
 

@@ -38,7 +38,7 @@ public class SoundManager {
                 "bm_major_laceration", "bm_minor_laceration", "bm_major_fracture",
                 "bm_minor_fracture", "bm_blood_loss", "bm_health_critical", "bm_health_critical2",
                 "bm_morphine_system", "bm_seek_medical", "bm_near_death", "bm_chemical", 
-                "bm_ammunition_depleted", 
+                "bm_ammunition_depleted", "bm_hev_logon",
                 
                 // Black Mesa Armor percentage sfx
                 "bm_power", "bm_power_level_is", "bm_percent",

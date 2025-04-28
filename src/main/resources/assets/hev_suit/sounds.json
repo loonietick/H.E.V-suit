@@ -5,6 +5,9 @@
   "hev_logon": {
     "sounds": [{"name": "hev_suit:hev_logon"}]
   },
+  "bm_hev_logon": {
+    "sounds": [{"name": "hev_suit:bm_hev_logon"}]
+  },
   "weapon_pickup": {
     "sounds": [{"name": "hev_suit:weapon_pickup"}]
   },

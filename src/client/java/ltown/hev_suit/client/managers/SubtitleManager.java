@@ -47,7 +47,7 @@ public class SubtitleManager {
         CAPTIONS.put("bm_seek_medical", "Seek Medical Attention");
         CAPTIONS.put("bm_near_death", "Emergency! User Death Imminent");
         CAPTIONS.put("bm_chemical", "Warning: Hazardous Chemical Detected");
-
+        CAPTIONS.put("bm_hev_logon", "Welcome to the HEV Mark IV Protective System, for use in hazardous environment conditions.");
         // Power level related captions
         CAPTIONS.put("power", "Power");
         CAPTIONS.put("bm_power", "Power");

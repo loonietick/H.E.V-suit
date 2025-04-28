@@ -261,13 +261,16 @@ public class HudManager {
     private static double calculateArmorDurabilityMultiplier(PlayerEntity player) {
         double totalDurability = 0;
         int armorPieces = 0;
-        // Use getEquippedStack for each armor slot for 1.21.5+
         EquipmentSlot[] armorSlots = new EquipmentSlot[] {
             EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
         };
         for (EquipmentSlot armorSlot : armorSlots) {
             net.minecraft.item.ItemStack armorPiece = player.getEquippedStack(armorSlot);
             if (!armorPiece.isEmpty()) {
+                // Exclude elytras from durability calculation
+                if (armorSlot == EquipmentSlot.CHEST && armorPiece.getItem().getTranslationKey().toLowerCase().contains("elytra")) {
+                    continue;
+                }
                 int maxDurability = armorPiece.getMaxDamage();
                 if (maxDurability > 0) {
                     int currentDamage = armorPiece.getDamage();

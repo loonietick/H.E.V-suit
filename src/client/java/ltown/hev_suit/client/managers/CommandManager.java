@@ -192,11 +192,11 @@ public class CommandManager {
                                 return 1;
                             })
                         )
-                        .then(ClientCommandManager.literal("health_critical2")
+                        .then(ClientCommandManager.literal("vitalsignsdropping")
                             .executes(context -> {
                                 SettingsManager.healthCritical2Enabled = !SettingsManager.healthCritical2Enabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Health Critical 2 alerts " + (SettingsManager.healthCritical2Enabled ? "enabled" : "disabled"))
+                                    Text.literal("Vital Signs Dropping alerts " + (SettingsManager.healthCritical2Enabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();

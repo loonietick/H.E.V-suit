@@ -32,6 +32,8 @@ public class SubtitleManager {
         CAPTIONS.put("hev_logon", "Welcome to the HEV Mark IV Protective System, for use in hazardous environment conditions.");
         CAPTIONS.put("weapon_pickup", "Weapon Acquired");
         CAPTIONS.put("ammo_pickup", "Ammunition Acquired");
+        CAPTIONS.put("powermove_on", "Power assist movement activated");
+        CAPTIONS.put("powermove_overload", "Warning: Power movement system overload");
         
         // Black Mesa captions
         CAPTIONS.put("bm_major_laceration", "Major Lacerations Detected");
@@ -74,7 +76,7 @@ public class SubtitleManager {
             soundName.equals("power_level_is") || soundName.equals("bm_power_level_is")) {
             String powerLevel = SoundManager.getPowerLevelFromQueue();
             if (powerLevel != null) {
-                Text message = Text.literal("HEV Suit: Power: " + powerLevel + "%")
+                Text message = Text.literal("[HEV Suit] Power: " + powerLevel + "%")
                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF));
                 client.player.sendMessage(message, false);
             }
@@ -84,7 +86,7 @@ public class SubtitleManager {
         if (!isPowerNumber(soundName) && !soundName.contains("percent")) {
             String caption = CAPTIONS.get(soundName);
             if (caption != null) {
-                Text message = Text.literal("HEV Suit: " + caption)
+                Text message = Text.literal("[HEV Suit] " + caption)
                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF));
                 client.player.sendMessage(message, false);
             }

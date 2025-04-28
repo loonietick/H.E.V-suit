@@ -49,6 +49,10 @@ public class EventManager {
     private static long lastShockDamageTime = 0;
     private static long lastMajorLacerationTime = 0;
     private static long lastMinorLacerationTime = 0;
+    private static long lastHealthCritical2Time = 0;
+    private static net.minecraft.item.ItemStack lastChestItem = net.minecraft.item.ItemStack.EMPTY;
+    private static final long HEALTH_CRITICAL2_COOLDOWN = 5000; // 5 seconds
+    private static boolean lastChestHadElytra = false;
 
     private static final long HEAT_DAMAGE_COOLDOWN = 8000;
     private static final long GENERAL_COOLDOWN = 5000;
@@ -87,6 +91,21 @@ public class EventManager {
             PlayerEntity player = client.player;
             if (player == null) return;
 
+            // Elytra/chestplate equip detection
+            net.minecraft.item.ItemStack currentChest = player.getEquippedStack(EquipmentSlot.CHEST);
+            boolean currentChestIsElytra = !currentChest.isEmpty() && currentChest.getItem().getTranslationKey().toLowerCase().contains("elytra");
+            if (!net.minecraft.item.ItemStack.areEqual(currentChest, lastChestItem)) {
+                // Elytra equip (only on first equip)
+                if (currentChestIsElytra && !lastChestHadElytra) {
+                    SoundManager.queueSound("powermove_on");
+                }
+                // HEV chestplate equip
+                if (!currentChest.isEmpty() && currentChest.getName().getString().toUpperCase().startsWith("HEV")) {
+                    SoundManager.queueSound("hev_logon");
+                }
+                lastChestItem = currentChest.copy();
+            }
+            lastChestHadElytra = currentChestIsElytra;
 
             checkArmorDurability(player);
 
@@ -176,13 +195,20 @@ public class EventManager {
             } else if (currentHealth <= 10.0 && lastHealth > 10.0 && SettingsManager.seekMedicalEnabled) {
                 SoundManager.queueSound(prefix + "seek_medical");
             } else if (currentHealth <= 15.0 && lastHealth > 15.0 && SettingsManager.healthCritical2Enabled) {
-                SoundManager.queueSound(prefix + "health_critical2");
+                if (currentTime - lastHealthCritical2Time >= HEALTH_CRITICAL2_COOLDOWN) {
+                    SoundManager.queueSound(prefix + "health_critical2");
+                    lastHealthCritical2Time = currentTime;
+                }
             }
         }
 
+        // Only play morphine SFX if damage taken is 5 or more (2.5 hearts)
         if (SettingsManager.morphineEnabled && currentTime - lastMorphineTime >= MORPHINE_COOLDOWN && currentHealth < 20) {
-            SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_morphine_system" : "morphine_administered");
-            lastMorphineTime = currentTime;
+            float damage = lastHealth - currentHealth;
+            if (damage >= 6.0f) {
+                SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_morphine_system" : "morphine_administered");
+                lastMorphineTime = currentTime;
+            }
         }
 
         lastHealth = currentHealth;
@@ -273,12 +299,9 @@ public class EventManager {
 
     private static void checkArmorDurability(PlayerEntity player) {
         if (!SettingsManager.armorDurabilityEnabled || SettingsManager.useBlackMesaSFX) return;
-        
         int slot = 0;
         boolean playedThresholdSound = false;
         Set<Integer> currentEquipped = new HashSet<>();
-        
-        // Use getEquippedStack for each armor slot for 1.21.5+
         EquipmentSlot[] armorSlots = new EquipmentSlot[] {
             EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
         };
@@ -298,7 +321,12 @@ public class EventManager {
                         double lastThreshold = lastArmorThresholds.getOrDefault(slot, 1.0);
                         for (double threshold : DURABILITY_THRESHOLDS) {
                             if (durabilityPercent <= threshold && lastThreshold > threshold) {
-                                SoundManager.queueSound("hev_damage");
+                                // If elytra, play powermove_overload instead of hev_damage
+                                if (armorSlot == EquipmentSlot.CHEST && stack.getItem().getTranslationKey().toLowerCase().contains("elytra")) {
+                                    SoundManager.queueSound("powermove_overload");
+                                } else {
+                                    SoundManager.queueSound("hev_damage");
+                                }
                                 playedThresholdSound = true;
                                 break;
                             }
@@ -309,7 +337,5 @@ public class EventManager {
             }
             slot++;
         }
-        
-
     }
 }

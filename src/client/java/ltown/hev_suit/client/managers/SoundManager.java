@@ -28,7 +28,7 @@ public class SoundManager {
                 "blood_loss", "health_critical", "health_critical2", "morphine_administered",
                 "seek_medical", "near_death", "heat_damage", "shock_damage", "chemical",
                 "armor_gone", "hev_damage", "ammunition_depleted", "hev_general_fail",
-                "hev_logon", "weapon_pickup", "ammo_pickup",
+                "hev_logon", "weapon_pickup", "ammo_pickup", "powermove_on", "powermove_overload",
 
                 // Half-Life 1 hev suit armor percentage sfx
                 "power", "power_level_is", "percent",

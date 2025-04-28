@@ -20,6 +20,12 @@
   "minor_fracture": {
     "sounds": [{"name": "hev_suit:minor_fracture"}]
   },
+  "powermove_on": {
+    "sounds": [{"name": "hev_suit:powermove_on"}]
+  },
+  "powermove_overload": {
+    "sounds": [{"name": "hev_suit:powermove_overload"}]
+  },
   "major_fracture": {
     "sounds": [{"name": "hev_suit:major_fracture"}]
   },

@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.effect.StatusEffects;
@@ -277,25 +278,24 @@ public class EventManager {
         boolean playedThresholdSound = false;
         Set<Integer> currentEquipped = new HashSet<>();
         
-        for (var stack : player.getArmorItems()) {
+        // Use getEquippedStack for each armor slot for 1.21.5+
+        EquipmentSlot[] armorSlots = new EquipmentSlot[] {
+            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
+        };
+        for (EquipmentSlot armorSlot : armorSlots) {
+            net.minecraft.item.ItemStack stack = player.getEquippedStack(armorSlot);
             if (!stack.isEmpty()) {
                 currentEquipped.add(slot);
                 if (!equippedArmorSlots.contains(slot)) {
-                    // New piece of armor equipped
                     equippedArmorSlots.add(slot);
                 }
-                
                 int maxDurability = stack.getMaxDamage();
                 int currentDamage = stack.getDamage();
-                
                 if (maxDurability > 0) {
                     double durabilityPercent = (maxDurability - currentDamage) / (double)maxDurability;
                     lastKnownDurability.put(slot, durabilityPercent);
-                    
-                    // Check thresholds if we haven't played a threshold sound yet
                     if (!playedThresholdSound) {
                         double lastThreshold = lastArmorThresholds.getOrDefault(slot, 1.0);
-                        
                         for (double threshold : DURABILITY_THRESHOLDS) {
                             if (durabilityPercent <= threshold && lastThreshold > threshold) {
                                 SoundManager.queueSound("hev_damage");
@@ -304,7 +304,6 @@ public class EventManager {
                             }
                         }
                     }
-                    
                     lastArmorThresholds.put(slot, durabilityPercent);
                 }
             }

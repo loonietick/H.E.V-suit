@@ -21,6 +21,7 @@ import net.minecraft.entity.mob.Monster;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.entity.EquipmentSlot;
 
 public class HudManager {
 
@@ -260,8 +261,12 @@ public class HudManager {
     private static double calculateArmorDurabilityMultiplier(PlayerEntity player) {
         double totalDurability = 0;
         int armorPieces = 0;
-
-        for (ItemStack armorPiece : player.getArmorItems()) {
+        // Use getEquippedStack for each armor slot for 1.21.5+
+        EquipmentSlot[] armorSlots = new EquipmentSlot[] {
+            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
+        };
+        for (EquipmentSlot armorSlot : armorSlots) {
+            net.minecraft.item.ItemStack armorPiece = player.getEquippedStack(armorSlot);
             if (!armorPiece.isEmpty()) {
                 int maxDurability = armorPiece.getMaxDamage();
                 if (maxDurability > 0) {
@@ -272,7 +277,6 @@ public class HudManager {
                 }
             }
         }
-
         return armorPieces > 0 ? totalDurability / armorPieces : 1.0;
     }
 

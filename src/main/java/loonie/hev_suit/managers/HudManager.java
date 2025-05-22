@@ -160,8 +160,11 @@ public class HudManager {
             Vec3d dir = indicator.direction.normalize();
             String dominantDirection = getDominantDirection(dir);
 
-            renderIndicatorTriangle(centerX, centerY, dominantDirection, color, 
-                INDICATOR_SIZE, INDICATOR_MARGIN, INDICATOR_LENGTH);
+            int[] xPoints = new int[3];
+            int[] yPoints = new int[3];
+            setupTrianglePoints(centerX, centerY, dominantDirection, INDICATOR_SIZE, INDICATOR_MARGIN, INDICATOR_LENGTH, xPoints, yPoints);
+
+            fillTriangle(mc, xPoints, yPoints, color);
         }
 
         GlStateManager.enableTexture2D();
@@ -250,18 +253,35 @@ public class HudManager {
         GlStateManager.enableBlend();
         GlStateManager.disableTexture2D();
         GlStateManager.tryBlendFuncSeparate(
-            GlStateManager.SourceFactor.SRC_ALPHA,
+            GlStateManager.SourceFactor.SRC_ALPHA, 
             GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-            GlStateManager.SourceFactor.ONE,
+            GlStateManager.SourceFactor.ONE, 
             GlStateManager.DestFactor.ZERO
         );
 
         for (ThreatIndicator indicator : activeThreatIndicators.values()) {
             if (!indicator.isActive) continue;
+            
+            // Calculate pulsing alpha using sin wave
+            float pulseProgress = (tickCounter % 40.0f) / 40.0f;
+            float pulseValue = (MathHelper.sin(pulseProgress * 2 * (float)Math.PI) + 1f) / 2f;
+            float alpha = 0.3f + (pulseValue * 0.6f); // Range from 0.3 to 0.9 alpha
+            
+            int color = (((int)(alpha * 0xFF)) << 24) | (THREAT_INDICATOR_COLOR & 0x00FFFFFF);
 
+            // Draw indicator based on direction
             String dominantDirection = getDominantDirection(indicator.currentDirection);
-            renderIndicatorTriangle(centerX, centerY, dominantDirection, THREAT_INDICATOR_COLOR, 
-                INDICATOR_SIZE, INDICATOR_MARGIN, INDICATOR_LENGTH);
+            int[] xPoints = new int[3];
+            int[] yPoints = new int[3];
+            int size = INDICATOR_SIZE / 2; // Half size for threats
+            int margin = INDICATOR_MARGIN;
+            int length = INDICATOR_LENGTH;
+
+            // Setup triangle points based on direction
+            setupTrianglePoints(centerX, centerY, dominantDirection, size, margin, length, xPoints, yPoints);
+            
+            // Draw filled triangle using our scan-line algorithm
+            fillTriangle(mc, xPoints, yPoints, color);
         }
 
         GlStateManager.enableTexture2D();
@@ -423,26 +443,75 @@ public class HudManager {
         fr.drawStringWithShadow(label, x, y - 10, DARK_AMBER);
     }
 
-    // Helper method from Minecraft's GuiScreen
+    // Helper method from Minecraft's GuiScreen - draw semi-transparent background
     private static void drawRect(int left, int top, int right, int bottom, int color) {
-        if (left < right) {
-            int i = left;
-            left = right;
-            right = i;
+        net.minecraft.client.gui.Gui.drawRect(left, top, right, bottom, color);
+    }
+
+    private static void fillTriangle(Minecraft mc, int[] xPoints, int[] yPoints, int color) {
+        // Draw filled triangle using multiple lines
+        int minY = Math.min(Math.min(yPoints[0], yPoints[1]), yPoints[2]);
+        int maxY = Math.max(Math.max(yPoints[0], yPoints[1]), yPoints[2]);
+
+        for (int y = minY; y <= maxY; y++) {
+            List<Integer> intersections = new ArrayList<>();
+            
+            // Find intersections with all three edges
+            for (int i = 0; i < 3; i++) {
+                int j = (i + 1) % 3;
+                int x1 = xPoints[i], y1 = yPoints[i];
+                int x2 = xPoints[j], y2 = yPoints[j];
+                
+                if ((y1 <= y && y2 > y) || (y2 <= y && y1 > y)) {
+                    intersections.add(x1 + (y - y1) * (x2 - x1) / (y2 - y1));
+                }
+            }
+
+            if (intersections.size() >= 2) {
+                int x1 = Math.min(intersections.get(0), intersections.get(1));
+                int x2 = Math.max(intersections.get(0), intersections.get(1));
+                drawRect(x1, y, x2, y + 1, color);
+            }
         }
+    }
 
-        if (top < bottom) {
-            int j = top;
-            top = bottom;
-            bottom = j;
+    private static void setupTrianglePoints(int centerX, int centerY, String direction, 
+                                          int size, int margin, int length,
+                                          int[] xPoints, int[] yPoints) {
+        switch (direction) {
+            case "FRONT":
+                xPoints[0] = centerX;
+                yPoints[0] = centerY - margin;
+                xPoints[1] = centerX - size;
+                yPoints[1] = centerY - margin - length;
+                xPoints[2] = centerX + size;
+                yPoints[2] = centerY - margin - length;
+                break;
+            case "BACK":
+                xPoints[0] = centerX;
+                yPoints[0] = centerY + margin;
+                xPoints[1] = centerX - size;
+                yPoints[1] = centerY + margin + length;
+                xPoints[2] = centerX + size;
+                yPoints[2] = centerY + margin + length;
+                break;
+            case "LEFT":
+                xPoints[0] = centerX - margin;
+                yPoints[0] = centerY;
+                xPoints[1] = centerX - margin - length;
+                yPoints[1] = centerY - size;
+                xPoints[2] = centerX - margin - length;
+                yPoints[2] = centerY + size;
+                break;
+            case "RIGHT":
+                xPoints[0] = centerX + margin;
+                yPoints[0] = centerY;
+                xPoints[1] = centerX + margin + length;
+                yPoints[1] = centerY - size;
+                xPoints[2] = centerX + margin + length;
+                yPoints[2] = centerY + size;
+                break;
         }
-
-        float a = (float)(color >> 24 & 255) / 255.0F;
-        float r = (float)(color >> 16 & 255) / 255.0F;
-        float g = (float)(color >> 8 & 255) / 255.0F;
-        float b = (float)(color & 255) / 255.0F;
-
-        // OpenGL rendering code here
     }
 
     // ...rest of the methods updated for 1.12.2...

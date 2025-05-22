@@ -8,6 +8,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.entity.projectile.EntityFireball;
 import net.minecraft.init.MobEffects;
+import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.item.ItemElytra;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.Vec3d;
@@ -50,6 +52,10 @@ public class EventManager {
     private static final long LACERATION_COOLDOWN = 5000;
     private static final long MORPHINE_COOLDOWN = 1800000;
 
+    private static String lastChestName = "";
+    private static String lastChestItemId = "";
+    private static boolean lastChestHadElytra = false;
+
     public static void registerEventListeners() {
         MinecraftForge.EVENT_BUS.register(new EventManager());
     }
@@ -69,6 +75,9 @@ public class EventManager {
         equippedArmorSlots.clear();  // Add this line
         brokenArmor.clear();
         lastKnownDurability.clear(); // Add this line
+        lastChestName = "";
+        lastChestItemId = "";
+        lastChestHadElytra = false;
     }
 
     @SubscribeEvent
@@ -81,6 +90,25 @@ public class EventManager {
 
             EntityPlayer player = client.player;
             if (player == null) return;
+
+            // Elytra/chestplate equip detection
+            ItemStack currentChest = player.getItemStackFromSlot(EntityEquipmentSlot.CHEST);
+            boolean currentChestIsElytra = currentChest != null && currentChest.getItem() instanceof ItemElytra;
+            String currentChestName = (currentChest != null && !currentChest.isEmpty()) ? currentChest.getDisplayName() : "";
+            String currentChestId = (currentChest != null && !currentChest.isEmpty()) ? currentChest.getItem().getRegistryName().toString() : "";
+            boolean chestChanged = !currentChestName.equals(lastChestName) || !currentChestId.equals(lastChestItemId);
+            if (chestChanged) {
+                if (currentChestIsElytra && !lastChestHadElytra && !SettingsManager.useBlackMesaSFX) {
+                    SoundManager.queueSound("powermove_on");
+                }
+                if (currentChest != null && !currentChest.isEmpty() && currentChestName.toUpperCase().startsWith("HEV")) {
+                    SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_hev_logon" : "hev_logon");
+                }
+                lastChestName = currentChestName;
+                lastChestItemId = currentChestId;
+            }
+            lastChestHadElytra = currentChestIsElytra;
+
             checkArmorDurability(player);
 
             int currentArmor = player.getTotalArmorValue();

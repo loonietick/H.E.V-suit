@@ -1,6 +1,7 @@
 package loonie.hev_suit;
 
 import loonie.hev_suit.managers.*;
+import loonie.hev_suit.managers.ResourcePackManager;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -26,6 +27,9 @@ public class hev_suit {
         
         // Load settings first
         SettingsManager.loadSettings();
+        
+        // Register resource pack reminder
+        ResourcePackManager.registerResourcePack();
         
         // Register sound events
         SoundManager.registerSounds();

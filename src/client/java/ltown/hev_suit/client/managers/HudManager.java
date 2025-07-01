@@ -191,8 +191,8 @@ public class HudManager {
             displayColor = SettingsManager.hudPrimaryColor;
         }
 
-        graphics.drawTextWithShadow(textRenderer, String.format("%d", value), x, y, displayColor);
-        graphics.drawTextWithShadow(textRenderer, label, x, y - 10, SettingsManager.hudSecondaryColor);
+        graphics.drawText(textRenderer, String.format("%d", value), x, y, displayColor, true);
+        graphics.drawText(textRenderer, label, x, y - 10, SettingsManager.hudSecondaryColor, true);
     }
 
     private static int getTransitionColor(int value, int threshold, int startColor, int endColor) {
@@ -250,12 +250,12 @@ public class HudManager {
         if (MinecraftClient.getInstance().player != null && 
             (MinecraftClient.getInstance().player.getMainHandStack().getItem() instanceof net.minecraft.item.BowItem ||
              MinecraftClient.getInstance().player.getMainHandStack().getItem() instanceof net.minecraft.item.CrossbowItem)) {
-            graphics.drawTextWithShadow(textRenderer, String.format("%d", totalAmmo), x, y, SettingsManager.hudPrimaryColor);
+            graphics.drawText(textRenderer, String.format("%d", totalAmmo), x, y, SettingsManager.hudPrimaryColor, true);
         } else {
-            graphics.drawTextWithShadow(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, SettingsManager.hudPrimaryColor);
+            graphics.drawText(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, SettingsManager.hudPrimaryColor, true);
         }
         
-        graphics.drawTextWithShadow(textRenderer, "AMMO", x, y - 10, SettingsManager.hudSecondaryColor);
+        graphics.drawText(textRenderer, "AMMO", x, y - 10, SettingsManager.hudSecondaryColor, true);
     }
 
     private static double calculateArmorDurabilityMultiplier(PlayerEntity player) {

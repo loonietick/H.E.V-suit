@@ -117,13 +117,11 @@ public class HudManager {
             int baseY = height - 29;
             TextRenderer textRenderer = client.textRenderer;
 
-        
             if (SettingsManager.hudHealthEnabled) {
                 int scaledHealth = (int)((player.getHealth() / player.getMaxHealth()) * 100);
                 drawNumericDisplay(graphics, textRenderer, 10, baseY, scaledHealth, "HEALTH");
             }
 
-      
             if (SettingsManager.hudArmorEnabled) {
                 int baseArmor = player.getArmor();
                 if (baseArmor > 0) {
@@ -148,10 +146,9 @@ public class HudManager {
                 renderDamageIndicators(graphics, client);
             }
 
-            // Render threat indicators - fix parameter type issue
+            // Render threat indicators
             if (SettingsManager.threatIndicatorsEnabled) {
-                // Supply a boolean argument (e.g., 'true') to getTickDelta(boolean)
-                renderThreatIndicators(graphics, MinecraftClient.getInstance(), tickDelta.getTickDelta(true));
+                renderThreatIndicators(graphics, MinecraftClient.getInstance());
             }
         });
 
@@ -179,20 +176,16 @@ public class HudManager {
 
     private static void drawNumericDisplay(DrawContext graphics, TextRenderer textRenderer, int x, int y, int value, String label) {
         graphics.fill(x - 2, y - 2, x + 90, y + 12, 0x80000000);
-        
         int displayColor;
         if (label.equals("HEALTH")) {
-            // Start transitioning to red at 85% health (17 hearts)
             displayColor = getTransitionColor(value, 85, SettingsManager.hudPrimaryColor, RED_COLOR);
         } else if (label.equals("ARMOR")) {
-            // Start transitioning to red at 50% armor durability
             displayColor = getTransitionColor(value, 50, SettingsManager.hudPrimaryColor, RED_COLOR);
         } else {
             displayColor = SettingsManager.hudPrimaryColor;
         }
-
-        graphics.drawText(textRenderer, String.format("%d", value), x, y, displayColor, true);
-        graphics.drawText(textRenderer, label, x, y - 10, SettingsManager.hudSecondaryColor, true);
+        graphics.drawTextWithShadow(textRenderer, String.format("%d", value), x, y, displayColor);
+        graphics.drawTextWithShadow(textRenderer, label, x, y - 10, SettingsManager.hudSecondaryColor);
     }
 
     private static int getTransitionColor(int value, int threshold, int startColor, int endColor) {
@@ -245,17 +238,14 @@ public class HudManager {
 
     private static void drawAmmoDisplay(DrawContext graphics, TextRenderer textRenderer, int x, int y, int currentAmmo, int totalAmmo) {
         graphics.fill(x - 2, y - 2, x + 90, y + 12, 0x80000000);
-        
-        // For bows and crossbows, show only total arrows
         if (MinecraftClient.getInstance().player != null && 
             (MinecraftClient.getInstance().player.getMainHandStack().getItem() instanceof net.minecraft.item.BowItem ||
              MinecraftClient.getInstance().player.getMainHandStack().getItem() instanceof net.minecraft.item.CrossbowItem)) {
-            graphics.drawText(textRenderer, String.format("%d", totalAmmo), x, y, SettingsManager.hudPrimaryColor, true);
+            graphics.drawTextWithShadow(textRenderer, String.format("%d", totalAmmo), x, y, SettingsManager.hudPrimaryColor);
         } else {
-            graphics.drawText(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, SettingsManager.hudPrimaryColor, true);
+            graphics.drawTextWithShadow(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, SettingsManager.hudPrimaryColor);
         }
-        
-        graphics.drawText(textRenderer, "AMMO", x, y - 10, SettingsManager.hudSecondaryColor, true);
+        graphics.drawTextWithShadow(textRenderer, "AMMO", x, y - 10, SettingsManager.hudSecondaryColor);
     }
 
     private static double calculateArmorDurabilityMultiplier(PlayerEntity player) {
@@ -414,7 +404,7 @@ public class HudManager {
         }
     }
 
-    private static void renderThreatIndicators(DrawContext graphics, MinecraftClient client, float tickDelta) {
+    private static void renderThreatIndicators(DrawContext graphics, MinecraftClient client) {
         int width = client.getWindow().getScaledWidth();
         int height = client.getWindow().getScaledHeight();
         int centerX = width / 2;

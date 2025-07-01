@@ -1,5 +1,6 @@
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT'
+    // Updated to support Minecraft 1.21.7
+    id 'fabric-loom' version '1.10.1'
     id 'maven-publish'
 }
 

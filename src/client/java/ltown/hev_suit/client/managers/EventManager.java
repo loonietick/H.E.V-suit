@@ -14,6 +14,8 @@ import net.minecraft.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
+import net.minecraft.entity.EquipmentSlot;
 import java.util.*;
 
 public class EventManager {
@@ -42,9 +44,15 @@ public class EventManager {
     private static long lastShockDamageTime = 0;
     private static long lastMajorLacerationTime = 0;
     private static long lastMinorLacerationTime = 0;
+    private static long lastHealthCritical2Time = 0;
+    private static final long HEALTH_CRITICAL2_COOLDOWN = 5000; // 5 seconds
+    private static boolean lastChestHadElytra = false;
+    private static String lastChestName = "";
+    private static String lastChestItemId = "";
 
-    private static final long HEAT_DAMAGE_COOLDOWN = 5000;
+    private static final long HEAT_DAMAGE_COOLDOWN = 8000;
     private static final long GENERAL_COOLDOWN = 5000;
+    private static final long BLOOD_LOSS_COOLDOWN = 8000;
     private static final long FRACTURE_COOLDOWN = 5000;
     private static final long LACERATION_COOLDOWN = 5000;
     private static final long MORPHINE_COOLDOWN = 1800000;
@@ -65,6 +73,10 @@ public class EventManager {
         lastShockDamageTime = 0;
         lastMajorLacerationTime = 0;
         lastMinorLacerationTime = 0;
+        lastHealthCritical2Time = 0;
+        lastChestHadElytra = false;
+        lastChestName = "";
+        lastChestItemId = "";
         lastArmorThresholds.clear();
         equippedArmorSlots.clear();
         brokenArmor.clear();
@@ -78,18 +90,39 @@ public class EventManager {
             PlayerEntity player = client.player;
             if (player == null) return;
 
+            // Elytra/chestplate equip detection
+            ItemStack currentChest = player.getEquippedStack(EquipmentSlot.CHEST);
+            boolean currentChestIsElytra = !currentChest.isEmpty() && currentChest.getItem().getTranslationKey().toLowerCase().contains("elytra");
+            String currentChestName = currentChest.isEmpty() ? "" : currentChest.getName().getString();
+            String currentChestId = currentChest.isEmpty() ? "" : currentChest.getItem().getTranslationKey();
+            boolean chestNameChanged = !currentChestName.equals(lastChestName) || !currentChestId.equals(lastChestItemId);
+            if (chestNameChanged) {
+                if (currentChestIsElytra && !lastChestHadElytra && !SettingsManager.useBlackMesaSFX) {
+                    SoundManager.queueSound("powermove_on");
+                }
+                if (!currentChest.isEmpty() && currentChestName.toUpperCase().startsWith("HEV")) {
+                    if (SettingsManager.useBlackMesaSFX) {
+                        SoundManager.queueSound("bm_hev_logon");
+                    } else {
+                        SoundManager.queueSound("hev_logon");
+                    }
+                }
+                lastChestName = currentChestName;
+                lastChestItemId = currentChestId;
+            }
+            lastChestHadElytra = currentChestIsElytra;
+
             // Add armor durability check
             checkArmorDurability(player);
 
             // Armor percentage system with durability consideration
             int currentArmor = player.getArmor();
             if (currentArmor != lastArmorValue) {
-                // Only play sound when armor increases
                 if (currentArmor > lastArmorValue) {
                     double durabilityMultiplier = calculateArmorDurabilityMultiplier(player);
                     int adjustedPercent = (int)(currentArmor * durabilityMultiplier * 5);
 
-                    if (adjustedPercent > 0) {
+                    if (adjustedPercent > 0 && adjustedPercent <= 100) {
                         List<String> components = new ArrayList<>();
 
                         if (adjustedPercent == 100) {
@@ -97,15 +130,15 @@ public class EventManager {
                             components.add(SettingsManager.useBlackMesaSFX ? "bm_100" : "100");
                         } else {
                             components.add(SettingsManager.useBlackMesaSFX ? "bm_power" : "power");
-                            // Get split percentage announcements
-                            List<Integer> percentages = getSplitPercentageAnnouncement(adjustedPercent);
-                            for (int percent : percentages) {
-                                components.add(SettingsManager.useBlackMesaSFX ? "bm_" + percent : String.valueOf(percent));
+                            for (int part : getArmorAnnouncement(adjustedPercent)) {
+                                components.add(SettingsManager.useBlackMesaSFX ? "bm_" + part : String.valueOf(part));
                             }
                         }
                         components.add(SettingsManager.useBlackMesaSFX ? "bm_percent" : "percent");
 
                         components.forEach(SoundManager::queueSound);
+                    } else if (adjustedPercent > 100) {
+                        SoundManager.queueSound("hev_general_fail");
                     }
                 }
                 lastArmorValue = currentArmor;
@@ -118,32 +151,22 @@ public class EventManager {
         }
     }
 
-    private static int findClosestPercentage(int value) {
-        // Direct mapping for values that have their own sound files
-        if (value >= 95) return 100;
-        if (value >= 85) return 90;
-        if (value >= 75) return 80;
-        if (value >= 65) return 70;
-        if (value >= 55) return 60;
-        if (value >= 45) return 50;
-        if (value >= 35) return 40;
-        if (value >= 25) return 25; // Keep original 25
-        if (value >= 15) return 15; // Keep original 15
-        if (value >= 8) return 10;
-        return 5;
-    }
-
-    private static List<Integer> getSplitPercentageAnnouncement(int value) {
-        // Handle special cases that should be split
-        switch (value) {
+    private static List<Integer> getArmorAnnouncement(int value) {
+        if (value == 100) {
+            return Collections.singletonList(100);
+        }
+        int remainder = value % 5;
+        int rounded = (remainder >= 3) ? (value + (5 - remainder)) : (value - remainder);
+        switch (rounded) {
+            case 95: return Arrays.asList(90, 5);
+            case 85: return Arrays.asList(80, 5);
+            case 75: return Arrays.asList(70, 5);
+            case 65: return Arrays.asList(60, 5);
+            case 55: return Arrays.asList(50, 5);
             case 45: return Arrays.asList(40, 5);
             case 35: return Arrays.asList(30, 5);
-            case 55: return Arrays.asList(50, 5);
-            case 65: return Arrays.asList(60, 5);
-            case 75: return Arrays.asList(70, 5);
-            case 85: return Arrays.asList(80, 5);
-            case 95: return Arrays.asList(90, 5);
-            default: return Collections.singletonList(findClosestPercentage(value));
+            default:
+                return Collections.singletonList(rounded);
         }
     }
 
@@ -196,13 +219,19 @@ public class EventManager {
             } else if (currentHealth <= 10.0 && lastHealth > 10.0 && SettingsManager.seekMedicalEnabled) {
                 SoundManager.queueSound(prefix + "seek_medical");
             } else if (currentHealth <= 15.0 && lastHealth > 15.0 && SettingsManager.healthCritical2Enabled) {
-                SoundManager.queueSound(prefix + "health_critical2");
+                if (currentTime - lastHealthCritical2Time >= HEALTH_CRITICAL2_COOLDOWN) {
+                    SoundManager.queueSound(prefix + "health_critical2");
+                    lastHealthCritical2Time = currentTime;
+                }
             }
         }
 
         if (SettingsManager.morphineEnabled && currentTime - lastMorphineTime >= MORPHINE_COOLDOWN && currentHealth < 20) {
-            SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_morphine_system" : "morphine_administered");
-            lastMorphineTime = currentTime;
+            float damage = lastHealth - currentHealth;
+            if (damage >= 6.0f) {
+                SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_morphine_system" : "morphine_administered");
+                lastMorphineTime = currentTime;
+            }
         }
 
         lastHealth = currentHealth;
@@ -214,7 +243,7 @@ public class EventManager {
         String prefix = SettingsManager.useBlackMesaSFX ? "bm_" : "";
 
         // Fall damage and fractures with cooldown
-        if (damageSource.getName().equals("fall") && SettingsManager.fracturesEnabled && currentTime - lastFractureTime >= FRACTURE_COOLDOWN) {
+        if (damageSource.isOf(DamageTypes.FALL) && SettingsManager.fracturesEnabled && currentTime - lastFractureTime >= FRACTURE_COOLDOWN) {
             if (damage >= 6) {
                 SoundManager.queueSound(prefix + "major_fracture");
                 lastFractureTime = currentTime;
@@ -226,17 +255,17 @@ public class EventManager {
 
         // Chemical damage with cooldown
         if (SettingsManager.chemicalDamageEnabled && currentTime - lastGeneralAlertTime >= GENERAL_COOLDOWN) {
-            if (client.player.hasStatusEffect(StatusEffects.POISON) && !wasPoisoned) {
+            if ((client.player.hasStatusEffect(StatusEffects.POISON) || client.player.hasStatusEffect(StatusEffects.WITHER)) && !wasPoisoned) {
                 SoundManager.queueSound(prefix + "chemical");
                 wasPoisoned = true;
                 lastGeneralAlertTime = currentTime;
-            } else if (!client.player.hasStatusEffect(StatusEffects.POISON)) {
+            } else if (!client.player.hasStatusEffect(StatusEffects.POISON) && !client.player.hasStatusEffect(StatusEffects.WITHER)) {
                 wasPoisoned = false;
             }
         }
 
         // Shock damage with cooldown
-        if (SettingsManager.shockDamageEnabled && damageSource.getName().equals("lightningBolt") && 
+        if (SettingsManager.shockDamageEnabled && damageSource.isOf(DamageTypes.LIGHTNING_BOLT) &&
             currentTime - lastShockDamageTime >= GENERAL_COOLDOWN) {
             SoundManager.queueSound(prefix + "shock_damage");
             lastShockDamageTime = currentTime;
@@ -244,7 +273,7 @@ public class EventManager {
 
         Entity damageEntity = damageSource.getSource();
         if (damageEntity instanceof ArrowEntity || damageEntity instanceof FireballEntity) {
-            if (SettingsManager.bloodLossEnabled && currentTime - lastBloodLossTime >= GENERAL_COOLDOWN) {
+            if (SettingsManager.bloodLossEnabled && currentTime - lastBloodLossTime >= BLOOD_LOSS_COOLDOWN) {
                 SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_blood_loss" : "blood_loss");
                 lastBloodLossTime = currentTime;
             }
@@ -269,35 +298,35 @@ public class EventManager {
         int slot = 0;
         boolean playedThresholdSound = false;
         Set<Integer> currentEquipped = new HashSet<>();
-        
-        for (var stack : player.getArmorItems()) {
+        EquipmentSlot[] armorSlots = new EquipmentSlot[] {
+            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
+        };
+        for (EquipmentSlot armorSlot : armorSlots) {
+            ItemStack stack = player.getEquippedStack(armorSlot);
             if (!stack.isEmpty()) {
                 currentEquipped.add(slot);
                 if (!equippedArmorSlots.contains(slot)) {
-                    // New piece of armor equipped
                     equippedArmorSlots.add(slot);
                 }
-                
                 int maxDurability = stack.getMaxDamage();
                 int currentDamage = stack.getDamage();
-                
                 if (maxDurability > 0) {
                     double durabilityPercent = (maxDurability - currentDamage) / (double)maxDurability;
                     lastKnownDurability.put(slot, durabilityPercent);
-                    
-                    // Check thresholds if we haven't played a threshold sound yet
                     if (!playedThresholdSound) {
                         double lastThreshold = lastArmorThresholds.getOrDefault(slot, 1.0);
-                        
                         for (double threshold : DURABILITY_THRESHOLDS) {
                             if (durabilityPercent <= threshold && lastThreshold > threshold) {
-                                SoundManager.queueSound("hev_damage");
+                                if (armorSlot == EquipmentSlot.CHEST && stack.getItem().getTranslationKey().toLowerCase().contains("elytra")) {
+                                    SoundManager.queueSound("powermove_overload");
+                                } else {
+                                    SoundManager.queueSound("hev_damage");
+                                }
                                 playedThresholdSound = true;
                                 break;
                             }
                         }
                     }
-                    
                     lastArmorThresholds.put(slot, durabilityPercent);
                 }
             }

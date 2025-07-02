@@ -8,10 +8,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+import ltown.hev_suit.client.managers.SettingsManager;
+
 public class HudManager {
 
-    private static final int AMBER_COLOR = 0xFFFFAE00;
-    private static final int DARK_AMBER = 0xFF8B5E00;
     private static final int RED_COLOR = 0xFFFF0000;
 
     public static void registerHud() {
@@ -56,16 +56,16 @@ public class HudManager {
         int displayColor;
         if (label.equals("HEALTH")) {
             // Start transitioning to red at 85% health (17 hearts)
-            displayColor = getTransitionColor(value, 85, AMBER_COLOR, RED_COLOR);
+            displayColor = getTransitionColor(value, 85, SettingsManager.hudPrimaryColor, RED_COLOR);
         } else if (label.equals("ARMOR")) {
             // Start transitioning to red at 50% armor durability
-            displayColor = getTransitionColor(value, 50, AMBER_COLOR, RED_COLOR);
+            displayColor = getTransitionColor(value, 50, SettingsManager.hudPrimaryColor, RED_COLOR);
         } else {
-            displayColor = AMBER_COLOR;
+            displayColor = SettingsManager.hudPrimaryColor;
         }
 
         graphics.drawTextWithShadow(textRenderer, String.format("%d", value), x, y, displayColor);
-        graphics.drawTextWithShadow(textRenderer, label, x, y - 10, DARK_AMBER);
+        graphics.drawTextWithShadow(textRenderer, label, x, y - 10, SettingsManager.hudSecondaryColor);
     }
 
     private static int getTransitionColor(int value, int threshold, int startColor, int endColor) {
@@ -93,8 +93,8 @@ public class HudManager {
 
     private static void drawAmmoDisplay(DrawContext graphics, TextRenderer textRenderer, int x, int y, int currentAmmo, int totalAmmo) {
         graphics.fill(x - 2, y - 2, x + 90, y + 12, 0x80000000);
-        graphics.drawTextWithShadow(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, AMBER_COLOR);
-        graphics.drawTextWithShadow(textRenderer, "AMMO", x, y - 10, DARK_AMBER);
+        graphics.drawTextWithShadow(textRenderer, String.format("%d/%d", currentAmmo, totalAmmo), x, y, SettingsManager.hudPrimaryColor);
+        graphics.drawTextWithShadow(textRenderer, "AMMO", x, y - 10, SettingsManager.hudSecondaryColor);
     }
 
     private static int calculateTotalAmmo(PlayerEntity player, Item item) {
@@ -106,6 +106,12 @@ public class HudManager {
             }
         }
         return total;
+    }
+
+    public static int getScaledArmorValue(PlayerEntity player) {
+        int baseArmor = player.getArmor();
+        double durabilityMultiplier = calculateArmorDurabilityMultiplier(player);
+        return (int)(baseArmor * durabilityMultiplier * 5);
     }
 
     private static double calculateArmorDurabilityMultiplier(PlayerEntity player) {

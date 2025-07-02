@@ -2,11 +2,32 @@
   "minor_laceration": {
     "sounds": [{"name": "hev_suit:minor_lacerations"}]
   },
+  "hev_logon": {
+    "sounds": [{"name": "hev_suit:hev_logon"}]
+  },
+  "bm_hev_logon": {
+    "sounds": [{"name": "hev_suit:bm_hev_logon"}]
+  },
+  "weapon_pickup": {
+    "sounds": [{"name": "hev_suit:weapon_pickup"}]
+  },
+  "ammo_pickup": {
+    "sounds": [{"name": "hev_suit:ammo_pickup"}]
+  },
+  "hev_general_fail": {
+    "sounds": [{"name": "hev_suit:hev_general_fail"}]
+  },
   "major_laceration": {
     "sounds": [{"name": "hev_suit:major_lacerations"}]
   },
   "minor_fracture": {
     "sounds": [{"name": "hev_suit:minor_fracture"}]
+  },
+  "powermove_on": {
+    "sounds": [{"name": "hev_suit:powermove_on"}]
+  },
+  "powermove_overload": {
+    "sounds": [{"name": "hev_suit:powermove_overload"}]
   },
   "major_fracture": {
     "sounds": [{"name": "hev_suit:major_fracture"}]
@@ -49,6 +70,12 @@
   },
   "percent": {
     "sounds": [{"name":  "hev_suit:percent"}]
+  },
+  "ammunition_depleted": {
+    "sounds": [{"name": "hev_suit:ammunition_depleted"}]
+  },
+  "bm_ammunition_depleted": {
+    "sounds": [{"name": "hev_suit:bm_ammunition_depleted"}]
   },
   "bm_major_laceration": {
     "sounds": [{"name": "hev_suit:bm_major_lacerations"}]
@@ -98,6 +125,7 @@
   "hev_damage": {
     "sounds": [{"name": "hev_suit:hev_damage"}]
   },
+  
   "bm_5": {"sounds": [{"name": "hev_suit:bm_5"}]},
   "bm_10": {"sounds": [{"name": "hev_suit:bm_10"}]},
   "bm_15": {"sounds": [{"name": "hev_suit:bm_15"}]},

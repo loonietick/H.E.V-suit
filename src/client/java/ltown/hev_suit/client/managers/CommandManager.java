@@ -27,17 +27,17 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.hudEnabled = !SettingsManager.hudEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("HUD " + (SettingsManager.hudEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] HUD " + (SettingsManager.hudEnabled ? "enabled" : "disabled"))
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 if (SettingsManager.hudEnabled) {
                                     context.getSource().sendFeedback(
-                                        Text.literal("Notice: If you want to hide the vanilla minecraft hearts and armor icons make sure you enable the resourcepack that does so.")
+                                        Text.literal("[HEV Suit] Notice: If you want to hide the vanilla minecraft hearts and armor icons make sure you enable the resourcepack that does so.")
                                             .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                     );
                                 } else {
                                     context.getSource().sendFeedback(
-                                        Text.literal("Notice: Please go into the Minecraft settings to disable the resourcepack that hides the hearts and armor icons.")
+                                        Text.literal("[HEV Suit] Notice: Please go into the Minecraft settings to disable the resourcepack that hides the hearts and armor icons.")
                                             .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                     );
                                 }
@@ -49,7 +49,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.hudHealthEnabled = !SettingsManager.hudHealthEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("HUD Health " + (SettingsManager.hudHealthEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] HUD Health " + (SettingsManager.hudHealthEnabled ? "enabled" : "disabled"))
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -60,7 +60,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.hudArmorEnabled = !SettingsManager.hudArmorEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("HUD Armor " + (SettingsManager.hudArmorEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] HUD Armor " + (SettingsManager.hudArmorEnabled ? "enabled" : "disabled"))
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -71,7 +71,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.hudAmmoEnabled = !SettingsManager.hudAmmoEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("HUD Ammo " + (SettingsManager.hudAmmoEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] HUD Ammo " + (SettingsManager.hudAmmoEnabled ? "enabled" : "disabled"))
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -82,7 +82,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.damageIndicatorsEnabled = !SettingsManager.damageIndicatorsEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Damage indicators " + (SettingsManager.damageIndicatorsEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Damage indicators " + (SettingsManager.damageIndicatorsEnabled ? "enabled" : "disabled"))
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -93,7 +93,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.threatIndicatorsEnabled = !SettingsManager.threatIndicatorsEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Hostile MOB indicators " + (SettingsManager.threatIndicatorsEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Hostile MOB indicators " + (SettingsManager.threatIndicatorsEnabled ? "enabled" : "disabled"))
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -107,7 +107,7 @@ public class CommandManager {
                                 SettingsManager.hevSuitEnabled = !SettingsManager.hevSuitEnabled;
                                 String status = SettingsManager.hevSuitEnabled ? "Enabled" : "Disabled";
                                 context.getSource().sendFeedback(
-                                    Text.literal("The HEV Suit is now: " + status)
+                                    Text.literal("[HEV Suit] The HEV Suit is now: " + status)
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -118,7 +118,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.morphineEnabled = !SettingsManager.morphineEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Morphine sound effects " + (SettingsManager.morphineEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Morphine sound effects " + (SettingsManager.morphineEnabled ? "enabled" : "disabled"))
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -129,7 +129,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.armorDurabilityEnabled = !SettingsManager.armorDurabilityEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Armor durability sound effects " + 
+                                    Text.literal("[HEV Suit] Armor durability sound effects " + 
                                         (SettingsManager.armorDurabilityEnabled ? "enabled" : "disabled"))
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
@@ -141,7 +141,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.fracturesEnabled = !SettingsManager.fracturesEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Fracture alerts " + (SettingsManager.fracturesEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Fracture alerts " + (SettingsManager.fracturesEnabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -152,7 +152,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.heatDamageEnabled = !SettingsManager.heatDamageEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Heat Damage alerts " + (SettingsManager.heatDamageEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Heat Damage alerts " + (SettingsManager.heatDamageEnabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -163,7 +163,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.bloodLossEnabled = !SettingsManager.bloodLossEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Blood Loss alerts " + (SettingsManager.bloodLossEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Blood Loss alerts " + (SettingsManager.bloodLossEnabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -174,7 +174,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.shockDamageEnabled = !SettingsManager.shockDamageEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Shock Damage alerts " + (SettingsManager.shockDamageEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Shock Damage alerts " + (SettingsManager.shockDamageEnabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -185,7 +185,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.chemicalDamageEnabled = !SettingsManager.chemicalDamageEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Chemical Damage alerts " + (SettingsManager.chemicalDamageEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Chemical Damage alerts " + (SettingsManager.chemicalDamageEnabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -196,7 +196,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.healthCritical2Enabled = !SettingsManager.healthCritical2Enabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Vital Signs Dropping alerts " + (SettingsManager.healthCritical2Enabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Vital Signs Dropping alerts " + (SettingsManager.healthCritical2Enabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -207,7 +207,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.seekMedicalEnabled = !SettingsManager.seekMedicalEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Seek Medical alerts " + (SettingsManager.seekMedicalEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Seek Medical alerts " + (SettingsManager.seekMedicalEnabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -218,7 +218,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.healthCriticalEnabled = !SettingsManager.healthCriticalEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Health Critical alerts " + (SettingsManager.healthCriticalEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Health Critical alerts " + (SettingsManager.healthCriticalEnabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -229,7 +229,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SettingsManager.nearDeathEnabled = !SettingsManager.nearDeathEnabled;
                                 context.getSource().sendFeedback(
-                                    Text.literal("Near Death alerts " + (SettingsManager.nearDeathEnabled ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Near Death alerts " + (SettingsManager.nearDeathEnabled ? "enabled" : "disabled"))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -254,7 +254,7 @@ public class CommandManager {
                                         SettingsManager.hevSuitEnabled = false;
                                         SettingsManager.healthCritical2Enabled = false;
                                         SettingsManager.armorDurabilityEnabled = true; 
-                                        context.getSource().sendFeedback(Text.literal("PvP mode has been enabled, All hev suit features besides the hud, health alerts and armor durability tracking are disabled.").setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
+                                        context.getSource().sendFeedback(Text.literal("[HEV Suit] [HEV Suit] PvP mode has been enabled, All hev suit features besides the hud, health alerts and armor durability tracking are disabled.").setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
                                     } else {
                                         SettingsManager.healthAlertsEnabled = true;
                                         SettingsManager.hudEnabled = true;
@@ -266,7 +266,7 @@ public class CommandManager {
                                         SettingsManager.morphineEnabled = true;
                                         SettingsManager.hevSuitEnabled = true;
                                         SettingsManager.healthCritical2Enabled = true;
-                                        context.getSource().sendFeedback(Text.literal("PVP mode deactivated: All features re-enabled.").setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
+                                        context.getSource().sendFeedback(Text.literal("[HEV Suit] [HEV Suit] PVP mode deactivated: All features re-enabled.").setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
                                     }
                                     SettingsManager.saveSettings();
                                 } else {
@@ -283,7 +283,7 @@ public class CommandManager {
                                         SettingsManager.hudEnabled = true;
                                         SettingsManager.armorDurabilityEnabled = true;
                                         context.getSource().sendFeedback(
-                                            Text.literal("PvP mode has been enabled, All hev suit features besides the hud and health alerts are disabled.")
+                                            Text.literal("[HEV Suit] PvP mode has been enabled, All hev suit features besides the hud and health alerts are disabled.")
                                                 .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                         );
                                     } else {
@@ -297,7 +297,7 @@ public class CommandManager {
                                         SettingsManager.healthAlertsEnabled = true;
                                         SettingsManager.hudEnabled = true;
                                         context.getSource().sendFeedback(
-                                            Text.literal("PVP mode deactivated: All features re-enabled.")
+                                            Text.literal("[HEV Suit] PVP mode deactivated: All features re-enabled.")
                                                 .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                         );
                                     }
@@ -324,7 +324,7 @@ public class CommandManager {
                             .executes(context -> {
                                 SubtitleManager.toggleCaptions();
                                 context.getSource().sendFeedback(
-                                    Text.literal("Captions " + (SubtitleManager.areCaptionsEnabled() ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Captions " + (SubtitleManager.areCaptionsEnabled() ? "enabled" : "disabled"))
                                 .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                             );
                             return 1;
@@ -354,7 +354,7 @@ public class CommandManager {
                                 SettingsManager.nearDeathEnabled = newState;
 
                                 context.getSource().sendFeedback(
-                                    Text.literal("Toggled all features " + (newState ? "enabled" : "disabled"))
+                                    Text.literal("[HEV Suit] Toggled all features " + (newState ? "enabled" : "disabled"))
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();
@@ -369,17 +369,17 @@ public class CommandManager {
                         List<String> queuedSounds = SoundManager.getQueuedSounds();
                         if (queuedSounds.isEmpty()) {
                             context.getSource().sendFeedback(
-                                Text.literal("Sound queue is empty")
+                                Text.literal("[HEV Suit] Sound queue is empty")
                                 .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                             );
                         } else {
                             context.getSource().sendFeedback(
-                                Text.literal("Queued sounds:")
+                                Text.literal("[HEV Suit] Queued sounds:")
                                 .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                             );
                             for (int i = 0; i < queuedSounds.size(); i++) {
                                 context.getSource().sendFeedback(
-                                    Text.literal(" • " + queuedSounds.get(i))
+                                    Text.literal("[HEV Suit]  • " + queuedSounds.get(i))
                                     .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                             }
@@ -392,7 +392,7 @@ public class CommandManager {
                     .executes(context -> {
                         SoundManager.clearSoundQueue();
                         context.getSource().sendFeedback(
-                            Text.literal("Queue cleared.")
+                            Text.literal("[HEV Suit] Queue cleared.")
                             .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                         );
                         return 1;
@@ -404,9 +404,9 @@ public class CommandManager {
                             String soundName = StringArgumentType.getString(context, "sound");
                             if (SoundManager.SOUND_EVENTS.containsKey(soundName)) {
                                 SoundManager.queueSound(soundName);
-                                context.getSource().sendFeedback(Text.literal("Queuing sound: " + soundName).setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
+                                context.getSource().sendFeedback(Text.literal("[HEV Suit] [HEV Suit] Queuing sound: " + soundName).setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
                             } else {
-                                context.getSource().sendFeedback(Text.literal("Sound not found: " + soundName).setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
+                                context.getSource().sendFeedback(Text.literal("[HEV Suit] [HEV Suit] Sound not found: " + soundName).setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
                             }
                             return 1;
                         })
@@ -423,7 +423,7 @@ public class CommandManager {
                                     // Validate hex color format
                                     if (!isValidHexColor(hexColor)) {
                                         context.getSource().sendFeedback(
-                                            Text.literal("Invalid hex color format. Use format: #RRGGBB or RRGGBB")
+                                            Text.literal("[HEV Suit] Invalid hex color format. Use format: #RRGGBB or RRGGBB")
                                                 .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                         );
                                         return 0;
@@ -448,33 +448,33 @@ public class CommandManager {
                                         
                                         // Display a color preview in chat
                                         context.getSource().sendFeedback(
-                                            Text.literal("HUD colors updated.")
+                                            Text.literal("[HEV Suit] HUD colors updated.")
                                                 .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                         );
                                         
                                         // Show color preview
                                         context.getSource().sendFeedback(
-                                            Text.literal("Primary color: ")
+                                            Text.literal("[HEV Suit] Primary color: ")
                                                 .append(Text.literal("■■■")
                                                     .setStyle(Style.EMPTY.withColor(primaryColor & 0xFFFFFF)))
                                         );
                                         
                                         context.getSource().sendFeedback(
-                                            Text.literal("Secondary color: ")
+                                            Text.literal("[HEV Suit] Secondary color: ")
                                                 .append(Text.literal("■■■")
                                                     .setStyle(Style.EMPTY.withColor(secondaryColor & 0xFFFFFF)))
                                         );
                                         
                                         // Show reset instructions
                                         context.getSource().sendFeedback(
-                                            Text.literal("Use '/hev edit hud color reset' to restore default colors.")
+                                            Text.literal("[HEV Suit] Use '/hev edit hud color reset' to restore default colors.")
                                                 .setStyle(Style.EMPTY.withColor(Formatting.GRAY))
                                         );
                                         
                                         return 1;
                                     } catch (NumberFormatException e) {
                                         context.getSource().sendFeedback(
-                                            Text.literal("Error parsing hex color.")
+                                            Text.literal("[HEV Suit] Error parsing hex color.")
                                                 .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                         );
                                         return 0;
@@ -489,19 +489,19 @@ public class CommandManager {
                                     SettingsManager.saveSettings();
                                     
                                     context.getSource().sendFeedback(
-                                        Text.literal("HUD colors reset to default.")
+                                        Text.literal("[HEV Suit] HUD colors reset to default.")
                                             .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                     );
                                     
                                     // Show color preview
                                     context.getSource().sendFeedback(
-                                        Text.literal("Primary color: ")
+                                        Text.literal("[HEV Suit] Primary color: ")
                                             .append(Text.literal("■■■")
                                                 .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)))
                                     );
                                     
                                     context.getSource().sendFeedback(
-                                        Text.literal("Secondary color: ")
+                                        Text.literal("[HEV Suit] Secondary color: ")
                                             .append(Text.literal("■■■")
                                                 .setStyle(Style.EMPTY.withColor(SettingsManager.hudSecondaryColor & 0xFFFFFF)))
                                     );
@@ -515,7 +515,7 @@ public class CommandManager {
                                         String hexColor = StringArgumentType.getString(context, "hexcolor");
                                         if (!isValidHexColor(hexColor)) {
                                             context.getSource().sendFeedback(
-                                                Text.literal("Invalid hex color format. Use format: #RRGGBB or RRGGBB")
+                                                Text.literal("[HEV Suit] Invalid hex color format. Use format: #RRGGBB or RRGGBB")
                                                     .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                             );
                                             return 0;
@@ -528,13 +528,13 @@ public class CommandManager {
                                             SettingsManager.saveSettings();
                                             
                                             context.getSource().sendFeedback(
-                                                Text.literal("Primary HUD color updated.")
+                                                Text.literal("[HEV Suit] Primary HUD color updated.")
                                                     .setStyle(Style.EMPTY.withColor(primaryColor & 0xFFFFFF))
                                             );
                                             return 1;
                                         } catch (NumberFormatException e) {
                                             context.getSource().sendFeedback(
-                                                Text.literal("Error parsing hex color.")
+                                                Text.literal("[HEV Suit] Error parsing hex color.")
                                                     .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                             );
                                             return 0;
@@ -548,7 +548,7 @@ public class CommandManager {
                                         String hexColor = StringArgumentType.getString(context, "hexcolor");
                                         if (!isValidHexColor(hexColor)) {
                                             context.getSource().sendFeedback(
-                                                Text.literal("Invalid hex color format. Use format: #RRGGBB or RRGGBB")
+                                                Text.literal("[HEV Suit] Invalid hex color format. Use format: #RRGGBB or RRGGBB")
                                                     .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                             );
                                             return 0;
@@ -561,13 +561,13 @@ public class CommandManager {
                                             SettingsManager.saveSettings();
                                             
                                             context.getSource().sendFeedback(
-                                                Text.literal("Secondary HUD color updated.")
+                                                Text.literal("[HEV Suit] Secondary HUD color updated.")
                                                     .setStyle(Style.EMPTY.withColor(secondaryColor & 0xFFFFFF))
                                             );
                                             return 1;
                                         } catch (NumberFormatException e) {
                                             context.getSource().sendFeedback(
-                                                Text.literal("Error parsing hex color.")
+                                                Text.literal("[HEV Suit] Error parsing hex color.")
                                                     .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                             );
                                             return 0;
@@ -581,7 +581,7 @@ public class CommandManager {
                                         String hexColor = StringArgumentType.getString(context, "hexcolor");
                                         if (!isValidHexColor(hexColor)) {
                                             context.getSource().sendFeedback(
-                                                Text.literal("Invalid hex color format. Use format: #RRGGBB or RRGGBB")
+                                                Text.literal("[HEV Suit] Invalid hex color format. Use format: #RRGGBB or RRGGBB")
                                                     .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                             );
                                             return 0;
@@ -600,17 +600,17 @@ public class CommandManager {
                                             SettingsManager.saveSettings();
                                             
                                             context.getSource().sendFeedback(
-                                                Text.literal("HUD colors updated.")
+                                                Text.literal("[HEV Suit] HUD colors updated.")
                                                     .setStyle(Style.EMPTY.withColor(primaryColor & 0xFFFFFF))
                                             );
                                             
                                             context.getSource().sendFeedback(
-                                                Text.literal("Primary: ")
+                                                Text.literal("[HEV Suit] Primary: ")
                                                     .append(Text.literal("■■■")
                                                     .setStyle(Style.EMPTY.withColor(primaryColor & 0xFFFFFF)))
                                             );
                                             context.getSource().sendFeedback(
-                                                Text.literal("Secondary: ")
+                                                Text.literal("[HEV Suit] Secondary: ")
                                                     .append(Text.literal("■■■")
                                                     .setStyle(Style.EMPTY.withColor(secondaryColor & 0xFFFFFF)))
                                             );
@@ -618,7 +618,7 @@ public class CommandManager {
                                             return 1;
                                         } catch (NumberFormatException e) {
                                             context.getSource().sendFeedback(
-                                                Text.literal("Error parsing hex color.")
+                                                Text.literal("[HEV Suit] Error parsing hex color.")
                                                     .setStyle(Style.EMPTY.withColor(Formatting.RED))
                                             );
                                             return 0;

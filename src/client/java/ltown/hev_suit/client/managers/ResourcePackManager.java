@@ -5,9 +5,12 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import net.minecraft.client.MinecraftClient;
 
 public class ResourcePackManager {
     private static final Logger LOGGER = LogManager.getLogger("ResourcePackManager");
+
+    private static final String PACK_ID = "hev_resources";
 
     public static void registerBuiltInResourcePack() {
         try {
@@ -15,12 +18,18 @@ public class ResourcePackManager {
                 .getModContainer("hev_suit")
                 .orElseThrow(() -> new RuntimeException("Could not find HEV Suit mod container"));
 
-                net.fabricmc.fabric.api.resource.ResourceManagerHelper.registerBuiltinResourcePack(
-                    Identifier.of("hev_suit", "hev_resources"),
-                    modContainer,
-                    ResourcePackActivationType.ALWAYS_ENABLED
-                );
-            
+            Identifier id = Identifier.of("hev_suit", PACK_ID);
+            net.fabricmc.fabric.api.resource.ResourceManagerHelper.registerBuiltinResourcePack(
+                id,
+                modContainer,
+                ResourcePackActivationType.DEFAULT_ENABLED
+            );
+
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (!client.options.resourcePacks.contains(PACK_ID)) {
+                client.options.resourcePacks.add(PACK_ID);
+            }
+
             LOGGER.info("HEV Suit resource pack registered successfully");
         } catch (Exception e) {
             LOGGER.error("Failed to register HEV Suit resource pack", e);

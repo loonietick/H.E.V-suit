@@ -45,6 +45,18 @@ public class CommandManager {
                                 return 1;
                             })
                         )
+                        .then(ClientCommandManager.literal("offsets")
+                            .then(ClientCommandManager.literal("reload")
+                                .executes(context -> {
+                                    DebugOffsetManager.reload();
+                                    context.getSource().sendFeedback(
+                                        Text.literal("HUD debug offsets reloaded")
+                                            .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
+                                    );
+                                    return 1;
+                                })
+                            )
+                        )
                         .then(ClientCommandManager.literal("health")
                             .executes(context -> {
                                 SettingsManager.hudHealthEnabled = !SettingsManager.hudHealthEnabled;
@@ -72,6 +84,17 @@ public class CommandManager {
                                 SettingsManager.hudAmmoEnabled = !SettingsManager.hudAmmoEnabled;
                                 context.getSource().sendFeedback(
                                     Text.literal("HUD Ammo " + (SettingsManager.hudAmmoEnabled ? "enabled" : "disabled"))
+                                        .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
+                                );
+                                SettingsManager.saveSettings();
+                                return 1;
+                            })
+                        )
+                        .then(ClientCommandManager.literal("align")
+                            .executes(context -> {
+                                SettingsManager.hudAlignmentMode = !SettingsManager.hudAlignmentMode;
+                                context.getSource().sendFeedback(
+                                    Text.literal("HUD Alignment Mode " + (SettingsManager.hudAlignmentMode ? "enabled" : "disabled"))
                                         .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
                                 );
                                 SettingsManager.saveSettings();

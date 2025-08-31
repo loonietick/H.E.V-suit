@@ -53,7 +53,7 @@ public class SoundManager {
 
     private static void registerSound(String name) {
         try {
-            Identifier soundId = Identifier.of("hev_suit", name);
+            Identifier soundId = ltown.hev_suit.client.util.IdCompat.of("hev_suit", name);
             SoundEvent sound = SoundEvent.of(soundId);
             Registry.register(Registries.SOUND_EVENT, soundId, sound);
             SOUND_EVENTS.put(name, sound);

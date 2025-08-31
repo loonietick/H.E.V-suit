@@ -36,3 +36,16 @@
 ### **PvP Mode**
 - `/hev toggle systems pvp` – Disables all HEV suit systems except health monitoring and the HUD. This is so the HEV suit only tells you the needed alerts to survive (e.g., you won’t be told you’re on fire when someone uses a fire aspect sword).
 
+## Building for Multiple Versions
+
+This project now builds against both Minecraft 1.21.7 and the backported 1.21.4.
+
+- Default target comes from `gradle.properties` (`minecraft_version=1.21.7`).
+- Override per build using the `mcVersion` property:
+  - Build for 1.21.7:
+    `./gradlew build -PmcVersion=1.21.7`
+  - Build for 1.21.4:
+    `./gradlew build -PmcVersion=1.21.4`
+
+The Gradle script selects compatible Yarn mappings, Fabric Loader and Fabric API versions for each target.
+You can update the mapping in `build.gradle` (see the `supported` map near the top) when bumping versions.

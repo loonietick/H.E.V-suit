@@ -1,5 +1,5 @@
 plugins {
-    // Updated to support Minecraft 1.21.7
+    // Loom supports 1.21.x; keep in sync with Fabric docs
     id 'fabric-loom' version '1.10.1'
     id 'maven-publish'
 }
@@ -9,6 +9,32 @@ group = project.maven_group
 base {
     archivesName = project.archives_base_name
 }
+
+// ---- Multi-version configuration (1.19.4 → 1.21.8) ----
+// Select with: ./gradlew build -PmcVersion=1.21.4 (or 1.21.7, 1.19.4, ...)
+def mcVersionSelected = (findProperty('mcVersion') ?: project.findProperty('minecraft_version'))?.toString()
+def supported = [
+        // Keep these up to date if you bump versions
+        '1.19.4': [ yarn: '1.19.4+build.2', fabricApi: '0.81.0+1.19.4', loader: '0.16.14' ],
+        '1.20.1': [ yarn: '1.20.1+build.10', fabricApi: '0.92.3+1.20.1', loader: '0.16.14' ],
+        '1.20.6': [ yarn: '1.20.6+build.3', fabricApi: '0.100.8+1.20.6', loader: '0.16.14' ],
+        '1.21'  : [ yarn: '1.21+build.9',     fabricApi: '0.101.2+1.21',   loader: '0.16.14' ],
+        '1.21.1': [ yarn: '1.21.1+build.3',  fabricApi: '0.116.6+1.21.1', loader: '0.16.14' ],
+        '1.21.2': [ yarn: '1.21.2+build.1',  fabricApi: '0.103.2+1.21.2', loader: '0.16.14' ],
+        '1.21.3': [ yarn: '1.21.3+build.2',  fabricApi: '0.108.0+1.21.3', loader: '0.16.14' ],
+        '1.21.4': [ yarn: '1.21.4+build.8',  fabricApi: '0.119.4+1.21.4', loader: '0.16.14' ],
+        '1.21.5': [ yarn: '1.21.5+build.1',  fabricApi: '0.119.9+1.21.5', loader: '0.16.14' ],
+        '1.21.6': [ yarn: '1.21.6+build.1',  fabricApi: '0.124.4+1.21.6', loader: '0.16.14' ],
+        '1.21.7': [ yarn: '1.21.7+build.8',  fabricApi: '0.128.1+1.21.7', loader: '0.16.14' ],
+        '1.21.8': [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8', loader: '0.16.14' ],
+]
+
+if (!supported.containsKey(mcVersionSelected)) {
+    throw new GradleException("Unsupported mcVersion '${mcVersionSelected}'. Supported: ${supported.keySet()} (set with -PmcVersion)")
+}
+def vconf = supported[mcVersionSelected]
+
+println "[build] Targeting Minecraft ${mcVersionSelected} (Yarn ${vconf.yarn}, Fabric API ${vconf.fabricApi}, Loader ${vconf.loader})"
 
 loom {
     splitEnvironmentSourceSets()
@@ -21,32 +47,30 @@ loom {
 }
 
 repositories {
-    // Add these repositories
-
+    // Additional maven repos if needed
     maven { url "https://maven.shedaniel.me/" }
 }
 
 dependencies {
-    // To change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    
-    // Fabric API. This is technically optional, but you probably want it anyway.
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    // Controlled by mcVersion (-PmcVersion=1.21.4 or 1.21.7)
+    minecraft "com.mojang:minecraft:${mcVersionSelected}"
+    mappings "net.fabricmc:yarn:${vconf.yarn}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${vconf.loader}"
 
+    // Fabric API (optional but recommended)
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${vconf.fabricApi}"
 }
 
 processResources {
     inputs.property "version", project.version
-    inputs.property "minecraft_version", project.minecraft_version
-    inputs.property "loader_version", project.loader_version
+    inputs.property "minecraft_version", mcVersionSelected
+    inputs.property "loader_version", vconf.loader
     filteringCharset "UTF-8"
 
     filesMatching("fabric.mod.json") {
         expand "version": project.version,
-                "minecraft_version": project.minecraft_version,
-                "loader_version": project.loader_version
+                "minecraft_version": mcVersionSelected,
+                "loader_version": vconf.loader
     }
 }
 

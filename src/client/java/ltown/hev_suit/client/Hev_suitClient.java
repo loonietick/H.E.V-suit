@@ -10,7 +10,7 @@ import ltown.hev_suit.client.managers.HudManager;
 import ltown.hev_suit.client.managers.ResourcePackManager;
 import ltown.hev_suit.client.managers.SettingsManager;
 import ltown.hev_suit.client.managers.SoundManager;
-
+import ltown.hev_suit.client.managers.DebugOffsetManager;
 public class Hev_suitClient implements ClientModInitializer {
 
     private static final Logger LOGGER = LogManager.getLogger("Hev_suitClient");
@@ -20,9 +20,11 @@ public class Hev_suitClient implements ClientModInitializer {
         LOGGER.debug("Initializing HEV Suit Client");
         ResourcePackManager.registerBuiltInResourcePack();
         SettingsManager.loadSettings();
+        DebugOffsetManager.reload();
         SoundManager.registerSounds();
         EventManager.registerEventListeners();
         CommandManager.registerToggleCommands();
         HudManager.registerHud();
+        LOGGER.debug("HEV Suit Client Initialized");
     }
 }

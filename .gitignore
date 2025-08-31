@@ -22,7 +22,8 @@ hs_err_pid*
 .gradle/
 build/
 !gradle-wrapper.jar
-
+run/
+.DS_Store
 # macOS
 .DS_Store
 .AppleDouble

@@ -37,6 +37,7 @@ public class SettingsManager {
     public static boolean hudArmorEnabled = true;
     public static boolean hudAmmoEnabled = true;
     public static boolean threatIndicatorsEnabled = false;
+    public static boolean hudAlignmentMode = false; // render all assets centered for offset tuning
     
     public static int hudPrimaryColor = 0xFFFFAE00; 
     public static int hudSecondaryColor = 0xFF8B5E00;
@@ -66,6 +67,7 @@ public class SettingsManager {
                 hudArmorEnabled = getOrDefault(json, "hudArmorEnabled", true);
                 hudAmmoEnabled = getOrDefault(json, "hudAmmoEnabled", true);
                 threatIndicatorsEnabled = getOrDefault(json, "threatIndicatorsEnabled", false);
+                hudAlignmentMode = getOrDefault(json, "hudAlignmentMode", false);
                 hudPrimaryColor = getOrDefaultInt(json, "hudPrimaryColor", 0xFFFFAE00);
                 hudSecondaryColor = getOrDefaultInt(json, "hudSecondaryColor", 0xFF8B5E00);
                 LOGGER.debug("Settings loaded: useBlackMesaSFX = " + useBlackMesaSFX);
@@ -107,6 +109,7 @@ public class SettingsManager {
         json.addProperty("hudArmorEnabled", hudArmorEnabled);
         json.addProperty("hudAmmoEnabled", hudAmmoEnabled);
         json.addProperty("threatIndicatorsEnabled", threatIndicatorsEnabled);
+        json.addProperty("hudAlignmentMode", hudAlignmentMode);
         // Save custom color settings
         json.addProperty("hudPrimaryColor", hudPrimaryColor);
         json.addProperty("hudSecondaryColor", hudSecondaryColor);

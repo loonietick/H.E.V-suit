@@ -18,18 +18,15 @@ public class ResourcePackManager {
                 .getModContainer("hev_suit")
                 .orElseThrow(() -> new RuntimeException("Could not find HEV Suit mod container"));
 
-            Identifier id = Identifier.of("hev_suit", PACK_ID);
+            Identifier id = ltown.hev_suit.client.util.IdCompat.of("hev_suit", PACK_ID);
             net.fabricmc.fabric.api.resource.ResourceManagerHelper.registerBuiltinResourcePack(
                 id,
                 modContainer,
                 ResourcePackActivationType.DEFAULT_ENABLED
             );
-            // Add the pack to client options if not already present
-            MinecraftClient client = MinecraftClient.getInstance();
-            if (!client.options.resourcePacks.contains(PACK_ID)) {
-                client.options.resourcePacks.add(PACK_ID);
-            }
-            LOGGER.info("HEV Suit resource pack registered successfully");
+            // Do not touch client.options here — it can be null during early init on 1.21.4.
+            // DEFAULT_ENABLED will auto-activate unless user disabled it previously.
+            LOGGER.info("HEV Suit builtin resource pack registered (DEFAULT_ENABLED)");
         } catch (Exception e) {
             LOGGER.error("Failed to register HEV Suit resource pack", e);
         }

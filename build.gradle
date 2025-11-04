@@ -1,8 +1,10 @@
 plugins {
     // Loom supports 1.21.x; keep in sync with Fabric docs
-    id 'fabric-loom' version '1.10.1'
+    id 'fabric-loom' version '1.11.8'
     id 'maven-publish'
 }
+
+import org.gradle.api.file.DuplicatesStrategy
 
 version = project.mod_version
 group = project.maven_group
@@ -10,23 +12,14 @@ base {
     archivesName = project.archives_base_name
 }
 
-// ---- Multi-version configuration (1.19.4 → 1.21.8) ----
-// Select with: ./gradlew build -PmcVersion=1.21.4 (or 1.21.7, 1.19.4, ...)
+// ---- Multi-version configuration (1.21.8 → 1.21.10) ----
+// Select with: ./gradlew build -PmcVersion=1.21.8 (or 1.21.9, 1.21.10, ...)
 def mcVersionSelected = (findProperty('mcVersion') ?: project.findProperty('minecraft_version'))?.toString()
 def supported = [
-        // Keep these up to date if you bump versions
-        '1.19.4': [ yarn: '1.19.4+build.2', fabricApi: '0.81.0+1.19.4', loader: '0.16.14' ],
-        '1.20.1': [ yarn: '1.20.1+build.10', fabricApi: '0.92.3+1.20.1', loader: '0.16.14' ],
-        '1.20.6': [ yarn: '1.20.6+build.3', fabricApi: '0.100.8+1.20.6', loader: '0.16.14' ],
-        '1.21'  : [ yarn: '1.21+build.9',     fabricApi: '0.101.2+1.21',   loader: '0.16.14' ],
-        '1.21.1': [ yarn: '1.21.1+build.3',  fabricApi: '0.116.6+1.21.1', loader: '0.16.14' ],
-        '1.21.2': [ yarn: '1.21.2+build.1',  fabricApi: '0.103.2+1.21.2', loader: '0.16.14' ],
-        '1.21.3': [ yarn: '1.21.3+build.2',  fabricApi: '0.108.0+1.21.3', loader: '0.16.14' ],
-        '1.21.4': [ yarn: '1.21.4+build.8',  fabricApi: '0.119.4+1.21.4', loader: '0.16.14' ],
-        '1.21.5': [ yarn: '1.21.5+build.1',  fabricApi: '0.119.9+1.21.5', loader: '0.16.14' ],
-        '1.21.6': [ yarn: '1.21.6+build.1',  fabricApi: '0.124.4+1.21.6', loader: '0.16.14' ],
-        '1.21.7': [ yarn: '1.21.7+build.8',  fabricApi: '0.128.1+1.21.7', loader: '0.16.14' ],
-        '1.21.8': [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8', loader: '0.16.14' ],
+        // Keep these up to date as new Minecraft releases drop
+        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8', loader: '0.17.2' ],
+        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9', loader: '0.17.2' ],
+        '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.2' ],
 ]
 
 if (!supported.containsKey(mcVersionSelected)) {
@@ -46,6 +39,32 @@ loom {
     }
 }
 
+// Map MC version to a versioned source tree. Duplicate code per variant is OK.
+// Variants use directories like:
+//   - src/v1_21/java and src/v1_21/resources
+//   - src/v1_21_client/java and src/v1_21_client/resources
+def variantFor = { String mc ->
+    if (mc.startsWith('1.21.10')) return 'v1_21_10'
+    if (mc.startsWith('1.21.9')) return 'v1_21_9'
+    if (mc.startsWith('1.21.8')) return 'v1_21_8'
+    throw new GradleException("No source variant available for Minecraft ${mc}. Update variantFor in build.gradle.")
+}
+def variant = variantFor(mcVersionSelected)
+def variantMainDir = "src/${variant}"
+def variantClientDir = "src/${variant}_client"
+println "[build] Using source variant '${variant}' from ${variantMainDir} and ${variantClientDir}"
+
+sourceSets {
+    main {
+        java.srcDirs = ["${variantMainDir}/java"]
+        resources.srcDirs = ["${variantMainDir}/resources"]
+    }
+    client {
+        java.srcDirs = ["${variantClientDir}/java"]
+        resources.srcDirs = ["${variantClientDir}/resources"]
+    }
+}
+
 repositories {
     // Additional maven repos if needed
     maven { url "https://maven.shedaniel.me/" }
@@ -62,6 +81,7 @@ dependencies {
 }
 
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     inputs.property "version", project.version
     inputs.property "minecraft_version", mcVersionSelected
     inputs.property "loader_version", vconf.loader
@@ -72,6 +92,10 @@ processResources {
                 "minecraft_version": mcVersionSelected,
                 "loader_version": vconf.loader
     }
+}
+
+tasks.named("processClientResources") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 def targetJavaVersion = 17

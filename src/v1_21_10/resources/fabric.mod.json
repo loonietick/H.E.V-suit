@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "hev_suit",
+  "version": "${version}",
+  "icon": "assets/hev_suit/icon.png",
+  "name": "HEV Suit Sound System",
+  "description": "Adds reactive sound effects from Half-Life and Black Mesa to Minecraft alongside a 1:1 hud.",
+  "authors": ["loonietick/lunatic"],
+  "contact": {
+    "sources": "https://github.com/loonietick/H.E.V-suit",
+    "issues": "https://github.com/loonietick/H.E.V-suit/issues" 
+    
+  },
+  "license": "MIT",
+
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "ltown.hev_suit.client.Hev_suitClient"
+    ]
+  },
+  "mixins": [
+    "hev_suit.mixins.json",
+    {
+      "config": "hev_suit.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

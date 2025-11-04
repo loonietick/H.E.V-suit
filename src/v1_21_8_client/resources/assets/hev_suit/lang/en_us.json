@@ -1,0 +1,6 @@
+{
+  "key.categories.hev_suit": "HEV Suit",
+  "key.hev_suit.open_config": "Open HEV Suit Config",
+  "hev_suit.config.title": "HEV Suit Configuration",
+  "hev_suit.config.subtitle": "Toggle suit systems on or off. Settings save instantly."
+}

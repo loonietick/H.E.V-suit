@@ -21,11 +21,16 @@ public class SoundManager {
     private static final Random RANDOM = new Random();
     private static final float MIN_PITCH = 0.98f;
     private static final float MAX_PITCH = 1.05f;
+    private static final Set<String> PRIORITY_ALERT_SOUNDS = Set.of(
+            "minor_fracture", "major_fracture", "minor_laceration", "major_laceration",
+            "blood_loss", "internal_bleeding"
+    );
     private static final Set<String> HEALTH_ALERT_SOUNDS = Set.of(
             "health_critical2", "seek_medical", "health_critical", "near_death",
             "bm_health_critical2", "bm_seek_medical", "bm_health_critical", "bm_near_death"
     );
     private static final QueueChannel GENERAL_CHANNEL = new QueueChannel("general", "");
+    private static final QueueChannel PRIORITY_CHANNEL = new QueueChannel("priority", "[priority] ");
     private static final QueueChannel HEALTH_CHANNEL = new QueueChannel("health", "[health] ");
     private static SoundInstance geigerSoundInstance;
     private static boolean geigerLoopRequested = false;
@@ -96,7 +101,9 @@ public class SoundManager {
             return;
         }
 
-        // Health alerts are processed first so they do not starve behind other notifications.
+        // Prioritized injury alerts should play before health status updates, mirroring the Half-Life cadence.
+        processQueueChannel(client, PRIORITY_CHANNEL);
+        // Health alerts stay ahead of the general queue so they do not starve behind other notifications.
         processQueueChannel(client, HEALTH_CHANNEL);
         processQueueChannel(client, GENERAL_CHANNEL);
     }
@@ -161,13 +168,19 @@ public class SoundManager {
     }
 
     public static void queueSound(String soundName) {
-        QueueChannel target = HEALTH_ALERT_SOUNDS.contains(soundName) ? HEALTH_CHANNEL : GENERAL_CHANNEL;
+        QueueChannel target = GENERAL_CHANNEL;
+        if (PRIORITY_ALERT_SOUNDS.contains(soundName)) {
+            target = PRIORITY_CHANNEL;
+        } else if (HEALTH_ALERT_SOUNDS.contains(soundName)) {
+            target = HEALTH_CHANNEL;
+        }
         target.pending.offer(soundName);
     }
 
     public static void clearSoundQueue() {
         resetChannel(GENERAL_CHANNEL);
         resetChannel(HEALTH_CHANNEL);
+        resetChannel(PRIORITY_CHANNEL);
     }
 
     public static void clearQueue() {
@@ -200,7 +213,10 @@ public class SoundManager {
     }
 
     public static List<String> getQueuedSounds() {
-        List<String> queued = new ArrayList<>(HEALTH_CHANNEL.pending.size() + GENERAL_CHANNEL.pending.size());
+        List<String> queued = new ArrayList<>(PRIORITY_CHANNEL.pending.size()
+                + HEALTH_CHANNEL.pending.size()
+                + GENERAL_CHANNEL.pending.size());
+        appendQueuedSounds(queued, PRIORITY_CHANNEL);
         appendQueuedSounds(queued, HEALTH_CHANNEL);
         appendQueuedSounds(queued, GENERAL_CHANNEL);
         return queued;
@@ -228,6 +244,7 @@ public class SoundManager {
 
     public static void startGeigerLoop() {
         geigerLoopRequested = true;
+        HudManager.setRadiationActive(true);
         MinecraftClient client = MinecraftClient.getInstance();
         if (client != null) {
             ensureGeigerLoop(client);
@@ -236,6 +253,7 @@ public class SoundManager {
 
     public static void stopGeigerLoop() {
         geigerLoopRequested = false;
+        HudManager.setRadiationActive(false);
         MinecraftClient client = MinecraftClient.getInstance();
         if (client != null && geigerSoundInstance != null) {
             client.getSoundManager().stop(geigerSoundInstance);

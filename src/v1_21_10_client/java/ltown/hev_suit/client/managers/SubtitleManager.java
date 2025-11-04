@@ -35,10 +35,10 @@ public class SubtitleManager {
         CAPTIONS.put("powermove_on", "Power assist movement activated");
         CAPTIONS.put("powermove_overload", "Warning: Power movement system overload");
         CAPTIONS.put("administering_medical", "Administering Medical Attention");
-        CAPTIONS.put("insufficient_medical", "Insufficient medical supplies to repair damage");
+        CAPTIONS.put("insufficient_medical", "Insufficient Medical Supplies to repair damage");
         CAPTIONS.put("medical_repaired", "Medical Damage Repaired");
         CAPTIONS.put("radiation_detected", "Warning: Hazardous Radiation Levels Detected");
-        CAPTIONS.put("geiger", "(Geiger Counter)");
+        CAPTIONS.put("geiger", "(Geiger Counter Clicking)");
         CAPTIONS.put("flatline", "User Fatality");
         CAPTIONS.put("internal_bleeding", "Internal Bleeding Detected");
 

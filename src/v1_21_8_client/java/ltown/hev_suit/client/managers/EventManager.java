@@ -3,6 +3,7 @@ package ltown.hev_suit.client.managers;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
@@ -168,6 +169,10 @@ public class EventManager {
         lastWeaponPickupTime = 0;
         SoundManager.stopGeigerLoop();
         SoundManager.stopFlatline();
+        HudManager.setColdActive(false);
+        HudManager.setBiohazardActive(false);
+        HudManager.clearElectricalAlert();
+        HudManager.setRadiationActive(false);
     }
 
     private static void onClientTick(MinecraftClient client) {
@@ -188,6 +193,15 @@ public class EventManager {
 
             PlayerEntity player = client.player;
             if (player == null) return;
+
+            boolean inPowderSnow = player.getFrozenTicks() > 0
+                    || client.world != null && (
+                        client.world.getBlockState(player.getBlockPos()).isOf(Blocks.POWDER_SNOW)
+                        || client.world.getBlockState(player.getBlockPos().down()).isOf(Blocks.POWDER_SNOW));
+            HudManager.setColdActive(inPowderSnow);
+
+            boolean hasChemicalEffect = player.hasStatusEffect(StatusEffects.POISON) || player.hasStatusEffect(StatusEffects.WITHER);
+            HudManager.setBiohazardActive(hasChemicalEffect);
 
             handleDeathState(player);
             handleBasaltExposure(client, player);
@@ -398,10 +412,12 @@ public class EventManager {
         }
 
         // Shock damage with cooldown
-        if (SettingsManager.shockDamageEnabled && damageSource.isOf(DamageTypes.LIGHTNING_BOLT) && 
-            currentTime - lastShockDamageTime >= GENERAL_COOLDOWN) {
-            SoundManager.queueSound(prefix + "shock_damage");
-            lastShockDamageTime = currentTime;
+        if (damageSource.isOf(DamageTypes.LIGHTNING_BOLT)) {
+            HudManager.triggerElectricalAlert();
+            if (SettingsManager.shockDamageEnabled && currentTime - lastShockDamageTime >= GENERAL_COOLDOWN) {
+                SoundManager.queueSound(prefix + "shock_damage");
+                lastShockDamageTime = currentTime;
+            }
         }
 
         Entity damageEntity = damageSource.getSource();

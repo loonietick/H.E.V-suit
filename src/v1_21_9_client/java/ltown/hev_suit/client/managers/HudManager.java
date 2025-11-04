@@ -204,11 +204,15 @@ public class HudManager {
     };
 
     // icons
-    private static final Identifier ICON_HEALTH    = tex("health");
-    private static final Identifier ICON_ARMOR_ON  = tex("armoron");
-    private static final Identifier ICON_NOARMOR   = tex("noarmor");
-    private static final Identifier ICON_O2_SM     = tex("oxygensm");
-    private static final Identifier ICON_FIRE_SM   = tex("firesm");
+    private static final Identifier ICON_HEALTH        = tex("health");
+    private static final Identifier ICON_ARMOR_ON      = tex("armoron");
+    private static final Identifier ICON_NOARMOR       = tex("noarmor");
+    private static final Identifier ICON_O2            = tex("oxygen");
+    private static final Identifier ICON_FIRE          = tex("fire");
+    private static final Identifier ICON_COLD          = tex("cold");
+    private static final Identifier ICON_ELECTRICAL    = tex("eletrical");
+    private static final Identifier ICON_RADIATION     = tex("radiation");
+    private static final Identifier ICON_BIOHAZARD     = tex("biohazard");
 
     // === HL1 sizing + tint ===
     // (unused HL1 tuning constants removed)
@@ -219,6 +223,37 @@ public class HudManager {
         int a = (argb >>> 24) & 0xFF;
         int na = Math.max(0, Math.min(255, Math.round(a * opacity)));
         return (na << 24) | (argb & 0x00FFFFFF);
+    }
+
+    private static final long ELECTRICAL_ALERT_DURATION_MS = 5000;
+    private static final float STATUS_ICON_SCALE = 0.65f;
+    private static volatile boolean coldActive = false;
+    private static volatile boolean radiationActive = false;
+    private static volatile boolean biohazardActive = false;
+    private static volatile long electricalAlertUntilMs = 0;
+
+    public static void setColdActive(boolean active) {
+        coldActive = active;
+    }
+
+    public static void triggerElectricalAlert() {
+        electricalAlertUntilMs = System.currentTimeMillis() + ELECTRICAL_ALERT_DURATION_MS;
+    }
+
+    public static void clearElectricalAlert() {
+        electricalAlertUntilMs = 0;
+    }
+
+    public static void setRadiationActive(boolean active) {
+        radiationActive = active;
+    }
+
+    public static void setBiohazardActive(boolean active) {
+        biohazardActive = active;
+    }
+
+    private static boolean isElectricalActive() {
+        return electricalAlertUntilMs > System.currentTimeMillis();
     }
 
     // scaled draw helpers (use matrix scale so we don't need the larger drawTexture overloads)
@@ -461,12 +496,41 @@ public class HudManager {
 
             // === Normal HUD layout (left and right anchored) ===
             // Small status pips (above left row)
-            if (showO2 || showFire) {
-                if (showO2) {
-                    drawIconBottomAlignedScaled(graphics, ICON_O2_SM, uiPAD, uiBaseline - Math.round(targetIconH + targetDigitH * 0.9f), uiIconScale * 0.75f, PRIMARY, "status_o2_icon");
-                }
-                if (showFire) {
-                    drawIconBottomAlignedScaled(graphics, ICON_FIRE_SM, uiPAD + Math.round(targetDigitH * 1.2f), uiBaseline - Math.round(targetIconH + targetDigitH * 0.9f), uiIconScale * 0.75f, PRIMARY, "status_fire_icon");
+            java.util.ArrayList<Identifier> statusIcons = new java.util.ArrayList<>();
+            java.util.ArrayList<String> statusContexts = new java.util.ArrayList<>();
+            if (showO2) {
+                statusIcons.add(ICON_O2);
+                statusContexts.add("status_o2_icon");
+            }
+            if (showFire) {
+                statusIcons.add(ICON_FIRE);
+                statusContexts.add("status_fire_icon");
+            }
+            if (coldActive) {
+                statusIcons.add(ICON_COLD);
+                statusContexts.add("status_cold_icon");
+            }
+            if (isElectricalActive()) {
+                statusIcons.add(ICON_ELECTRICAL);
+                statusContexts.add("status_electrical_icon");
+            }
+            if (radiationActive) {
+                statusIcons.add(ICON_RADIATION);
+                statusContexts.add("status_radiation_icon");
+            }
+            if (biohazardActive) {
+                statusIcons.add(ICON_BIOHAZARD);
+                statusContexts.add("status_biohazard_icon");
+            }
+            if (!statusIcons.isEmpty()) {
+                int statusBaseline = uiBaseline - Math.round(targetIconH + targetDigitH * 0.9f);
+                int statusX = uiPAD;
+                int statusSpacing = Math.max(6, Math.round(targetDigitH * 0.8f));
+                for (int idx = 0; idx < statusIcons.size(); idx++) {
+                    Identifier icon = statusIcons.get(idx);
+                    String context = statusContexts.get(idx);
+                    statusX += drawIconBottomAlignedScaled(graphics, icon, statusX, statusBaseline, uiIconScale * STATUS_ICON_SCALE, PRIMARY, context);
+                    statusX += statusSpacing;
                 }
             }
 

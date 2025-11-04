@@ -228,6 +228,7 @@ public class SoundManager {
 
     public static void startGeigerLoop() {
         geigerLoopRequested = true;
+        HudManager.setRadiationActive(true);
         MinecraftClient client = MinecraftClient.getInstance();
         if (client != null) {
             ensureGeigerLoop(client);
@@ -236,6 +237,7 @@ public class SoundManager {
 
     public static void stopGeigerLoop() {
         geigerLoopRequested = false;
+        HudManager.setRadiationActive(false);
         MinecraftClient client = MinecraftClient.getInstance();
         if (client != null && geigerSoundInstance != null) {
             client.getSoundManager().stop(geigerSoundInstance);

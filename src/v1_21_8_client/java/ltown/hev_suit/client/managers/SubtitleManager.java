@@ -34,12 +34,12 @@ public class SubtitleManager {
         CAPTIONS.put("ammo_pickup", "Ammunition Acquired");
         CAPTIONS.put("powermove_on", "Power assist movement activated");
         CAPTIONS.put("powermove_overload", "Warning: Power movement system overload");
-        CAPTIONS.put("administering_medical", "Administering Medical Aid");
-        CAPTIONS.put("insufficient_medical", "Medical Supplies Insufficient");
-        CAPTIONS.put("medical_repaired", "Medical Systems Restored");
-        CAPTIONS.put("radiation_detected", "Warning: Radiation Detected");
-        CAPTIONS.put("geiger", "Radiation Levels Rising");
-        CAPTIONS.put("flatline", "Critical: Flatline Detected");
+        CAPTIONS.put("administering_medical", "Administering Medical Attention");
+        CAPTIONS.put("insufficient_medical", "Insufficient Medical Supplies to repair damage");
+        CAPTIONS.put("medical_repaired", "Medical Damage Repaired");
+        CAPTIONS.put("radiation_detected", "Warning: Hazardous Radiation Levels Detected");
+        CAPTIONS.put("geiger", "(Geiger Counter Clicking)");
+        CAPTIONS.put("flatline", "User Fatality");
         
         // Black Mesa captions
         CAPTIONS.put("bm_major_laceration", "Major Lacerations Detected");

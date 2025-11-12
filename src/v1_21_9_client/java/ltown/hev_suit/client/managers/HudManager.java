@@ -38,19 +38,65 @@ public class HudManager {
         static float digitScaleMul = 1.0f;  // global digit scale multiplier
         static int baselineOffsetY = 0;     // shift the whole row up/down
         static int digitBaselineOffsetY = 0;// shift digits vs icons
-        static int ammoDividerOffsetX = 0;  // shift ammo divider left/right
-        static int ammoDividerTopOffset = 0;    // shorten/extend from top (px)
-        static int ammoDividerBottomOffset = 0; // shorten/extend from bottom (px)
+        static int healthArmorDividerOffsetX = 0;    // shift the health/armor separator left/right
+        static int healthArmorDividerTopOffset = 0;  // shift top edge up/down (px)
+        static int healthArmorDividerBottomOffset = 0;// shift bottom edge up/down (px)
+        static int healthArmorDividerWidth = 1;      // thickness of the bar (px)
+        static int healthArmorDividerHeight = 10;    // vertical size (px)
 
-        static final java.util.Map<String, Vec2i> iconOffsets = new java.util.HashMap<>();     // per-icon pixel offsets
-        static final java.util.Map<String, Integer> digitKerning = new java.util.HashMap<>();  // per-digit kerning
+        static int ammoDividerOffsetX = 0;      // shift ammo divider left/right
+        static int ammoDividerTopOffset = 0;    // shift top edge up/down (px)
+        static int ammoDividerBottomOffset = 0; // shift bottom edge up/down (px)
+        static int ammoDividerWidth = 1;        // thickness of the bar (px)
+        static int ammoDividerHeight = 10;      // vertical size (px)
 
-        static {
-            // defaults — tweak freely; keys are the png base names (e.g., "health", "armoron", "digit_1")
-            iconOffsets.put("health",  new Vec2i(0, 0));
-            iconOffsets.put("armoron", new Vec2i(0, 0));
-            iconOffsets.put("noarmor", new Vec2i(0, 0));
-            for (int d = 0; d <= 9; d++) digitKerning.put(Integer.toString(d), 0);
+        static final java.util.Map<String, Vec2i> iconOffsets = createIconOffsets();     // per-icon pixel offsets
+        static final java.util.Map<String, Integer> digitKerning = createDigitKerning(); // per-digit kerning
+
+        private static java.util.Map<String, Vec2i> createIconOffsets() {
+            java.util.Map<String, Vec2i> map = new java.util.HashMap<>();
+
+            put(map, "armoron", 0, 5);
+            put(map, "armorsmall", 0, 0);
+            put(map, "biohazard", 0, 0);
+            put(map, "biohazardsm", 0, 0);
+            put(map, "cold", 0, 0);
+            put(map, "coldsm", 0, 0);
+            put(map, "eletrical", 0, 0);
+            put(map, "eletricalsm", 0, 0);
+            put(map, "fire", 0, 0);
+            put(map, "firesm", 0, 0);
+            put(map, "health", 0, 3);
+            put(map, "lightoff", 0, 0);
+            put(map, "lighton", 0, 0);
+            put(map, "nervegas", 0, 0);
+            put(map, "nervegassm", 0, 0);
+            put(map, "noarmor", 0, 5);
+            put(map, "noarmorsmall", 0, 0);
+            put(map, "oxygen", 0, 0);
+            put(map, "oxygensm", 0, 0);
+            put(map, "radiation", 0, 0);
+            put(map, "radiationsm", 0, 0);
+            put(map, "waste", 0, 0);
+            put(map, "wastesm", 0, 0);
+
+            for (int d = 0; d <= 9; d++) {
+                put(map, "digit_" + d, 0, 0);
+            }
+
+            return java.util.Map.copyOf(map);
+        }
+
+        private static java.util.Map<String, Integer> createDigitKerning() {
+            java.util.Map<String, Integer> map = new java.util.HashMap<>();
+            for (int d = 0; d <= 9; d++) {
+                map.put(Integer.toString(d), 0);
+            }
+            return java.util.Map.copyOf(map);
+        }
+
+        private static void put(java.util.Map<String, Vec2i> map, String key, int x, int y) {
+            map.put(key, new Vec2i(x, y));
         }
     }
 
@@ -66,16 +112,23 @@ public class HudManager {
     private static int iconOffX(Identifier id, String ctx){ return iconOffX(id, ctx, null); }
     private static int iconOffY(Identifier id, String ctx){ return iconOffY(id, ctx, null); }
     private static int iconOffX(Identifier id, String ctx, String role){
-        String k = keyOf(id);
-        Vec2i v = HudTuning.iconOffsets.get(k);
-        int base = (v==null?0:v.x);
-        return base + DebugOffsetManager.getOffsetX(k, ctx, role);
+        Vec2i v = resolveIconOffset(keyOf(id), ctx, role);
+        return v == null ? 0 : v.x;
     }
     private static int iconOffY(Identifier id, String ctx, String role){
-        String k = keyOf(id);
-        Vec2i v = HudTuning.iconOffsets.get(k);
-        int base = (v==null?0:v.y);
-        return base + DebugOffsetManager.getOffsetY(k, ctx, role);
+        Vec2i v = resolveIconOffset(keyOf(id), ctx, role);
+        return v == null ? 0 : v.y;
+    }
+    private static Vec2i resolveIconOffset(String key, String ctx, String role) {
+        if (ctx != null && !ctx.isEmpty() && role != null && !role.isEmpty()) {
+            Vec2i v = HudTuning.iconOffsets.get(key + "@" + ctx + "#" + role);
+            if (v != null) return v;
+        }
+        if (ctx != null && !ctx.isEmpty()) {
+            Vec2i v = HudTuning.iconOffsets.get(key + "@" + ctx);
+            if (v != null) return v;
+        }
+        return HudTuning.iconOffsets.get(key);
     }
     private static int kernFor(char c){ Integer k = HudTuning.digitKerning.get(Character.toString(c)); return k==null?0:k; }
 
@@ -546,10 +599,14 @@ public class HudManager {
                 int armorDigitsBase = uiBaseline - Math.round(2 * uiDigitScale) + Math.round(HudTuning.digitBaselineOffsetY * uiDigitScale);
                 int armorPctClamped = Math.max(0, armorPct);
                 if (SettingsManager.hudHealthEnabled) {
-                    int barX1 = xLeft + Math.max(4, Math.round(targetDigitH * 0.25f));
-                    int barX2 = barX1 + 1;
-                    int barTop = uiBaseline - Math.round(16 * uiDigitScale);
-                    int barBot = uiBaseline - Math.round(6 * uiDigitScale);
+                    int baseBarX1 = xLeft + Math.max(4, Math.round(targetDigitH * 0.25f));
+                    int barX1 = baseBarX1 + Math.round(HudTuning.healthArmorDividerOffsetX * uiDigitScale);
+                    int barWidth = Math.max(1, Math.round(HudTuning.healthArmorDividerWidth * uiDigitScale));
+                    int barX2 = barX1 + barWidth;
+                    int baseTop = uiBaseline - Math.round(16 * uiDigitScale);
+                    int barTop = baseTop + Math.round(HudTuning.healthArmorDividerTopOffset * uiDigitScale);
+                    int barHeight = Math.max(1, Math.round(HudTuning.healthArmorDividerHeight * uiDigitScale));
+                    int barBot = barTop + barHeight + Math.round(HudTuning.healthArmorDividerBottomOffset * uiDigitScale);
                     ((DrawContext) graphics).fill(barX1, barTop, barX2, barBot, withOpacity(PRIMARY, HUD_OPACITY));
                     xLeft = barX2 + uiCOL_GAP;
                 }
@@ -567,9 +624,12 @@ public class HudManager {
                 drawDigitStringScaled(graphics, rStr, startR, digitsBase, uiDigitScale, PRIMARY, "ammo_right_digits");
 
                 int barX1 = startR - dividerGap + Math.round(HudTuning.ammoDividerOffsetX * uiDigitScale);
-                int barX2 = barX1 + 1;
-                int barTop = uiBaseline - Math.round(16 * uiDigitScale) + Math.round(HudTuning.ammoDividerTopOffset * uiDigitScale);
-                int barBot = uiBaseline - Math.round(6 * uiDigitScale) + Math.round(HudTuning.ammoDividerBottomOffset * uiDigitScale);
+                int barWidth = Math.max(1, Math.round(HudTuning.ammoDividerWidth * uiDigitScale));
+                int barX2 = barX1 + barWidth;
+                int baseTop = uiBaseline - Math.round(16 * uiDigitScale);
+                int barTop = baseTop + Math.round(HudTuning.ammoDividerTopOffset * uiDigitScale);
+                int barHeight = Math.max(1, Math.round(HudTuning.ammoDividerHeight * uiDigitScale));
+                int barBot = barTop + barHeight + Math.round(HudTuning.ammoDividerBottomOffset * uiDigitScale);
                 ((DrawContext) graphics).fill(barX1, barTop, barX2, barBot, withOpacity(PRIMARY, HUD_OPACITY));
 
                 int lWidth = measureDigitString(lStr, uiDigitScale);

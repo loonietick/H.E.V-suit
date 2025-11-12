@@ -67,18 +67,6 @@ public class CommandManager {
                                 return 1;
                             })
                         )
-                        .then(ClientCommandManager.literal("offsets")
-                            .then(ClientCommandManager.literal("reload")
-                                .executes(context -> {
-                                    DebugOffsetManager.reload();
-                                    context.getSource().sendFeedback(
-                                        Text.literal("HUD debug offsets reloaded")
-                                            .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
-                                    );
-                                    return 1;
-                                })
-                            )
-                        )
                         .then(ClientCommandManager.literal("health")
                             .executes(context -> {
                                 SettingsManager.hudHealthEnabled = !SettingsManager.hudHealthEnabled;
@@ -285,82 +273,33 @@ public class CommandManager {
                     .then(ClientCommandManager.literal("systems")
                         .then(ClientCommandManager.literal("pvp")
                             .executes(context -> {
-                                if (!SettingsManager.useBlackMesaSFX) {
-                                    SettingsManager.pvpModeEnabled = !SettingsManager.pvpModeEnabled;
-                                    if (SettingsManager.pvpModeEnabled) {
-                                        SettingsManager.healthAlertsEnabled = true;
-                                        SettingsManager.hudEnabled = true;
-                                        SettingsManager.fracturesEnabled = false;
-                                        SettingsManager.heatDamageEnabled = false;
-                                        SettingsManager.bloodLossEnabled = false;
-                                        SettingsManager.shockDamageEnabled = false;
-                                        SettingsManager.chemicalDamageEnabled = false;
-                                        SettingsManager.morphineEnabled = false;
-                                        SettingsManager.hevSuitEnabled = false;
-                                        SettingsManager.healthCritical2Enabled = false;
-                                        SettingsManager.armorDurabilityEnabled = true; 
-                                        context.getSource().sendFeedback(Text.literal("PvP mode has been enabled, All hev suit features besides the hud, health alerts and armor durability tracking are disabled.").setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
-                                    } else {
-                                        SettingsManager.healthAlertsEnabled = true;
-                                        SettingsManager.hudEnabled = true;
-                                        SettingsManager.fracturesEnabled = true;
-                                        SettingsManager.heatDamageEnabled = true;
-                                        SettingsManager.bloodLossEnabled = true;
-                                        SettingsManager.shockDamageEnabled = true;
-                                        SettingsManager.chemicalDamageEnabled = true;
-                                        SettingsManager.morphineEnabled = true;
-                                        SettingsManager.hevSuitEnabled = true;
-                                        SettingsManager.healthCritical2Enabled = true;
-                                        context.getSource().sendFeedback(Text.literal("PVP mode deactivated: All features re-enabled.").setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
-                                    }
-                                    SettingsManager.saveSettings();
+                                SettingsManager.pvpModeEnabled = !SettingsManager.pvpModeEnabled;
+                                if (SettingsManager.pvpModeEnabled) {
+                                    SettingsManager.healthAlertsEnabled = true;
+                                    SettingsManager.hudEnabled = true;
+                                    SettingsManager.fracturesEnabled = false;
+                                    SettingsManager.heatDamageEnabled = false;
+                                    SettingsManager.bloodLossEnabled = false;
+                                    SettingsManager.shockDamageEnabled = false;
+                                    SettingsManager.chemicalDamageEnabled = false;
+                                    SettingsManager.morphineEnabled = false;
+                                    SettingsManager.hevSuitEnabled = false;
+                                    SettingsManager.healthCritical2Enabled = false;
+                                    SettingsManager.armorDurabilityEnabled = true;
+                                    context.getSource().sendFeedback(Text.literal("PvP mode has been enabled, All hev suit features besides the hud, health alerts and armor durability tracking are disabled.").setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
                                 } else {
-                                    SettingsManager.pvpModeEnabled = !SettingsManager.pvpModeEnabled;
-                                    if (SettingsManager.pvpModeEnabled) {
-                                        SettingsManager.fracturesEnabled = false;
-                                        SettingsManager.bloodLossEnabled = false;
-                                        SettingsManager.chemicalDamageEnabled = false;
-                                        SettingsManager.morphineEnabled = false;
-                                        SettingsManager.healthCritical2Enabled = false;
-                                        SettingsManager.nearDeathEnabled = false;
-                                        SettingsManager.hevSuitEnabled = false;
-                                        SettingsManager.healthAlertsEnabled = true;
-                                        SettingsManager.hudEnabled = true;
-                                        SettingsManager.armorDurabilityEnabled = true;
-                                        context.getSource().sendFeedback(
-                                            Text.literal("PvP mode has been enabled, All hev suit features besides the hud and health alerts are disabled.")
-                                                .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
-                                        );
-                                    } else {
-                                        SettingsManager.fracturesEnabled = true;
-                                        SettingsManager.bloodLossEnabled = true;
-                                        SettingsManager.chemicalDamageEnabled = true;
-                                        SettingsManager.morphineEnabled = true;
-                                        SettingsManager.healthCritical2Enabled = true;
-                                        SettingsManager.nearDeathEnabled = true;
-                                        SettingsManager.hevSuitEnabled = true;
-                                        SettingsManager.healthAlertsEnabled = true;
-                                        SettingsManager.hudEnabled = true;
-                                        context.getSource().sendFeedback(
-                                            Text.literal("PVP mode deactivated: All features re-enabled.")
-                                                .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
-                                        );
-                                    }
-                                    SettingsManager.saveSettings();
+                                    SettingsManager.healthAlertsEnabled = true;
+                                    SettingsManager.hudEnabled = true;
+                                    SettingsManager.fracturesEnabled = true;
+                                    SettingsManager.heatDamageEnabled = true;
+                                    SettingsManager.bloodLossEnabled = true;
+                                    SettingsManager.shockDamageEnabled = true;
+                                    SettingsManager.chemicalDamageEnabled = true;
+                                    SettingsManager.morphineEnabled = true;
+                                    SettingsManager.hevSuitEnabled = true;
+                                    SettingsManager.healthCritical2Enabled = true;
+                                    context.getSource().sendFeedback(Text.literal("PVP mode deactivated: All features re-enabled.").setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF)));
                                 }
-                                return 1;
-                            })
-                        )
-                        .then(ClientCommandManager.literal("blackmesasfx")
-                            .executes(context -> {
-                                SettingsManager.useBlackMesaSFX = !SettingsManager.useBlackMesaSFX;
-                                LOGGER.debug("Toggled Black Mesa SFX: " + SettingsManager.useBlackMesaSFX);
-                                context.getSource().sendFeedback(
-                                    Text.literal(SettingsManager.useBlackMesaSFX ? 
-                                        "Black Mesa SFX enabled" : 
-                                        "Half-Life 1 SFX enabled")
-                                    .setStyle(Style.EMPTY.withColor(SettingsManager.hudPrimaryColor & 0xFFFFFF))
-                                );
                                 SettingsManager.saveSettings();
                                 return 1;
                             })

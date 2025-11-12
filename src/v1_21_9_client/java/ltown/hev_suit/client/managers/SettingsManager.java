@@ -30,7 +30,6 @@ public class SettingsManager {
     public static boolean seekMedicalEnabled = true;
     public static boolean healthCriticalEnabled = true;
     public static boolean nearDeathEnabled = true;
-    public static boolean useBlackMesaSFX = false;
     public static boolean captionsEnabled = false;
     public static boolean damageIndicatorsEnabled = true;
     public static boolean hudHealthEnabled = true;
@@ -61,7 +60,6 @@ public class SettingsManager {
                 seekMedicalEnabled = getOrDefault(json, "seekMedicalEnabled", true);
                 healthCriticalEnabled = getOrDefault(json, "healthCriticalEnabled", true);
                 nearDeathEnabled = getOrDefault(json, "nearDeathEnabled", true);
-                useBlackMesaSFX = getOrDefault(json, "useBlackMesaSFX", false);
                 captionsEnabled = getOrDefault(json, "captionsEnabled", false);
                 damageIndicatorsEnabled = getOrDefault(json, "damageIndicatorsEnabled", true);
                 hudHealthEnabled = getOrDefault(json, "hudHealthEnabled", true);
@@ -71,7 +69,6 @@ public class SettingsManager {
                 hudAlignmentMode = getOrDefault(json, "hudAlignmentMode", false);
                 hudPrimaryColor = getOrDefaultInt(json, "hudPrimaryColor", 0xFFFFAE00);
                 hudSecondaryColor = getOrDefaultInt(json, "hudSecondaryColor", 0xFF8B5E00);
-                LOGGER.debug("Settings loaded: useBlackMesaSFX = " + useBlackMesaSFX);
             } catch (IOException e) {
                 LOGGER.error("Failed to load settings", e);
             }
@@ -104,7 +101,6 @@ public class SettingsManager {
         json.addProperty("seekMedicalEnabled", seekMedicalEnabled);
         json.addProperty("healthCriticalEnabled", healthCriticalEnabled);
         json.addProperty("nearDeathEnabled", nearDeathEnabled);
-        json.addProperty("useBlackMesaSFX", useBlackMesaSFX);
         json.addProperty("captionsEnabled", captionsEnabled);
         json.addProperty("damageIndicatorsEnabled", damageIndicatorsEnabled);
         json.addProperty("hudHealthEnabled", hudHealthEnabled);

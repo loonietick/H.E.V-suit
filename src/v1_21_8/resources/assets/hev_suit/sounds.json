@@ -1,165 +1,37 @@
 {
-  "minor_laceration": {
-    "sounds": [{"name": "hev_suit:minor_lacerations"}]
-  },
-  "hev_logon": {
-    "sounds": [{"name": "hev_suit:hev_logon"}]
-  },
-  "bm_hev_logon": {
-    "sounds": [{"name": "hev_suit:bm_hev_logon"}]
-  },
-  "weapon_pickup": {
-    "sounds": [{"name": "hev_suit:weapon_pickup"}]
-  },
-  "administering_medical": {
-    "sounds": [{"name": "hev_suit:administering_medical"}]
-  },
-  "insufficient_medical": {
-    "sounds": [{"name": "hev_suit:insufficient_medical"}]
-  },
-  "medical_repaired": {
-    "sounds": [{"name": "hev_suit:medical_repaired"}]
-  },
-  "armor_compromised": {
-    "sounds": [{"name": "hev_suit:armor_compromised"}]
-  },
-  "radiation_detected": {
-    "sounds": [{"name": "hev_suit:radiation_detected"}]
-  },
-  "geiger": {
-    "sounds": [{"name": "hev_suit:geiger", "stream": true}]
-  },
-  "flatline": {
-    "sounds": [{"name": "hev_suit:flatline", "stream": true}]
-  },
-  "ammo_pickup": {
-    "sounds": [{"name": "hev_suit:ammo_pickup"}]
-  },
-  "hev_general_fail": {
-    "sounds": [{"name": "hev_suit:hev_general_fail"}]
-  },
-  "major_laceration": {
-    "sounds": [{"name": "hev_suit:major_lacerations"}]
-  },
-  "minor_fracture": {
-    "sounds": [{"name": "hev_suit:minor_fracture"}]
-  },
-  "powermove_on": {
-    "sounds": [{"name": "hev_suit:powermove_on"}]
-  },
-  "powermove_overload": {
-    "sounds": [{"name": "hev_suit:powermove_overload"}]
-  },
-  "major_fracture": {
-    "sounds": [{"name": "hev_suit:major_fracture"}]
-  },
-  "blood_loss": {
-    "sounds": [{"name": "hev_suit:blood_loss"}]
-  },
-  "health_critical": {
-    "sounds": [{"name": "hev_suit:health_critical"}]
-  },
-  "health_critical2": {
-    "sounds": [{"name": "hev_suit:health_critical2"}]
-  },
-  "morphine_administered": {
-    "sounds": [{"name": "hev_suit:morphine_administered"}]
-  },
-  "seek_medical": {
-    "sounds": [{"name": "hev_suit:seek_medic"}]
-  },
-  "near_death": {
-    "sounds": [{"name": "hev_suit:near_death"}]
-  },
-  "heat_damage": {
-    "sounds": [{"name": "hev_suit:heat_damage"}]
-  },
-  "chemical": {
-    "sounds": [{"name": "hev_suit:chemical"}]
-  },
-  "shock_damage": {
-    "sounds": [{"name":  "hev_suit:shock_damage"}]
-  },
-  "internal_bleeding": {
-    "sounds": [{"name":  "hev_suit:internal_bleeding"}]
-  },
-  "power_level_is": {
-    "sounds": [{"name":  "hev_suit:power_level_is"}]
-  },
-  "power": {
-    "sounds": [{"name":  "hev_suit:power"}]
-  },
-  "percent": {
-    "sounds": [{"name":  "hev_suit:percent"}]
-  },
-  "ammunition_depleted": {
-    "sounds": [{"name": "hev_suit:ammunition_depleted"}]
-  },
-  "bm_ammunition_depleted": {
-    "sounds": [{"name": "hev_suit:bm_ammunition_depleted"}]
-  },
-  "bm_major_laceration": {
-    "sounds": [{"name": "hev_suit:bm_major_lacerations"}]
-  },
-  "bm_minor_fracture": {
-    "sounds": [{"name": "hev_suit:bm_minor_fracture"}]
-  },
-  "bm_minor_laceration": {
-    "sounds": [{"name": "hev_suit:bm_minor_lacerations"}]
-  },
-  "bm_morphine_system": {
-    "sounds": [{"name": "hev_suit:bm_morphine_system"}]
-  },
-  "bm_near_death": {
-    "sounds": [{"name": "hev_suit:bm_near_death"}]
-  },
-  "bm_seek_medical": {
-    "sounds": [{"name": "hev_suit:bm_seek_medic"}]
-  },
-  "bm_health_critical": {
-    "sounds": [{"name": "hev_suit:bm_health_critical"}]
-  },
-  "bm_health_critical2": {
-    "sounds": [{"name": "hev_suit:bm_health_critical2"}]
-  },
-  "bm_chemical": {
-    "sounds": [{"name": "hev_suit:bm_chemical"}]
-  },
-  "bm_major_fracture": {
-    "sounds": [{"name": "hev_suit:bm_major_fracture"}]
-  },
-  "bm_blood_loss": {
-    "sounds": [{"name": "hev_suit:bm_blood_loss"}]
-  },
-  "bm_power_level_is": {
-    "sounds": [{"name": "hev_suit:bm_power_level_is"}]
-  },
-  "bm_power": {
-    "sounds": [{"name": "hev_suit:bm_power"}]
-  },
-  "bm_percent": {
-    "sounds": [{"name": "hev_suit:bm_percent"}]
-  },
-  "armor_gone": {
-    "sounds": [{"name": "hev_suit:armor_gone"}]
-  },
-  "hev_damage": {
-    "sounds": [{"name": "hev_suit:hev_damage"}]
-  },
-  
-  "bm_5": {"sounds": [{"name": "hev_suit:bm_5"}]},
-  "bm_10": {"sounds": [{"name": "hev_suit:bm_10"}]},
-  "bm_15": {"sounds": [{"name": "hev_suit:bm_15"}]},
-  "bm_20": {"sounds": [{"name": "hev_suit:bm_20"}]},
-  "bm_25": {"sounds": [{"name": "hev_suit:bm_25"}]},
-  "bm_30": {"sounds": [{"name": "hev_suit:bm_30"}]},
-  "bm_40": {"sounds": [{"name": "hev_suit:bm_40"}]},
-  "bm_50": {"sounds": [{"name": "hev_suit:bm_50"}]},
-  "bm_60": {"sounds": [{"name": "hev_suit:bm_60"}]},
-  "bm_70": {"sounds": [{"name": "hev_suit:bm_70"}]},
-  "bm_80": {"sounds": [{"name": "hev_suit:bm_80"}]},
-  "bm_90": {"sounds": [{"name": "hev_suit:bm_90"}]},
-  "bm_100": {"sounds": [{"name": "hev_suit:bm_100"}]},
+  "minor_laceration": {"sounds": [{"name": "hev_suit:minor_lacerations"}]},
+  "hev_logon": {"sounds": [{"name": "hev_suit:hev_logon"}]},
+  "weapon_pickup": {"sounds": [{"name": "hev_suit:weapon_pickup"}]},
+  "administering_medical": {"sounds": [{"name": "hev_suit:administering_medical"}]},
+  "insufficient_medical": {"sounds": [{"name": "hev_suit:insufficient_medical"}]},
+  "medical_repaired": {"sounds": [{"name": "hev_suit:medical_repaired"}]},
+  "armor_compromised": {"sounds": [{"name": "hev_suit:armor_compromised"}]},
+  "radiation_detected": {"sounds": [{"name": "hev_suit:radiation_detected"}]},
+  "geiger": {"sounds": [{"name": "hev_suit:geiger", "stream": true}]},
+  "flatline": {"sounds": [{"name": "hev_suit:flatline", "stream": true}]},
+  "ammo_pickup": {"sounds": [{"name": "hev_suit:ammo_pickup"}]},
+  "hev_general_fail": {"sounds": [{"name": "hev_suit:hev_general_fail"}]},
+  "major_laceration": {"sounds": [{"name": "hev_suit:major_lacerations"}]},
+  "minor_fracture": {"sounds": [{"name": "hev_suit:minor_fracture"}]},
+  "powermove_on": {"sounds": [{"name": "hev_suit:powermove_on"}]},
+  "powermove_overload": {"sounds": [{"name": "hev_suit:powermove_overload"}]},
+  "major_fracture": {"sounds": [{"name": "hev_suit:major_fracture"}]},
+  "blood_loss": {"sounds": [{"name": "hev_suit:blood_loss"}]},
+  "health_critical": {"sounds": [{"name": "hev_suit:health_critical"}]},
+  "health_critical2": {"sounds": [{"name": "hev_suit:health_critical2"}]},
+  "morphine_administered": {"sounds": [{"name": "hev_suit:morphine_administered"}]},
+  "seek_medical": {"sounds": [{"name": "hev_suit:seek_medic"}]},
+  "near_death": {"sounds": [{"name": "hev_suit:near_death"}]},
+  "heat_damage": {"sounds": [{"name": "hev_suit:heat_damage"}]},
+  "chemical": {"sounds": [{"name": "hev_suit:chemical"}]},
+  "shock_damage": {"sounds": [{"name": "hev_suit:shock_damage"}]},
+  "internal_bleeding": {"sounds": [{"name": "hev_suit:internal_bleeding"}]},
+  "power_level_is": {"sounds": [{"name": "hev_suit:power_level_is"}]},
+  "power": {"sounds": [{"name": "hev_suit:power"}]},
+  "percent": {"sounds": [{"name": "hev_suit:percent"}]},
+  "ammunition_depleted": {"sounds": [{"name": "hev_suit:ammunition_depleted"}]},
+  "armor_gone": {"sounds": [{"name": "hev_suit:armor_gone"}]},
+  "hev_damage": {"sounds": [{"name": "hev_suit:hev_damage"}]},
   "5": {"sounds": [{"name": "hev_suit:5"}]},
   "10": {"sounds": [{"name": "hev_suit:10"}]},
   "15": {"sounds": [{"name": "hev_suit:15"}]},

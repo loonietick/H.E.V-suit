@@ -17,9 +17,9 @@ base {
 def mcVersionSelected = (findProperty('mcVersion') ?: project.findProperty('minecraft_version'))?.toString()
 def supported = [
         // Keep these up to date as new Minecraft releases drop
-        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8', loader: '0.17.2' ],
-        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9', loader: '0.17.2' ],
-        '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.2' ],
+        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8', loader: '0.17.2', modmenu: '15.0.0' ],
+        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9', loader: '0.17.2', modmenu: '16.0.0-rc.1' ],
+        '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.2', modmenu: '16.0.0-rc.1' ],
 ]
 
 if (!supported.containsKey(mcVersionSelected)) {
@@ -67,7 +67,8 @@ sourceSets {
 
 repositories {
     // Additional maven repos if needed
-    maven { url "https://maven.shedaniel.me/" }
+    maven { url = uri("https://maven.shedaniel.me/") }
+    maven { url = uri("https://maven.terraformersmc.com/releases/") }
 }
 
 dependencies {
@@ -78,6 +79,12 @@ dependencies {
 
     // Fabric API (optional but recommended)
     modImplementation "net.fabricmc.fabric-api:fabric-api:${vconf.fabricApi}"
+
+    // Optional integrations
+    if (vconf.modmenu != null) {
+        modCompileOnly "com.terraformersmc:modmenu:${vconf.modmenu}"
+        modRuntimeOnly "com.terraformersmc:modmenu:${vconf.modmenu}"
+    }
 }
 
 processResources {
@@ -85,12 +92,16 @@ processResources {
     inputs.property "version", project.version
     inputs.property "minecraft_version", mcVersionSelected
     inputs.property "loader_version", vconf.loader
-    filteringCharset "UTF-8"
+    filteringCharset = "UTF-8"
+
+    def expandValues = [
+        version: project.version,
+        minecraft_version: mcVersionSelected,
+        loader_version: vconf.loader
+    ]
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version,
-                "minecraft_version": mcVersionSelected,
-                "loader_version": vconf.loader
+        expand expandValues
     }
 }
 
@@ -105,6 +116,7 @@ tasks.withType(JavaCompile).configureEach {
     // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
     // If Javadoc is generated, this must be specified in that task too.
     it.options.encoding = "UTF-8"
+    it.options.compilerArgs.add("-Xlint:deprecation")
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
         it.options.release.set(targetJavaVersion)
     }

@@ -216,17 +216,13 @@ public class EventManager {
             String currentChestId = currentChest.isEmpty() ? "" : currentChest.getItem().getTranslationKey();
             boolean chestNameChanged = !currentChestName.equals(lastChestName) || !currentChestId.equals(lastChestItemId);
             if (chestNameChanged) {
-                // Elytra equip (only on first equip, and only if Black Mesa SFX is NOT enabled)
-                if (currentChestIsElytra && !lastChestHadElytra && !SettingsManager.useBlackMesaSFX) {
+                // Elytra equip (only on first equip)
+                if (currentChestIsElytra && !lastChestHadElytra) {
                     SoundManager.queueSound("powermove_on");
                 }
                 // HEV chestplate equip (only on first equip, and only if name starts with HEV)
                 if (!currentChest.isEmpty() && currentChestName.toUpperCase().startsWith("HEV")) {
-                    if (SettingsManager.useBlackMesaSFX) {
-                        SoundManager.queueSound("bm_hev_logon");
-                    } else {
-                        SoundManager.queueSound("hev_logon");
-                    }
+                    SoundManager.queueSound("hev_logon");
                 }
                 lastChestName = currentChestName;
                 lastChestItemId = currentChestId;
@@ -244,15 +240,15 @@ public class EventManager {
                         List<String> components = new ArrayList<>();
 
                         if (adjustedPercent == 100) {
-                            components.add(SettingsManager.useBlackMesaSFX ? "bm_power_level_is" : "power_level_is");
-                            components.add(SettingsManager.useBlackMesaSFX ? "bm_100" : "100");
+                            components.add("power_level_is");
+                            components.add("100");
                         } else {
-                            components.add(SettingsManager.useBlackMesaSFX ? "bm_power" : "power");
+                            components.add("power");
                             for (int part : getArmorAnnouncement(adjustedPercent)) {
-                                components.add(SettingsManager.useBlackMesaSFX ? "bm_" + part : String.valueOf(part));
+                                components.add(String.valueOf(part));
                             }
                         }
-                        components.add(SettingsManager.useBlackMesaSFX ? "bm_percent" : "percent");
+                        components.add("percent");
 
                         components.forEach(SoundManager::queueSound);
                     } else if (adjustedPercent > 100) { 
@@ -309,19 +305,18 @@ public class EventManager {
         }
 
         if (SettingsManager.healthAlertsEnabled) {
-            String prefix = SettingsManager.useBlackMesaSFX ? "bm_" : "";
             if (currentHealth <= 3.0 && lastHealth > 3.0 && SettingsManager.nearDeathEnabled) {
-                SoundManager.queueSound(prefix + "near_death");
+                SoundManager.queueSound("near_death");
             } else if (currentHealth <= 5.0 && lastHealth > 5.0 && SettingsManager.healthCriticalEnabled) {
-                SoundManager.queueSound(prefix + "health_critical");
+                SoundManager.queueSound("health_critical");
             } else if (currentHealth <= 10.0 && lastHealth > 10.0 && SettingsManager.seekMedicalEnabled) {
                 if (currentTime - lastSeekMedicalTime >= SEEK_MEDICAL_COOLDOWN) {
-                    SoundManager.queueSound(prefix + "seek_medical");
+                    SoundManager.queueSound("seek_medical");
                     lastSeekMedicalTime = currentTime;
                 }
             } else if (currentHealth <= 15.0 && lastHealth > 15.0 && SettingsManager.healthCritical2Enabled) {
                 if (currentTime - lastHealthCritical2Time >= HEALTH_CRITICAL2_COOLDOWN) {
-                    SoundManager.queueSound(prefix + "health_critical2");
+                    SoundManager.queueSound("health_critical2");
                     lastHealthCritical2Time = currentTime;
                 }
             }
@@ -338,7 +333,7 @@ public class EventManager {
         if (SettingsManager.morphineEnabled && currentTime - lastMorphineTime >= MORPHINE_COOLDOWN && currentHealth < 20) {
             float damage = lastHealth - currentHealth;
             if (damage >= 6.0f) {
-                SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_morphine_system" : "morphine_administered");
+                SoundManager.queueSound("morphine_administered");
                 lastMorphineTime = currentTime;
             }
         }
@@ -354,7 +349,6 @@ public class EventManager {
     private static void handleDamage(MinecraftClient client, float damage, DamageSource damageSource) {
         if (damageSource == null) return;
         long currentTime = System.currentTimeMillis();
-        String prefix = SettingsManager.useBlackMesaSFX ? "bm_" : "";
 
         // Add damage indicator if feature is enabled and we have a damage source entity or position
         if (SettingsManager.damageIndicatorsEnabled && client.player != null) {
@@ -386,24 +380,24 @@ public class EventManager {
         // Fall damage and fractures with cooldown
         if (damageSource.isOf(DamageTypes.FALL) && SettingsManager.fracturesEnabled && currentTime - lastFractureTime >= FRACTURE_COOLDOWN) {
             if (damage >= 6) {
-                SoundManager.queueSound(prefix + "major_fracture");
+                SoundManager.queueSound("major_fracture");
                 lastFractureTime = currentTime;
             } else if (damage >= 3) {
-                SoundManager.queueSound(prefix + "minor_fracture");
+                SoundManager.queueSound("minor_fracture");
                 lastFractureTime = currentTime;
             }
         }
 
         if (SettingsManager.heatDamageEnabled && damage >= 4.0f && isHeatDamage(damageSource) &&
                 currentTime - lastHeatDamageTime >= HEAT_DAMAGE_COOLDOWN) {
-            SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_heat_damage" : "heat_damage");
+            SoundManager.queueSound("heat_damage");
             lastHeatDamageTime = currentTime;
         }
 
         // Chemical damage with cooldown
         if (SettingsManager.chemicalDamageEnabled && currentTime - lastGeneralAlertTime >= GENERAL_COOLDOWN) {
             if ((client.player.hasStatusEffect(StatusEffects.POISON) || client.player.hasStatusEffect(StatusEffects.WITHER)) && !wasPoisoned) {
-                SoundManager.queueSound(prefix + "chemical");
+                SoundManager.queueSound("chemical");
                 wasPoisoned = true;
                 lastGeneralAlertTime = currentTime;
             } else if (!client.player.hasStatusEffect(StatusEffects.POISON) && !client.player.hasStatusEffect(StatusEffects.WITHER)) {
@@ -415,7 +409,7 @@ public class EventManager {
         if (damageSource.isOf(DamageTypes.LIGHTNING_BOLT)) {
             HudManager.triggerElectricalAlert();
             if (SettingsManager.shockDamageEnabled && currentTime - lastShockDamageTime >= GENERAL_COOLDOWN) {
-                SoundManager.queueSound(prefix + "shock_damage");
+                SoundManager.queueSound("shock_damage");
                 lastShockDamageTime = currentTime;
             }
         }
@@ -427,7 +421,7 @@ public class EventManager {
                 && (damageSource.isIn(DamageTypeTags.IS_PROJECTILE)
                     || damageEntity instanceof ArrowEntity
                     || damageEntity instanceof FireballEntity)) {
-            SoundManager.queueSound(SettingsManager.useBlackMesaSFX ? "bm_blood_loss" : "blood_loss");
+            SoundManager.queueSound("blood_loss");
             lastBloodLossTime = currentTime;
         }
 
@@ -441,10 +435,10 @@ public class EventManager {
         if (damageEntity instanceof HostileEntity && !(damageEntity instanceof CreeperEntity)) {
             if (SettingsManager.fracturesEnabled) {
                 if (damage >= 4 && currentTime - lastMajorLacerationTime >= LACERATION_COOLDOWN) {
-                    SoundManager.queueSound(prefix + "major_laceration");
+                    SoundManager.queueSound("major_laceration");
                     lastMajorLacerationTime = currentTime;
                 } else if (damage < 3 && currentTime - lastMinorLacerationTime >= LACERATION_COOLDOWN) {
-                    SoundManager.queueSound(prefix + "minor_laceration");
+                    SoundManager.queueSound("minor_laceration");
                     lastMinorLacerationTime = currentTime;
                 }
             }
@@ -678,12 +672,11 @@ public class EventManager {
         long now = System.currentTimeMillis();
         if (now - lastFractureTime < FRACTURE_COOLDOWN) return;
 
-        String prefix = SettingsManager.useBlackMesaSFX ? "bm_" : "";
         if (damageDelta >= 6) {
-            SoundManager.queueSound(prefix + "major_fracture");
+            SoundManager.queueSound("major_fracture");
             lastFractureTime = now;
         } else if (damageDelta >= 2) {
-            SoundManager.queueSound(prefix + "minor_fracture");
+            SoundManager.queueSound("minor_fracture");
             lastFractureTime = now;
         }
     }

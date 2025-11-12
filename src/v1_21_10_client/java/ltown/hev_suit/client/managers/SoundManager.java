@@ -22,8 +22,7 @@ public class SoundManager {
     private static final float MIN_PITCH = 0.98f;
     private static final float MAX_PITCH = 1.05f;
     private static final Set<String> HEALTH_ALERT_SOUNDS = Set.of(
-            "health_critical2", "seek_medical", "health_critical", "near_death",
-            "bm_health_critical2", "bm_seek_medical", "bm_health_critical", "bm_near_death"
+            "health_critical2", "seek_medical", "health_critical", "near_death"
     );
     private static final QueueChannel GENERAL_CHANNEL = new QueueChannel("general", "");
     private static final QueueChannel HEALTH_CHANNEL = new QueueChannel("health", "[health] ");
@@ -45,33 +44,15 @@ public class SoundManager {
     }
     public static void registerSounds() {
         String[] soundNames = {
-                // Half-Life 1 HEV suit sounds
                 "major_laceration", "minor_laceration", "major_fracture", "minor_fracture",
                 "blood_loss", "health_critical", "health_critical2", "morphine_administered",
                 "seek_medical", "near_death", "heat_damage", "shock_damage", "chemical",
                 "armor_gone", "hev_damage", "ammunition_depleted", "hev_general_fail",
                 "hev_logon", "weapon_pickup", "ammo_pickup", "powermove_on", "powermove_overload",
-                "internal_bleeding",
-
-                // Half-Life 1 hev suit armor percentage sfx
-                "power", "power_level_is", "percent",
-                "5", "10", "15", "20", "25", "30", "40", "50", "60", "70", "80", "90", "100",
-                
-                // Black Mesa HEV suit sounds
-                "bm_major_laceration", "bm_minor_laceration", "bm_major_fracture",
-                "bm_minor_fracture", "bm_blood_loss", "bm_health_critical", "bm_health_critical2",
-                "bm_morphine_system", "bm_seek_medical", "bm_near_death", "bm_chemical", 
-                "bm_ammunition_depleted", "bm_hev_logon",
-                
-                // Black Mesa Armor percentage sfx
-                "bm_power", "bm_power_level_is", "bm_percent",
-                "bm_5", "bm_10", "bm_15", "bm_20", "bm_25", "bm_30", "bm_40", "bm_50",
-                "bm_60", "bm_70", "bm_80", "bm_90", "bm_100",
-
-                // Supplemental alerts
+                "internal_bleeding", "power", "power_level_is", "percent", "5", "10", "15",
+                "20", "25", "30", "40", "50", "60", "70", "80", "90", "100",
                 "administering_medical", "insufficient_medical", "medical_repaired",
-                "armor_compromised",
-                "radiation_detected", "geiger", "flatline"
+                "armor_compromised", "radiation_detected", "geiger", "flatline"
         };
 
         for (String soundName : soundNames) {
@@ -114,14 +95,17 @@ public class SoundManager {
         if (channel.currentSound != null) {
             if (channel.startupCooldown > 0) {
                 channel.startupCooldown--;
-                return;
             }
-
-            if (client.getSoundManager().isPlaying(channel.currentSound)) {
+            if (isChannelActive(client, channel)) {
                 return;
             }
 
             channel.currentSound = null;
+            channel.currentSoundName = null;
+        }
+
+        if (channel == GENERAL_CHANNEL && isChannelActive(client, HEALTH_CHANNEL)) {
+            return;
         }
 
         if (!channel.pending.isEmpty()) {
@@ -139,10 +123,15 @@ public class SoundManager {
             return;
         }
 
+        if (channel == HEALTH_CHANNEL && isChannelActive(client, GENERAL_CHANNEL)) {
+            interruptChannel(client, GENERAL_CHANNEL);
+        }
+
         try {
             LOGGER.debug("Playing {} queue sound: {}", channel.name, soundName);
             SoundInstance instance = createSoundInstance(sound, MIN_PITCH + RANDOM.nextFloat() * (MAX_PITCH - MIN_PITCH));
             channel.currentSound = instance;
+            channel.currentSoundName = soundName;
             if (playSoundInstance(client, instance)) {
                 channel.startupCooldown = SOUND_STARTUP_GRACE_TICKS;
                 LOGGER.debug("Displaying caption for: {} (captions enabled: {})", soundName, SettingsManager.captionsEnabled);
@@ -150,19 +139,24 @@ public class SoundManager {
             } else {
                 LOGGER.warn("Failed to play sound '{}' in {} queue, re-queuing.", soundName, channel.name);
                 channel.currentSound = null;
+                channel.currentSoundName = null;
                 channel.startupCooldown = 0;
-                channel.pending.addFirst(soundName);
+                channel.addUniqueToFront(soundName);
             }
         } catch (Exception e) {
             LOGGER.error("Error playing sound: {}", soundName, e);
             channel.currentSound = null;
+            channel.currentSoundName = null;
             channel.startupCooldown = 0;
         }
     }
 
     public static void queueSound(String soundName) {
+        if (soundName == null || soundName.isEmpty()) {
+            return;
+        }
         QueueChannel target = HEALTH_ALERT_SOUNDS.contains(soundName) ? HEALTH_CHANNEL : GENERAL_CHANNEL;
-        target.pending.offer(soundName);
+        target.addUniqueToTail(soundName);
     }
 
     public static void clearSoundQueue() {
@@ -189,8 +183,7 @@ public class SoundManager {
         for (String sound : upcoming) {
             if (sound.contains("percent")) break;
             try {
-                String numStr = sound.replace("bm_", "");
-                totalPercent += Integer.parseInt(numStr); // Add the numbers together
+                totalPercent += Integer.parseInt(sound); // Add the numbers together
             } catch (NumberFormatException e) {
                 continue;
             }
@@ -348,9 +341,38 @@ public class SoundManager {
         return new ImmediateSoundInstance(sound, pitch);
     }
 
+    private static boolean isChannelActive(MinecraftClient client, QueueChannel channel) {
+        if (channel.currentSound == null) {
+            return false;
+        }
+        if (channel.startupCooldown > 0) {
+            return true;
+        }
+        if (client == null || client.getSoundManager() == null) {
+            return false;
+        }
+        return client.getSoundManager().isPlaying(channel.currentSound);
+    }
+
+    private static void interruptChannel(MinecraftClient client, QueueChannel channel) {
+        if (channel.currentSound == null || client == null || client.getSoundManager() == null) {
+            return;
+        }
+
+        if (channel.currentSoundName != null) {
+            channel.addUniqueToFront(channel.currentSoundName);
+        }
+
+        client.getSoundManager().stop(channel.currentSound);
+        channel.currentSound = null;
+        channel.currentSoundName = null;
+        channel.startupCooldown = 0;
+    }
+
     private static void resetChannel(QueueChannel channel) {
         channel.pending.clear();
         channel.currentSound = null;
+        channel.currentSoundName = null;
         channel.startupCooldown = 0;
     }
 
@@ -455,11 +477,38 @@ public class SoundManager {
         final String listPrefix;
         final LinkedList<String> pending = new LinkedList<>();
         SoundInstance currentSound;
+        String currentSoundName;
         int startupCooldown;
 
         QueueChannel(String name, String listPrefix) {
             this.name = name;
             this.listPrefix = listPrefix;
+        }
+
+        void addUniqueToTail(String soundName) {
+            if (soundName == null) {
+                return;
+            }
+            // Eliminate trailing duplicates so the queue only keeps one contiguous copy.
+            ListIterator<String> iterator = pending.listIterator(pending.size());
+            while (iterator.hasPrevious()) {
+                if (!soundName.equals(iterator.previous())) {
+                    break;
+                }
+                iterator.remove();
+            }
+            pending.addLast(soundName);
+        }
+
+        void addUniqueToFront(String soundName) {
+            if (soundName == null) {
+                return;
+            }
+            // Prevent duplicate fronts when re-queueing interrupted clips.
+            while (!pending.isEmpty() && soundName.equals(pending.peekFirst())) {
+                pending.removeFirst();
+            }
+            pending.addFirst(soundName);
         }
     }
 }

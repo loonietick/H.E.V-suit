@@ -37,6 +37,7 @@ public class SoundManager {
     private static final Method SOUND_MANAGER_PLAY_METHOD;
     private static final boolean SOUND_MANAGER_PLAY_WITH_SEED;
     private static final int SOUND_STARTUP_GRACE_TICKS = 3; // give the engine a few ticks before we declare a sound dead
+    private static long alertsSuppressedUntil = 0;
 
     static {
         Method seeded = resolvePlayMethod(true);
@@ -78,6 +79,9 @@ public class SoundManager {
 
     public static void processSoundQueue(MinecraftClient client) {
         maintainLoopingSounds(client);
+        if (alertsSuppressed()) {
+            return;
+        }
         if (client == null || client.getSoundManager() == null) {
             return;
         }
@@ -128,6 +132,10 @@ public class SoundManager {
     }
 
     private static void playNextSound(MinecraftClient client, QueueChannel channel) {
+        if (alertsSuppressed()) {
+            channel.pending.clear();
+            return;
+        }
         String soundName = channel.pending.poll();
         if (soundName == null) return;
 
@@ -170,6 +178,9 @@ public class SoundManager {
 
     public static void queueSound(String soundName) {
         if (soundName == null || soundName.isEmpty()) {
+            return;
+        }
+        if (alertsSuppressed()) {
             return;
         }
         QueueChannel target = GENERAL_CHANNEL;
@@ -226,6 +237,9 @@ public class SoundManager {
     }
 
     public static void playImmediateSound(String soundName) {
+        if (alertsSuppressed()) {
+            return;
+        }
         MinecraftClient client = MinecraftClient.getInstance();
         if (client == null || client.getSoundManager() == null) return;
 
@@ -265,7 +279,7 @@ public class SoundManager {
     }
 
     private static void ensureGeigerLoop(MinecraftClient client) {
-        if (!geigerLoopRequested) return;
+        if (!geigerLoopRequested || alertsSuppressed()) return;
         if (geigerSoundInstance != null && client.getSoundManager().isPlaying(geigerSoundInstance)) {
             return;
         }
@@ -471,6 +485,17 @@ public class SoundManager {
         } catch (Throwable ignored) {
             // Ignored – the method may already be accessible or modules may forbid access.
         }
+    }
+
+    public static void suppressAlertsFor(long millis) {
+        long target = System.currentTimeMillis() + Math.max(0, millis);
+        if (target > alertsSuppressedUntil) {
+            alertsSuppressedUntil = target;
+        }
+    }
+
+    private static boolean alertsSuppressed() {
+        return System.currentTimeMillis() < alertsSuppressedUntil;
     }
 
     private static class ImmediateSoundInstance extends AbstractSoundInstance {

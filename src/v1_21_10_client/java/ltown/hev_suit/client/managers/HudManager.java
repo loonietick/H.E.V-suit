@@ -39,16 +39,16 @@ public class HudManager {
         static int baselineOffsetY = 0;     // shift the whole row up/down
         static int digitBaselineOffsetY = 0;// shift digits vs icons
         static int healthArmorDividerOffsetX = 0;    // shift the health/armor separator left/right
-        static int healthArmorDividerTopOffset = 0;  // shift top edge up/down (px)
+        static int healthArmorDividerTopOffset = -20;  // shift top edge up/down (px)
         static int healthArmorDividerBottomOffset = 0;// shift bottom edge up/down (px)
         static int healthArmorDividerWidth = 1;      // thickness of the bar (px)
-        static int healthArmorDividerHeight = 10;    // vertical size (px)
+        static int healthArmorDividerHeight = 35;    // vertical size (px)
 
         static int ammoDividerOffsetX = 0;      // shift ammo divider left/right
-        static int ammoDividerTopOffset = 0;    // shift top edge up/down (px)
+        static int ammoDividerTopOffset = -20;    // shift top edge up/down (px)
         static int ammoDividerBottomOffset = 0; // shift bottom edge up/down (px)
         static int ammoDividerWidth = 1;        // thickness of the bar (px)
-        static int ammoDividerHeight = 10;      // vertical size (px)
+        static int ammoDividerHeight = 35;      // vertical size (px)
 
         static final java.util.Map<String, Vec2i> iconOffsets = createIconOffsets();     // per-icon pixel offsets
         static final java.util.Map<String, Integer> digitKerning = createDigitKerning(); // per-digit kerning

@@ -62,6 +62,9 @@ public class EventManager {
     private static final Set<Integer> brokenArmor = new HashSet<>();
     private static final Map<Integer, Double> lastKnownDurability = new HashMap<>(); // Add this line
     private static final Map<Integer, Integer> lastRecordedItemDamage = new HashMap<>();
+    private static final Map<Integer, ItemStack> lastEquippedArmorStacks = new HashMap<>();
+    private static final Set<Integer> equipDamageAlertedSlots = new HashSet<>();
+    private static final Map<Integer, Set<Double>> triggeredArmorThresholds = new HashMap<>();
     private static String lastChestName = "";
     private static String lastChestItemId = "";
 
@@ -85,7 +88,7 @@ public class EventManager {
     private static final long GENERAL_COOLDOWN = 5000;
     private static final long BLOOD_LOSS_COOLDOWN = 8000;
     private static final long FRACTURE_COOLDOWN = 5000;
-    private static final long LACERATION_COOLDOWN = 5000;
+    private static final long LACERATION_COOLDOWN = 7000;
     private static final long MORPHINE_COOLDOWN = 1800000;
     private static final long RADIATION_ALERT_COOLDOWN = 10000;
     private static final long INSUFFICIENT_MEDICAL_COOLDOWN = 30000;
@@ -102,13 +105,13 @@ public class EventManager {
     private static int lastWeaponCount = -1;
     private static long lastWeaponPickupTime = 0;
     private static final long WEAPON_PICKUP_COOLDOWN = 1000;
-    private static final List<String> WEAPON_KEYWORDS = Arrays.asList("sword", "bow", "crossbow", "trident", "mace", "axe");
     private static long lastInternalBleedingTime = 0;
     private static final long INTERNAL_BLEEDING_COOLDOWN = 10000;
     private static long lastArmorBreakTime = 0;
     private static final long ARMOR_BREAK_COOLDOWN = 3000;
     private static long lastAmmoAlertTime = 0;
     private static final long AMMO_DEPLETED_COOLDOWN = 2000;
+    private static final long INITIAL_ALERT_SUPPRESSION_MS = 4000;
     private static final Set<Item> ADDITIONAL_AMMO_ITEMS = Set.of(
             Items.SNOWBALL,
             Items.EGG,
@@ -131,12 +134,12 @@ public class EventManager {
         }
         CONFIG_CATEGORY = category;
         OPEN_CONFIG_KEY = KeyBindingHelper.registerKeyBinding(
-            new KeyBinding(
-                "key.hev_suit.open_config",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_H,
-                CONFIG_CATEGORY
-            )
+                new KeyBinding(
+                        "key.hev_suit.open_config",
+                        InputUtil.Type.KEYSYM,
+                        GLFW.GLFW_KEY_H,
+                        CONFIG_CATEGORY
+                )
         );
     }
 
@@ -170,6 +173,9 @@ public class EventManager {
         lastHeldAmmoCount = -1;
         lastHeldAmmoSlot = -2;
         lastHeldAmmoFromOffhand = false;
+        lastEquippedArmorStacks.clear();
+        equipDamageAlertedSlots.clear();
+        triggeredArmorThresholds.clear();
         wasInBasalt = false;
         lastRadiationDetectedTime = 0;
         lastInsufficientMedicalTime = 0;
@@ -185,6 +191,7 @@ public class EventManager {
         HudManager.setBiohazardActive(false);
         HudManager.clearElectricalAlert();
         HudManager.setRadiationActive(false);
+        SoundManager.suppressAlertsFor(INITIAL_ALERT_SUPPRESSION_MS);
     }
 
     private static void onClientTick(MinecraftClient client) {
@@ -229,11 +236,13 @@ public class EventManager {
             boolean chestNameChanged = !currentChestName.equals(lastChestName) || !currentChestId.equals(lastChestItemId);
             if (chestNameChanged) {
                 // Elytra equip (only on first equip)
-                if (currentChestIsElytra && !lastChestHadElytra) {
+                if (currentChestIsElytra && !lastChestHadElytra && SettingsManager.elytraEquipSfxEnabled) {
                     SoundManager.queueSound("powermove_on");
                 }
                 // HEV chestplate equip (only on first equip, and only if name starts with HEV)
-                if (!currentChest.isEmpty() && currentChestName.toUpperCase().startsWith("HEV")) {
+                if (!currentChest.isEmpty()
+                        && currentChestName.toUpperCase().startsWith("HEV")
+                        && SettingsManager.hevLogonEnabled) {
                     SoundManager.queueSound("hev_logon");
                 }
                 lastChestName = currentChestName;
@@ -334,8 +343,10 @@ public class EventManager {
             }
         }
 
-        if (SettingsManager.healthAlertsEnabled && currentHealth <= 10.0f && currentHealth < lastHealth &&
-            currentTime - lastInsufficientMedicalTime >= INSUFFICIENT_MEDICAL_COOLDOWN && !hasHealingSupplies(player)) {
+        if (SettingsManager.healthAlertsEnabled && SettingsManager.insufficientMedicalEnabled
+                && currentHealth <= 10.0f && currentHealth < lastHealth
+                && currentTime - lastInsufficientMedicalTime >= INSUFFICIENT_MEDICAL_COOLDOWN
+                && !hasHealingSupplies(player)) {
             SoundManager.queueSound("insufficient_medical");
             lastInsufficientMedicalTime = currentTime;
             awaitingMedicalRepair = true;
@@ -437,7 +448,8 @@ public class EventManager {
             lastBloodLossTime = currentTime;
         }
 
-        if (damage > 2.0f
+        if (SettingsManager.internalBleedingEnabled
+                && damage > 2.0f
                 && damageSource.isIn(DamageTypeTags.IS_EXPLOSION)
                 && currentTime - lastInternalBleedingTime >= INTERNAL_BLEEDING_COOLDOWN) {
             SoundManager.queueSound("internal_bleeding");
@@ -484,7 +496,7 @@ public class EventManager {
     private static void handleDeathState(PlayerEntity player) {
         boolean isDead = player.isDead() || player.getHealth() <= 0;
         if (isDead) {
-            if (!wasPlayerDead) {
+            if (!wasPlayerDead && SettingsManager.deathSfxEnabled) {
                 SoundManager.playFlatline();
             }
             awaitingMedicalRepair = false;
@@ -497,6 +509,14 @@ public class EventManager {
 
     private static void handleBasaltExposure(MinecraftClient client, PlayerEntity player) {
         if (client.world == null) {
+            if (wasInBasalt) {
+                SoundManager.stopGeigerLoop();
+                wasInBasalt = false;
+            }
+            return;
+        }
+
+        if (!SettingsManager.radiationSfxEnabled) {
             if (wasInBasalt) {
                 SoundManager.stopGeigerLoop();
                 wasInBasalt = false;
@@ -545,12 +565,18 @@ public class EventManager {
     }
 
     private static void onTotemActivated() {
-        SoundManager.playImmediateSound("administering_medical");
-        SoundManager.queueSound("morphine_administered");
+        if (SettingsManager.administeringMedicalEnabled) {
+            SoundManager.playImmediateSound("administering_medical");
+            SoundManager.queueSound("morphine_administered");
+        }
         awaitingMedicalRepair = true;
     }
 
     private static void trackWeaponPickups(PlayerEntity player) {
+        if (!SettingsManager.weaponPickupEnabled) {
+            lastWeaponCount = countWeaponStacks(player);
+            return;
+        }
         int weaponCount = countWeaponStacks(player);
         if (lastWeaponCount == -1) {
             lastWeaponCount = weaponCount;
@@ -588,7 +614,11 @@ public class EventManager {
         Identifier id = Registries.ITEM.getId(stack.getItem());
         if (id == null) return false;
         String path = id.getPath();
-        for (String keyword : WEAPON_KEYWORDS) {
+        List<String> keywords = SettingsManager.weaponKeywords;
+        if (keywords == null || keywords.isEmpty()) {
+            return false;
+        }
+        for (String keyword : keywords) {
             if (path.contains(keyword)) {
                 return true;
             }
@@ -613,29 +643,13 @@ public class EventManager {
                 lastHeldAmmoCount = current.count;
             }
             return;
-    }
+        }
 
         if (lastHeldAmmoItem != null && lastHeldAmmoCount > 0) {
-            boolean stackGone = true;
-            if (lastHeldAmmoFromOffhand) {
-                ItemStack off = player.getOffHandStack();
-                if (!off.isEmpty() && off.getItem() == lastHeldAmmoItem) {
-                    stackGone = false;
-                }
-            } else {
-                if (lastHeldAmmoSlot >= 0 && lastHeldAmmoSlot < player.getInventory().size()) {
-                    ItemStack previous = player.getInventory().getStack(lastHeldAmmoSlot);
-                    if (!previous.isEmpty() && previous.getItem() == lastHeldAmmoItem) {
-                        stackGone = false;
-                    }
-                } else {
-                    stackGone = false;
-                }
-            }
-
-            if (stackGone) {
+            int remaining = countAmmoInInventory(player, lastHeldAmmoItem);
+            if (remaining <= 0) {
                 long now = System.currentTimeMillis();
-                if (now - lastAmmoAlertTime >= AMMO_DEPLETED_COOLDOWN) {
+                if (SettingsManager.ammoDepletedEnabled && now - lastAmmoAlertTime >= AMMO_DEPLETED_COOLDOWN) {
                     SoundManager.queueSound("ammunition_depleted");
                     lastAmmoAlertTime = now;
                 }
@@ -677,6 +691,17 @@ public class EventManager {
             return new AmmoSnapshot(off.getItem(), off.getCount(), -1, true);
         }
         return AmmoSnapshot.EMPTY;
+    }
+
+    private static int countAmmoInInventory(PlayerEntity player, Item item) {
+        int total = 0;
+        for (int i = 0; i < player.getInventory().size(); i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (!stack.isEmpty() && stack.getItem() == item) {
+                total += stack.getCount();
+            }
+        }
+        return total;
     }
 
     private static void handleElytraDamage(int damageDelta) {
@@ -728,77 +753,87 @@ public class EventManager {
 
     private static void checkArmorDurability(PlayerEntity player) {
         if (!SettingsManager.armorDurabilityEnabled) return;
-        int slot = 0;
         boolean playedThresholdSound = false;
         Set<Integer> currentEquipped = new HashSet<>();
         EquipmentSlot[] armorSlots = new EquipmentSlot[] {
             EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
         };
         for (EquipmentSlot armorSlot : armorSlots) {
+            int slotIndex = armorSlot.getEntitySlotId();
             ItemStack stack = player.getEquippedStack(armorSlot);
             if (!stack.isEmpty()) {
-                currentEquipped.add(slot);
-                if (!equippedArmorSlots.contains(slot)) {
-                    equippedArmorSlots.add(slot);
+                currentEquipped.add(slotIndex);
+                ItemStack previousTracked = lastEquippedArmorStacks.get(slotIndex);
+                boolean newStack = previousTracked != stack;
+                lastEquippedArmorStacks.put(slotIndex, stack);
+                if (!equippedArmorSlots.contains(slotIndex)) {
+                    equippedArmorSlots.add(slotIndex);
                 }
-                brokenArmor.remove(slot);
+                if (newStack) {
+                    equipDamageAlertedSlots.remove(slotIndex);
+                    triggeredArmorThresholds.remove(slotIndex);
+                }
+                Set<Double> triggeredThresholds = triggeredArmorThresholds.computeIfAbsent(slotIndex, key -> new HashSet<>());
+                brokenArmor.remove(slotIndex);
                 int maxDurability = stack.getMaxDamage();
                 int currentDamage = stack.getDamage();
                 if (maxDurability > 0) {
                     double durabilityPercent = (maxDurability - currentDamage) / (double)maxDurability;
-                    lastKnownDurability.put(slot, durabilityPercent);
-                    int previousDamage = lastRecordedItemDamage.getOrDefault(slot, currentDamage);
+                    lastKnownDurability.put(slotIndex, durabilityPercent);
+                    int previousDamage = lastRecordedItemDamage.getOrDefault(slotIndex, currentDamage);
                     int damageDelta = currentDamage - previousDamage;
                     if (armorSlot == EquipmentSlot.CHEST && isElytra(stack)) {
                         if (damageDelta > 0) {
                             handleElytraDamage(damageDelta);
                         }
                     }
-                    lastRecordedItemDamage.put(slot, currentDamage);
+                    lastRecordedItemDamage.put(slotIndex, currentDamage);
                     if (damageDelta > 0) {
                         double breakThreshold = Math.max(0.01, 1.0 / maxDurability);
                         if (durabilityPercent <= breakThreshold) {
-                            brokenArmor.add(slot);
+                            brokenArmor.add(slotIndex);
                         } else if (durabilityPercent > breakThreshold * 2) {
-                            brokenArmor.remove(slot);
+                            brokenArmor.remove(slotIndex);
                         }
                     }
                     if (!playedThresholdSound) {
-                        double lastThreshold = lastArmorThresholds.getOrDefault(slot, 1.0);
+                        double lastThreshold = lastArmorThresholds.getOrDefault(slotIndex, 1.0);
                         for (double threshold : DURABILITY_THRESHOLDS) {
                             if (durabilityPercent <= threshold && lastThreshold > threshold) {
-                                // If elytra, play powermove_overload instead of hev_damage
                                 if (armorSlot == EquipmentSlot.CHEST && isElytra(stack)) {
-                                    SoundManager.queueSound("powermove_overload");
-                                } else {
-                                    SoundManager.queueSound("hev_damage");
+                                    if (SettingsManager.powerArmorOverloadEnabled) {
+                                        SoundManager.queueSound("powermove_overload");
+                                    }
+                                } else if (SettingsManager.hevDamageEnabled) {
+                                    if ((!newStack || !equipDamageAlertedSlots.contains(slotIndex))
+                                            && !triggeredThresholds.contains(threshold)) {
+                                        SoundManager.queueSound("hev_damage");
+                                        triggeredThresholds.add(threshold);
+                                        if (newStack) {
+                                            equipDamageAlertedSlots.add(slotIndex);
+                                        }
+                                    }
                                 }
                                 playedThresholdSound = true;
                                 break;
                             }
                         }
                     }
-                    lastArmorThresholds.put(slot, durabilityPercent);
+                    lastArmorThresholds.put(slotIndex, durabilityPercent);
                 }
             } else {
-                if (brokenArmor.remove(slot)) {
-                    long now = System.currentTimeMillis();
-                    if (now - lastArmorBreakTime >= ARMOR_BREAK_COOLDOWN) {
-                        SoundManager.queueSound("armor_compromised");
-                        lastArmorBreakTime = now;
-                    }
-                }
-                equippedArmorSlots.remove(slot);
-                lastRecordedItemDamage.remove(slot);
-                lastKnownDurability.remove(slot);
-                lastArmorThresholds.remove(slot);
+                lastEquippedArmorStacks.remove(slotIndex);
+                equipDamageAlertedSlots.remove(slotIndex);
+                triggeredArmorThresholds.remove(slotIndex);
             }
-            slot++;
         }
         Set<Integer> damageSlots = new HashSet<>(lastRecordedItemDamage.keySet());
         damageSlots.removeAll(currentEquipped);
         for (Integer index : damageSlots) {
             lastRecordedItemDamage.remove(index);
+            lastEquippedArmorStacks.remove(index);
+            equipDamageAlertedSlots.remove(index);
+            triggeredArmorThresholds.remove(index);
         }
     }
 }

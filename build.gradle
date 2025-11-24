@@ -17,9 +17,9 @@ base {
 def mcVersionSelected = (findProperty('mcVersion') ?: project.findProperty('minecraft_version'))?.toString()
 def supported = [
         // Keep these up to date as new Minecraft releases drop
-        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8', loader: '0.17.2', modmenu: '15.0.0' ],
-        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9', loader: '0.17.2', modmenu: '16.0.0-rc.1' ],
-        '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.2', modmenu: '16.0.0-rc.1' ],
+        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8', loader: '0.17.2', modmenu: '15.0.0'],
+        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9', loader: '0.17.2', modmenu: '16.0.0-rc.1'],
+        '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.3', modmenu: '16.0.0-rc.1'],
 ]
 
 if (!supported.containsKey(mcVersionSelected)) {

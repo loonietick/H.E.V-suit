@@ -53,7 +53,8 @@ public class HevSuitConfigScreen extends Screen {
                         new ConfigToggle(Text.literal("Internal Bleeding Alerts"), Text.literal("Play internal bleeding warnings after severe explosive damage."), () -> SettingsManager.internalBleedingEnabled, value -> SettingsManager.internalBleedingEnabled = value)
                 ),
                 SectionContent.NONE,
-                List.of()
+                List.of(),
+                SettingsManager::resetHealthAlerts
         );
 
         ConfigSection weaponAlertsSubmenu = new ConfigSection(
@@ -64,7 +65,8 @@ public class HevSuitConfigScreen extends Screen {
                         new ConfigToggle(Text.literal("Ammunition Depletion Alerts"), Text.literal("Warn when your held ammo stack is consumed."), () -> SettingsManager.ammoDepletedEnabled, value -> SettingsManager.ammoDepletedEnabled = value)
                 ),
                 SectionContent.WEAPON_KEYWORDS,
-                List.of()
+                List.of(),
+                SettingsManager::resetWeaponAlerts
         );
 
         this.sections = List.of(
@@ -77,7 +79,8 @@ public class HevSuitConfigScreen extends Screen {
                                 new ConfigToggle(Text.literal("Captions"), Text.literal("Display subtitles."), () -> SettingsManager.captionsEnabled, value -> SettingsManager.captionsEnabled = value)
                         ),
                         SectionContent.NONE,
-                        List.of()
+                        List.of(),
+                        SettingsManager::resetMainToggles
                 ),
                 new ConfigSection(
                         Text.literal("HUD"),
@@ -91,14 +94,16 @@ public class HevSuitConfigScreen extends Screen {
                                 new ConfigToggle(Text.literal("Threat Indicators"), Text.literal("Show directional indicators pointing to where hostile entitys are."), () -> SettingsManager.threatIndicatorsEnabled, value -> SettingsManager.threatIndicatorsEnabled = value)
                         ),
                         SectionContent.NONE,
-                        List.of()
+                        List.of(),
+                        SettingsManager::resetHudToggles
                 ),
                 new ConfigSection(
                         Text.literal("HUD Colors"),
                         Text.literal("Adjust HUD colors using hex values (e.g. #FFAA00)."),
                         List.of(),
                         SectionContent.HUD_COLORS,
-                        List.of()
+                        List.of(),
+                        SettingsManager::resetHudColors
                 ),
                 new ConfigSection(
                         Text.literal("Audible Alerts"),
@@ -118,7 +123,8 @@ public class HevSuitConfigScreen extends Screen {
                                 new ConfigToggle(Text.literal("Radiation Alerts"), Text.literal("Enable Geiger counter effects inside basalt deltas."), () -> SettingsManager.radiationSfxEnabled, value -> SettingsManager.radiationSfxEnabled = value)
                         ),
                         SectionContent.NONE,
-                        List.of(healthAlertsSubmenu, weaponAlertsSubmenu)
+                        List.of(healthAlertsSubmenu, weaponAlertsSubmenu),
+                        SettingsManager::resetAudibleAlerts
                 )
         );
     }
@@ -219,7 +225,8 @@ public class HevSuitConfigScreen extends Screen {
             } else {
                 colorStartY += 8;
             }
-            initColorControls(colorStartY);
+            int colorsBottom = initColorControls(colorStartY);
+            contentBottom = Math.max(contentBottom, colorsBottom);
         } else if (section.content() == SectionContent.WEAPON_KEYWORDS) {
             int keywordsStartY = contentBottom;
             if (!toggles.isEmpty()) {
@@ -227,7 +234,26 @@ public class HevSuitConfigScreen extends Screen {
             } else {
                 keywordsStartY += 8;
             }
-            initWeaponKeywordControls(keywordsStartY, totalGridWidth);
+            int keywordsBottom = initWeaponKeywordControls(keywordsStartY, totalGridWidth);
+            contentBottom = Math.max(contentBottom, keywordsBottom);
+        }
+
+        if (section.resetAction() != null) {
+            int resetWidth = Math.min(200, totalGridWidth);
+            int resetX = (this.width - resetWidth) / 2;
+            int resetY = Math.min(this.height - 64, contentBottom + 24);
+            ButtonWidget resetButton = ButtonWidget.builder(Text.literal("Reset Section"), button -> {
+                        section.resetAction().run();
+                        SettingsManager.saveSettings();
+                        Text message = Text.literal(section.title().getString() + " reset to defaults.");
+                        this.init();
+                        showStatus(message, SettingsManager.hudPrimaryColor);
+                    })
+                    .dimensions(resetX, resetY, resetWidth, 20)
+                    .build();
+            this.addDrawableChild(resetButton);
+            registerTooltip(resetButton, Text.literal("Restore the default values for this section."));
+            contentBottom = Math.max(contentBottom, resetY + 20);
         }
 
         int navigationY = this.height - 32;
@@ -247,7 +273,7 @@ public class HevSuitConfigScreen extends Screen {
         this.addDrawableChild(doneButton);
     }
 
-    private void initColorControls(int startY) {
+    private int initColorControls(int startY) {
         int fieldWidth = 120;
         int buttonWidth = 90;
         int spacing = 8;
@@ -299,9 +325,11 @@ public class HevSuitConfigScreen extends Screen {
                 .build();
         this.addDrawableChild(syncButton);
         registerTooltip(syncButton, Text.literal("Set both colors using the primary value and auto-calculate a darker secondary."));
+
+        return y + 20;
     }
 
-    private void initWeaponKeywordControls(int startY, int totalWidth) {
+    private int initWeaponKeywordControls(int startY, int totalWidth) {
         int fieldWidth = Math.max(totalWidth, 200);
         int startX = (this.width - fieldWidth) / 2;
         int y = startY;
@@ -323,6 +351,8 @@ public class HevSuitConfigScreen extends Screen {
                 .build();
         this.addDrawableChild(saveButton);
         registerTooltip(saveButton, Text.literal("Update the keywords used to detect weapon pickups."));
+
+        return y + 20;
     }
 
     private void openSection(ConfigSection section) {
@@ -566,7 +596,7 @@ public class HevSuitConfigScreen extends Screen {
         }
     }
 
-    private record ConfigSection(Text title, Text description, List<ConfigToggle> toggles, SectionContent content, List<ConfigSection> children) { }
+    private record ConfigSection(Text title, Text description, List<ConfigToggle> toggles, SectionContent content, List<ConfigSection> children, Runnable resetAction) { }
 
     private enum SectionContent {
         NONE,

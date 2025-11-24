@@ -19,43 +19,78 @@ public class SettingsManager {
     private static final File CONFIG_FILE = new File("config/hev_suit_settings.json");
     private static final Gson GSON = new Gson();
     private static final List<String> DEFAULT_WEAPON_KEYWORDS = List.of("sword", "bow", "crossbow", "trident", "mace");
+    private static final boolean DEFAULT_HEV_SUIT_ENABLED = true;
+    private static final boolean DEFAULT_ARMOR_DURABILITY_ENABLED = true;
+    private static final boolean DEFAULT_HEALTH_ALERTS_ENABLED = true;
+    private static final boolean DEFAULT_HUD_ENABLED = true;
+    private static final boolean DEFAULT_FRACTURES_ENABLED = true;
+    private static final boolean DEFAULT_HEAT_DAMAGE_ENABLED = true;
+    private static final boolean DEFAULT_BLOOD_LOSS_ENABLED = true;
+    private static final boolean DEFAULT_SHOCK_DAMAGE_ENABLED = true;
+    private static final boolean DEFAULT_CHEMICAL_DAMAGE_ENABLED = true;
+    private static final boolean DEFAULT_PVP_MODE_ENABLED = false;
+    private static final boolean DEFAULT_MORPHINE_ENABLED = true;
+    private static final boolean DEFAULT_HEALTH_CRITICAL_2_ENABLED = true;
+    private static final boolean DEFAULT_SEEK_MEDICAL_ENABLED = true;
+    private static final boolean DEFAULT_HEALTH_CRITICAL_ENABLED = true;
+    private static final boolean DEFAULT_NEAR_DEATH_ENABLED = true;
+    private static final boolean DEFAULT_CAPTIONS_ENABLED = false;
+    private static final boolean DEFAULT_DAMAGE_INDICATORS_ENABLED = true;
+    private static final boolean DEFAULT_HUD_HEALTH_ENABLED = true;
+    private static final boolean DEFAULT_HUD_ARMOR_ENABLED = true;
+    private static final boolean DEFAULT_HUD_AMMO_ENABLED = true;
+    private static final boolean DEFAULT_THREAT_INDICATORS_ENABLED = false;
+    private static final boolean DEFAULT_HUD_ALIGNMENT_MODE = false;
+    private static final boolean DEFAULT_INSUFFICIENT_MEDICAL_ENABLED = false;
+    private static final boolean DEFAULT_HEV_DAMAGE_ENABLED = false;
+    private static final boolean DEFAULT_POWER_ARMOR_OVERLOAD_ENABLED = false;
+    private static final boolean DEFAULT_ADMINISTERING_MEDICAL_ENABLED = false;
+    private static final boolean DEFAULT_DEATH_SFX_ENABLED = true;
+    private static final boolean DEFAULT_WEAPON_PICKUP_ENABLED = false;
+    private static final boolean DEFAULT_AMMO_DEPLETED_ENABLED = true;
+    private static final boolean DEFAULT_HEV_LOGON_ENABLED = true;
+    private static final boolean DEFAULT_ELYTRA_EQUIP_SFX_ENABLED = false;
+    private static final boolean DEFAULT_INTERNAL_BLEEDING_ENABLED = true;
+    private static final boolean DEFAULT_RADIATION_SFX_ENABLED = true;
+    private static final int DEFAULT_HUD_PRIMARY_COLOR = 0xFFFFAE00;
+    private static final int DEFAULT_HUD_SECONDARY_COLOR = 0xFF8B5E00;
 
-    public static boolean hevSuitEnabled = true;
-    public static boolean armorDurabilityEnabled = true;
-    public static boolean healthAlertsEnabled = true;
-    public static boolean hudEnabled = true;
-    public static boolean fracturesEnabled = true;
-    public static boolean heatDamageEnabled = true;
-    public static boolean bloodLossEnabled = true;
-    public static boolean shockDamageEnabled = true;
-    public static boolean chemicalDamageEnabled = true;
-    public static boolean pvpModeEnabled = false;
-    public static boolean morphineEnabled = true;
-    public static boolean healthCritical2Enabled = true;
-    public static boolean seekMedicalEnabled = true;
-    public static boolean healthCriticalEnabled = true;
-    public static boolean nearDeathEnabled = true;
-    public static boolean captionsEnabled = false;
-    public static boolean damageIndicatorsEnabled = true;
-    public static boolean hudHealthEnabled = true;
-    public static boolean hudArmorEnabled = true;
-    public static boolean hudAmmoEnabled = true;
-    public static boolean threatIndicatorsEnabled = false;
-    public static boolean hudAlignmentMode = false; // render all assets centered for offset tuning
-    public static boolean insufficientMedicalEnabled = false;
-    public static boolean hevDamageEnabled = false;
-    public static boolean powerArmorOverloadEnabled = false;
-    public static boolean administeringMedicalEnabled = false;
-    public static boolean deathSfxEnabled = true;
-    public static boolean weaponPickupEnabled = false;
-    public static boolean ammoDepletedEnabled = true;
-    public static boolean hevLogonEnabled = true;
-    public static boolean elytraEquipSfxEnabled = false;
-    public static boolean internalBleedingEnabled = true;
-    public static boolean radiationSfxEnabled = true;
+    public static boolean hevSuitEnabled = DEFAULT_HEV_SUIT_ENABLED;
+    public static boolean armorDurabilityEnabled = DEFAULT_ARMOR_DURABILITY_ENABLED;
+    public static boolean healthAlertsEnabled = DEFAULT_HEALTH_ALERTS_ENABLED;
+    public static boolean hudEnabled = DEFAULT_HUD_ENABLED;
+    public static boolean fracturesEnabled = DEFAULT_FRACTURES_ENABLED;
+    public static boolean heatDamageEnabled = DEFAULT_HEAT_DAMAGE_ENABLED;
+    public static boolean bloodLossEnabled = DEFAULT_BLOOD_LOSS_ENABLED;
+    public static boolean shockDamageEnabled = DEFAULT_SHOCK_DAMAGE_ENABLED;
+    public static boolean chemicalDamageEnabled = DEFAULT_CHEMICAL_DAMAGE_ENABLED;
+    public static boolean pvpModeEnabled = DEFAULT_PVP_MODE_ENABLED;
+    public static boolean morphineEnabled = DEFAULT_MORPHINE_ENABLED;
+    public static boolean healthCritical2Enabled = DEFAULT_HEALTH_CRITICAL_2_ENABLED;
+    public static boolean seekMedicalEnabled = DEFAULT_SEEK_MEDICAL_ENABLED;
+    public static boolean healthCriticalEnabled = DEFAULT_HEALTH_CRITICAL_ENABLED;
+    public static boolean nearDeathEnabled = DEFAULT_NEAR_DEATH_ENABLED;
+    public static boolean captionsEnabled = DEFAULT_CAPTIONS_ENABLED;
+    public static boolean damageIndicatorsEnabled = DEFAULT_DAMAGE_INDICATORS_ENABLED;
+    public static boolean hudHealthEnabled = DEFAULT_HUD_HEALTH_ENABLED;
+    public static boolean hudArmorEnabled = DEFAULT_HUD_ARMOR_ENABLED;
+    public static boolean hudAmmoEnabled = DEFAULT_HUD_AMMO_ENABLED;
+    public static boolean threatIndicatorsEnabled = DEFAULT_THREAT_INDICATORS_ENABLED;
+    public static boolean hudAlignmentMode = DEFAULT_HUD_ALIGNMENT_MODE; // render all assets centered for offset tuning
+    public static boolean insufficientMedicalEnabled = DEFAULT_INSUFFICIENT_MEDICAL_ENABLED;
+    public static boolean hevDamageEnabled = DEFAULT_HEV_DAMAGE_ENABLED;
+    public static boolean powerArmorOverloadEnabled = DEFAULT_POWER_ARMOR_OVERLOAD_ENABLED;
+    public static boolean administeringMedicalEnabled = DEFAULT_ADMINISTERING_MEDICAL_ENABLED;
+    public static boolean deathSfxEnabled = DEFAULT_DEATH_SFX_ENABLED;
+    public static boolean weaponPickupEnabled = DEFAULT_WEAPON_PICKUP_ENABLED;
+    public static boolean ammoDepletedEnabled = DEFAULT_AMMO_DEPLETED_ENABLED;
+    public static boolean hevLogonEnabled = DEFAULT_HEV_LOGON_ENABLED;
+    public static boolean elytraEquipSfxEnabled = DEFAULT_ELYTRA_EQUIP_SFX_ENABLED;
+    public static boolean internalBleedingEnabled = DEFAULT_INTERNAL_BLEEDING_ENABLED;
+    public static boolean radiationSfxEnabled = DEFAULT_RADIATION_SFX_ENABLED;
 
-    public static int hudPrimaryColor = 0xFFFFAE00;
-    public static int hudSecondaryColor = 0xFF8B5E00;
+    public static int hudPrimaryColor = DEFAULT_HUD_PRIMARY_COLOR;
+    public static int hudSecondaryColor = DEFAULT_HUD_SECONDARY_COLOR;
     public static List<String> weaponKeywords = new ArrayList<>(DEFAULT_WEAPON_KEYWORDS);
 
     public static void loadSettings() {
@@ -64,41 +99,41 @@ public class SettingsManager {
         }
         try (FileReader reader = new FileReader(CONFIG_FILE)) {
             JsonObject json = GSON.fromJson(reader, JsonObject.class);
-            hevSuitEnabled = getOrDefault(json, "hevSuitEnabled", true);
-            armorDurabilityEnabled = getOrDefault(json, "armorDurabilityEnabled", true);
-            healthAlertsEnabled = getOrDefault(json, "healthAlertsEnabled", true);
-            hudEnabled = getOrDefault(json, "hudEnabled", true);
-            fracturesEnabled = getOrDefault(json, "fracturesEnabled", true);
-            heatDamageEnabled = getOrDefault(json, "heatDamageEnabled", true);
-            bloodLossEnabled = getOrDefault(json, "bloodLossEnabled", true);
-            shockDamageEnabled = getOrDefault(json, "shockDamageEnabled", true);
-            chemicalDamageEnabled = getOrDefault(json, "chemicalDamageEnabled", true);
-            pvpModeEnabled = getOrDefault(json, "pvpModeEnabled", false);
-            morphineEnabled = getOrDefault(json, "morphineEnabled", true);
-            healthCritical2Enabled = getOrDefault(json, "healthCritical2Enabled", true);
-            seekMedicalEnabled = getOrDefault(json, "seekMedicalEnabled", true);
-            healthCriticalEnabled = getOrDefault(json, "healthCriticalEnabled", true);
-            nearDeathEnabled = getOrDefault(json, "nearDeathEnabled", true);
-            captionsEnabled = getOrDefault(json, "captionsEnabled", false);
-            damageIndicatorsEnabled = getOrDefault(json, "damageIndicatorsEnabled", true);
-            hudHealthEnabled = getOrDefault(json, "hudHealthEnabled", true);
-            hudArmorEnabled = getOrDefault(json, "hudArmorEnabled", true);
-            hudAmmoEnabled = getOrDefault(json, "hudAmmoEnabled", true);
-            threatIndicatorsEnabled = getOrDefault(json, "threatIndicatorsEnabled", false);
-            hudAlignmentMode = getOrDefault(json, "hudAlignmentMode", false);
-            insufficientMedicalEnabled = getOrDefault(json, "insufficientMedicalEnabled", true);
-            hevDamageEnabled = getOrDefault(json, "hevDamageEnabled", true);
-            powerArmorOverloadEnabled = getOrDefault(json, "powerArmorOverloadEnabled", true);
-            administeringMedicalEnabled = getOrDefault(json, "administeringMedicalEnabled", true);
-            deathSfxEnabled = getOrDefault(json, "deathSfxEnabled", true);
-            weaponPickupEnabled = getOrDefault(json, "weaponPickupEnabled", true);
-            ammoDepletedEnabled = getOrDefault(json, "ammoDepletedEnabled", true);
-            hevLogonEnabled = getOrDefault(json, "hevLogonEnabled", true);
-            elytraEquipSfxEnabled = getOrDefault(json, "elytraEquipSfxEnabled", true);
-            internalBleedingEnabled = getOrDefault(json, "internalBleedingEnabled", true);
-            radiationSfxEnabled = getOrDefault(json, "radiationSfxEnabled", true);
-            hudPrimaryColor = getOrDefaultInt(json, "hudPrimaryColor", 0xFFFFAE00);
-            hudSecondaryColor = getOrDefaultInt(json, "hudSecondaryColor", 0xFF8B5E00);
+            hevSuitEnabled = getOrDefault(json, "hevSuitEnabled", DEFAULT_HEV_SUIT_ENABLED);
+            armorDurabilityEnabled = getOrDefault(json, "armorDurabilityEnabled", DEFAULT_ARMOR_DURABILITY_ENABLED);
+            healthAlertsEnabled = getOrDefault(json, "healthAlertsEnabled", DEFAULT_HEALTH_ALERTS_ENABLED);
+            hudEnabled = getOrDefault(json, "hudEnabled", DEFAULT_HUD_ENABLED);
+            fracturesEnabled = getOrDefault(json, "fracturesEnabled", DEFAULT_FRACTURES_ENABLED);
+            heatDamageEnabled = getOrDefault(json, "heatDamageEnabled", DEFAULT_HEAT_DAMAGE_ENABLED);
+            bloodLossEnabled = getOrDefault(json, "bloodLossEnabled", DEFAULT_BLOOD_LOSS_ENABLED);
+            shockDamageEnabled = getOrDefault(json, "shockDamageEnabled", DEFAULT_SHOCK_DAMAGE_ENABLED);
+            chemicalDamageEnabled = getOrDefault(json, "chemicalDamageEnabled", DEFAULT_CHEMICAL_DAMAGE_ENABLED);
+            pvpModeEnabled = getOrDefault(json, "pvpModeEnabled", DEFAULT_PVP_MODE_ENABLED);
+            morphineEnabled = getOrDefault(json, "morphineEnabled", DEFAULT_MORPHINE_ENABLED);
+            healthCritical2Enabled = getOrDefault(json, "healthCritical2Enabled", DEFAULT_HEALTH_CRITICAL_2_ENABLED);
+            seekMedicalEnabled = getOrDefault(json, "seekMedicalEnabled", DEFAULT_SEEK_MEDICAL_ENABLED);
+            healthCriticalEnabled = getOrDefault(json, "healthCriticalEnabled", DEFAULT_HEALTH_CRITICAL_ENABLED);
+            nearDeathEnabled = getOrDefault(json, "nearDeathEnabled", DEFAULT_NEAR_DEATH_ENABLED);
+            captionsEnabled = getOrDefault(json, "captionsEnabled", DEFAULT_CAPTIONS_ENABLED);
+            damageIndicatorsEnabled = getOrDefault(json, "damageIndicatorsEnabled", DEFAULT_DAMAGE_INDICATORS_ENABLED);
+            hudHealthEnabled = getOrDefault(json, "hudHealthEnabled", DEFAULT_HUD_HEALTH_ENABLED);
+            hudArmorEnabled = getOrDefault(json, "hudArmorEnabled", DEFAULT_HUD_ARMOR_ENABLED);
+            hudAmmoEnabled = getOrDefault(json, "hudAmmoEnabled", DEFAULT_HUD_AMMO_ENABLED);
+            threatIndicatorsEnabled = getOrDefault(json, "threatIndicatorsEnabled", DEFAULT_THREAT_INDICATORS_ENABLED);
+            hudAlignmentMode = getOrDefault(json, "hudAlignmentMode", DEFAULT_HUD_ALIGNMENT_MODE);
+            insufficientMedicalEnabled = getOrDefault(json, "insufficientMedicalEnabled", DEFAULT_INSUFFICIENT_MEDICAL_ENABLED);
+            hevDamageEnabled = getOrDefault(json, "hevDamageEnabled", DEFAULT_HEV_DAMAGE_ENABLED);
+            powerArmorOverloadEnabled = getOrDefault(json, "powerArmorOverloadEnabled", DEFAULT_POWER_ARMOR_OVERLOAD_ENABLED);
+            administeringMedicalEnabled = getOrDefault(json, "administeringMedicalEnabled", DEFAULT_ADMINISTERING_MEDICAL_ENABLED);
+            deathSfxEnabled = getOrDefault(json, "deathSfxEnabled", DEFAULT_DEATH_SFX_ENABLED);
+            weaponPickupEnabled = getOrDefault(json, "weaponPickupEnabled", DEFAULT_WEAPON_PICKUP_ENABLED);
+            ammoDepletedEnabled = getOrDefault(json, "ammoDepletedEnabled", DEFAULT_AMMO_DEPLETED_ENABLED);
+            hevLogonEnabled = getOrDefault(json, "hevLogonEnabled", DEFAULT_HEV_LOGON_ENABLED);
+            elytraEquipSfxEnabled = getOrDefault(json, "elytraEquipSfxEnabled", DEFAULT_ELYTRA_EQUIP_SFX_ENABLED);
+            internalBleedingEnabled = getOrDefault(json, "internalBleedingEnabled", DEFAULT_INTERNAL_BLEEDING_ENABLED);
+            radiationSfxEnabled = getOrDefault(json, "radiationSfxEnabled", DEFAULT_RADIATION_SFX_ENABLED);
+            hudPrimaryColor = getOrDefaultInt(json, "hudPrimaryColor", DEFAULT_HUD_PRIMARY_COLOR);
+            hudSecondaryColor = getOrDefaultInt(json, "hudSecondaryColor", DEFAULT_HUD_SECONDARY_COLOR);
             weaponKeywords = getStringList(json, "weaponKeywords", DEFAULT_WEAPON_KEYWORDS);
         } catch (IOException e) {
             LOGGER.error("Failed to load settings", e);
@@ -192,6 +227,59 @@ public class SettingsManager {
         } catch (IOException e) {
             LOGGER.error("Failed to save settings", e);
         }
+    }
+
+    public static void resetMainToggles() {
+        hevSuitEnabled = DEFAULT_HEV_SUIT_ENABLED;
+        pvpModeEnabled = DEFAULT_PVP_MODE_ENABLED;
+        captionsEnabled = DEFAULT_CAPTIONS_ENABLED;
+    }
+
+    public static void resetHudToggles() {
+        hudEnabled = DEFAULT_HUD_ENABLED;
+        hudHealthEnabled = DEFAULT_HUD_HEALTH_ENABLED;
+        hudArmorEnabled = DEFAULT_HUD_ARMOR_ENABLED;
+        hudAmmoEnabled = DEFAULT_HUD_AMMO_ENABLED;
+        damageIndicatorsEnabled = DEFAULT_DAMAGE_INDICATORS_ENABLED;
+        threatIndicatorsEnabled = DEFAULT_THREAT_INDICATORS_ENABLED;
+    }
+
+    public static void resetHudColors() {
+        hudPrimaryColor = DEFAULT_HUD_PRIMARY_COLOR;
+        hudSecondaryColor = DEFAULT_HUD_SECONDARY_COLOR;
+    }
+
+    public static void resetAudibleAlerts() {
+        fracturesEnabled = DEFAULT_FRACTURES_ENABLED;
+        bloodLossEnabled = DEFAULT_BLOOD_LOSS_ENABLED;
+        morphineEnabled = DEFAULT_MORPHINE_ENABLED;
+        armorDurabilityEnabled = DEFAULT_ARMOR_DURABILITY_ENABLED;
+        heatDamageEnabled = DEFAULT_HEAT_DAMAGE_ENABLED;
+        shockDamageEnabled = DEFAULT_SHOCK_DAMAGE_ENABLED;
+        chemicalDamageEnabled = DEFAULT_CHEMICAL_DAMAGE_ENABLED;
+        hevDamageEnabled = DEFAULT_HEV_DAMAGE_ENABLED;
+        powerArmorOverloadEnabled = DEFAULT_POWER_ARMOR_OVERLOAD_ENABLED;
+        hevLogonEnabled = DEFAULT_HEV_LOGON_ENABLED;
+        elytraEquipSfxEnabled = DEFAULT_ELYTRA_EQUIP_SFX_ENABLED;
+        radiationSfxEnabled = DEFAULT_RADIATION_SFX_ENABLED;
+    }
+
+    public static void resetHealthAlerts() {
+        healthAlertsEnabled = DEFAULT_HEALTH_ALERTS_ENABLED;
+        healthCritical2Enabled = DEFAULT_HEALTH_CRITICAL_2_ENABLED;
+        seekMedicalEnabled = DEFAULT_SEEK_MEDICAL_ENABLED;
+        healthCriticalEnabled = DEFAULT_HEALTH_CRITICAL_ENABLED;
+        nearDeathEnabled = DEFAULT_NEAR_DEATH_ENABLED;
+        insufficientMedicalEnabled = DEFAULT_INSUFFICIENT_MEDICAL_ENABLED;
+        administeringMedicalEnabled = DEFAULT_ADMINISTERING_MEDICAL_ENABLED;
+        deathSfxEnabled = DEFAULT_DEATH_SFX_ENABLED;
+        internalBleedingEnabled = DEFAULT_INTERNAL_BLEEDING_ENABLED;
+    }
+
+    public static void resetWeaponAlerts() {
+        weaponPickupEnabled = DEFAULT_WEAPON_PICKUP_ENABLED;
+        ammoDepletedEnabled = DEFAULT_AMMO_DEPLETED_ENABLED;
+        weaponKeywords = new ArrayList<>(DEFAULT_WEAPON_KEYWORDS);
     }
 
     // Calculate a darker shade of a color for secondary elements

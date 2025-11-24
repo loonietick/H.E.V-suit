@@ -43,24 +43,8 @@ public class SubtitleManager {
         CAPTIONS.put("internal_bleeding", "Internal Bleeding Detected");
 
         
-        // Black Mesa captions
-        CAPTIONS.put("bm_major_laceration", "Major Lacerations Detected");
-        CAPTIONS.put("bm_minor_laceration", "Minor Lacerations Detected");
-        CAPTIONS.put("bm_major_fracture", "Major Fracture Detected");
-        CAPTIONS.put("bm_minor_fracture", "Minor Fracture Detected");
-        CAPTIONS.put("bm_blood_loss", "Blood Loss Detected");
-        CAPTIONS.put("bm_health_critical", "Warning: Vital Signs Critical");
-        CAPTIONS.put("bm_health_critical2", "Vital Signs are Dropping");
-        CAPTIONS.put("bm_morphine_system", "Automatic Medical Systems Engaged. Morphine Administered.");
-        CAPTIONS.put("bm_seek_medical", "Seek Medical Attention");
-        CAPTIONS.put("bm_near_death", "Emergency! User Death Imminent");
-        CAPTIONS.put("bm_chemical", "Warning: Hazardous Chemical Detected");
-        CAPTIONS.put("bm_hev_logon", "Welcome to the HEV Mark IV Protective System, for use in hazardous environment conditions.");
-        // Power level related captions
         CAPTIONS.put("power", "Power");
-        CAPTIONS.put("bm_power", "Power");
         CAPTIONS.put("power_level_is", "Power Level Is");
-        CAPTIONS.put("bm_power_level_is", "Power Level Is");
     }
 
     public static void toggleCaptions() {
@@ -80,8 +64,7 @@ public class SubtitleManager {
         if (client.player == null) return;
 
         // Handle power level announcements
-        if (soundName.equals("power") || soundName.equals("bm_power") || 
-            soundName.equals("power_level_is") || soundName.equals("bm_power_level_is")) {
+        if (soundName.equals("power") || soundName.equals("power_level_is")) {
             String powerLevel = SoundManager.getPowerLevelFromQueue();
             if (powerLevel != null) {
                 Text message = Text.literal("[HEV Suit] Power: " + powerLevel + "%")
@@ -103,8 +86,7 @@ public class SubtitleManager {
 
     private static boolean isPowerNumber(String soundName) {
         try {
-            String numStr = soundName.replace("bm_", "");
-            Integer.parseInt(numStr);
+            Integer.parseInt(soundName);
             return true;
         } catch (NumberFormatException e) {
             return false;

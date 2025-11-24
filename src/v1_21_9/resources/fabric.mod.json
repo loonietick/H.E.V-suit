@@ -17,6 +17,9 @@
   "entrypoints": {
     "client": [
       "ltown.hev_suit.client.Hev_suitClient"
+    ],
+    "modmenu": [
+      "ltown.hev_suit.client.integration.HevSuitModMenuPlugin"
     ]
   },
   "mixins": [
@@ -30,5 +33,8 @@
     "fabricloader": ">=${loader_version}",
     "fabric": "*",
     "minecraft": "${minecraft_version}"
+  },
+  "suggests": {
+    "com.terraformersmc.modmenu": "*"
   }
 }

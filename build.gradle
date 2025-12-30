@@ -1,6 +1,6 @@
 plugins {
     // Loom supports 1.21.x; keep in sync with Fabric docs
-    id 'fabric-loom' version '1.11.8'
+    id 'fabric-loom' version '1.13.3'
     id 'maven-publish'
 }
 
@@ -12,14 +12,15 @@ base {
     archivesName = project.archives_base_name
 }
 
-// ---- Multi-version configuration (1.21.8 → 1.21.10) ----
-// Select with: ./gradlew build -PmcVersion=1.21.8 (or 1.21.9, 1.21.10, ...)
+// ---- Multi-version configuration (1.21.8 → 1.21.11) ----
+// Select with: ./gradlew build -PmcVersion=1.21.8 (or 1.21.9, 1.21.10, 1.21.11, ...)
 def mcVersionSelected = (findProperty('mcVersion') ?: project.findProperty('minecraft_version'))?.toString()
 def supported = [
         // Keep these up to date as new Minecraft releases drop
         '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8', loader: '0.17.2', modmenu: '15.0.0'],
         '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9', loader: '0.17.2', modmenu: '16.0.0-rc.1'],
         '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.3', modmenu: '16.0.0-rc.1'],
+        '1.21.11': [ yarn: '1.21.11+build.3', fabricApi: '0.140.2+1.21.11', loader: '0.18.4', modmenu: '17.0.0-beta.1' ]
 ]
 
 if (!supported.containsKey(mcVersionSelected)) {
@@ -37,6 +38,10 @@ loom {
             sourceSet sourceSets.client
         }
     }
+    if (mcVersionSelected == '1.21.11') {
+        // Fabric API 0.140.2 ships mod-provided javadocs in a non-intermediary namespace; Loom errors out during setup
+        enableModProvidedJavadoc.set(false)
+    }
 }
 
 // Map MC version to a versioned source tree. Duplicate code per variant is OK.
@@ -44,6 +49,7 @@ loom {
 //   - src/v1_21/java and src/v1_21/resources
 //   - src/v1_21_client/java and src/v1_21_client/resources
 def variantFor = { String mc ->
+    if (mc.startsWith('1.21.11')) return 'v1_21_11'
     if (mc.startsWith('1.21.10')) return 'v1_21_10'
     if (mc.startsWith('1.21.9')) return 'v1_21_9'
     if (mc.startsWith('1.21.8')) return 'v1_21_8'

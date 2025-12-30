@@ -7,6 +7,6 @@ you can open the config with h there is also a bunch of commands under /hev, pre
 ### build from source
 - just compile like any other gradle project
 - to specify a version use ``-PmcVersion=(version)``
-- for example, if you wanted to compile for 1.21.9 youd run ``./gradlew build -PmcVersion=1.21.9``
-- supported versions at the moment are 1.21.8 1.21.9 and 1.21.10
+- for example, if you wanted to compile for 1.21.11 youd run ``./gradlew build -PmcVersion=1.21.11``
+- supported versions at the moment are 1.21.8 1.21.9 1.21.10 and 1.21.11
 - jar will be inside of ./build/libs/

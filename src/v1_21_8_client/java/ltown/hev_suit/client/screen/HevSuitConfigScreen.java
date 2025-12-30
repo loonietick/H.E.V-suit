@@ -25,12 +25,10 @@ public class HevSuitConfigScreen extends Screen {
     private final Screen parent;
     private final List<ConfigSection> sections;
     private final Map<ClickableWidget, Text> tooltips = new HashMap<>();
-    private final Map<TextFieldWidget, Text> inputFieldLabels = new HashMap<>();
     private final Deque<ConfigSection> sectionStack = new ArrayDeque<>();
     private ConfigSection currentSection;
     private TextFieldWidget primaryColorField;
     private TextFieldWidget secondaryColorField;
-    private TextFieldWidget weaponKeywordField;
     private Text statusMessage;
     private int statusMessageColor = 0xFFFFFFFF;
     private int statusMessageTicks;
@@ -59,12 +57,12 @@ public class HevSuitConfigScreen extends Screen {
 
         ConfigSection weaponAlertsSubmenu = new ConfigSection(
                 Text.literal("Weapon Alerts"),
-                Text.literal("Configure weapon pickup alerts and keywords."),
+                Text.literal("Configure weapon pickup alerts."),
                 List.of(
                         new ConfigToggle(Text.literal("Weapon Acquisition Alerts"), Text.literal("Play a notification when picking up a configured weapon."), () -> SettingsManager.weaponPickupEnabled, value -> SettingsManager.weaponPickupEnabled = value),
                         new ConfigToggle(Text.literal("Ammunition Depletion Alerts"), Text.literal("Warn when your held ammo stack is consumed."), () -> SettingsManager.ammoDepletedEnabled, value -> SettingsManager.ammoDepletedEnabled = value)
                 ),
-                SectionContent.WEAPON_KEYWORDS,
+                SectionContent.NONE,
                 List.of(),
                 SettingsManager::resetWeaponAlerts
         );
@@ -134,10 +132,8 @@ public class HevSuitConfigScreen extends Screen {
         super.init();
         this.clearChildren();
         this.tooltips.clear();
-        this.inputFieldLabels.clear();
         this.primaryColorField = null;
         this.secondaryColorField = null;
-        this.weaponKeywordField = null;
         this.clearStatus();
         if (this.currentSection == null) {
             this.sectionStack.clear();
@@ -227,15 +223,6 @@ public class HevSuitConfigScreen extends Screen {
             }
             int colorsBottom = initColorControls(colorStartY);
             contentBottom = Math.max(contentBottom, colorsBottom);
-        } else if (section.content() == SectionContent.WEAPON_KEYWORDS) {
-            int keywordsStartY = contentBottom;
-            if (!toggles.isEmpty()) {
-                keywordsStartY += 24;
-            } else {
-                keywordsStartY += 8;
-            }
-            int keywordsBottom = initWeaponKeywordControls(keywordsStartY, totalGridWidth);
-            contentBottom = Math.max(contentBottom, keywordsBottom);
         }
 
         if (section.resetAction() != null) {
@@ -290,7 +277,6 @@ public class HevSuitConfigScreen extends Screen {
         this.primaryColorField.setChangedListener(value -> clearStatus());
         this.primaryColorField.setEditableColor(0xFFFFFFFF);
         this.addDrawableChild(this.primaryColorField);
-        this.inputFieldLabels.put(this.primaryColorField, Text.literal("Primary Color"));
         registerTooltip(this.primaryColorField, Text.literal("Enter a hex color like #FFAA00 to update the HUD's primary accent."));
 
         ButtonWidget applyPrimary = ButtonWidget.builder(Text.literal("Apply"), button -> applyPrimaryColor())
@@ -309,7 +295,6 @@ public class HevSuitConfigScreen extends Screen {
         this.secondaryColorField.setChangedListener(value -> clearStatus());
         this.secondaryColorField.setEditableColor(0xFFFFFFFF);
         this.addDrawableChild(this.secondaryColorField);
-        this.inputFieldLabels.put(this.secondaryColorField, Text.literal("Secondary Color"));
         registerTooltip(this.secondaryColorField, Text.literal("Enter a hex color like #D97F00 for the HUD's secondary accent."));
 
         ButtonWidget applySecondary = ButtonWidget.builder(Text.literal("Apply"), button -> applySecondaryColor())
@@ -325,32 +310,6 @@ public class HevSuitConfigScreen extends Screen {
                 .build();
         this.addDrawableChild(syncButton);
         registerTooltip(syncButton, Text.literal("Set both colors using the primary value and auto-calculate a darker secondary."));
-
-        return y + 20;
-    }
-
-    private int initWeaponKeywordControls(int startY, int totalWidth) {
-        int fieldWidth = Math.max(totalWidth, 200);
-        int startX = (this.width - fieldWidth) / 2;
-        int y = startY;
-
-        String currentKeywords = String.join(", ", SettingsManager.weaponKeywords);
-        this.weaponKeywordField = new TextFieldWidget(this.textRenderer, startX, y, fieldWidth, 20, Text.literal("Weapon Keywords"));
-        this.weaponKeywordField.setMaxLength(256);
-        this.weaponKeywordField.setText(currentKeywords);
-        this.weaponKeywordField.setChangedListener(value -> clearStatus());
-        this.weaponKeywordField.setEditableColor(0xFFFFFFFF);
-        this.addDrawableChild(this.weaponKeywordField);
-        this.inputFieldLabels.put(this.weaponKeywordField, Text.literal("Weapon Keywords (comma separated)"));
-        registerTooltip(this.weaponKeywordField, Text.literal("Enter comma separated weapon name fragments (e.g. sword,bow,trident)."));
-
-        y += 28;
-
-        ButtonWidget saveButton = ButtonWidget.builder(Text.literal("Save Keywords"), button -> applyWeaponKeywords())
-                .dimensions(startX, y, fieldWidth, 20)
-                .build();
-        this.addDrawableChild(saveButton);
-        registerTooltip(saveButton, Text.literal("Update the keywords used to detect weapon pickups."));
 
         return y + 20;
     }
@@ -432,28 +391,6 @@ public class HevSuitConfigScreen extends Screen {
         showStatus(Text.literal("HUD colors synced from primary."), primary);
     }
 
-    private void applyWeaponKeywords() {
-        if (this.weaponKeywordField == null) {
-            return;
-        }
-        String raw = this.weaponKeywordField.getText();
-        List<String> keywords = new ArrayList<>();
-        if (raw != null) {
-            String[] parts = raw.split(",");
-            for (String part : parts) {
-                String value = part.trim().toLowerCase();
-                if (!value.isEmpty()) {
-                    keywords.add(value);
-                }
-            }
-        }
-        SettingsManager.weaponKeywords = keywords;
-        SettingsManager.saveSettings();
-        this.weaponKeywordField.setEditableColor(0xFFFFFFFF);
-        this.weaponKeywordField.setText(String.join(", ", SettingsManager.weaponKeywords));
-        showStatus(Text.literal("Weapon keywords updated (" + keywords.size() + ")"), SettingsManager.hudPrimaryColor);
-    }
-
     private boolean isColorInput(String value) {
         if (value == null || value.isEmpty()) {
             return true;
@@ -523,9 +460,6 @@ public class HevSuitConfigScreen extends Screen {
         if (this.secondaryColorField != null) {
             this.secondaryColorField.setEditableColor(0xFFFFFFFF);
         }
-        if (this.weaponKeywordField != null) {
-            this.weaponKeywordField.setEditableColor(0xFFFFFFFF);
-        }
     }
 
     @Override
@@ -548,15 +482,6 @@ public class HevSuitConfigScreen extends Screen {
             Text description = this.currentSection.description();
             if (description != null) {
                 context.drawCenteredTextWithShadow(this.textRenderer, description, this.width / 2, 58, 0xA0A0A0);
-            }
-        }
-
-        if (this.currentSection != null && !this.inputFieldLabels.isEmpty()) {
-            for (Map.Entry<TextFieldWidget, Text> entry : this.inputFieldLabels.entrySet()) {
-                TextFieldWidget field = entry.getKey();
-                if (field != null && entry.getValue() != null) {
-                    context.drawTextWithShadow(this.textRenderer, entry.getValue(), field.getX(), field.getY() - 10, 0xFFFFFF);
-                }
             }
         }
 
@@ -600,7 +525,6 @@ public class HevSuitConfigScreen extends Screen {
 
     private enum SectionContent {
         NONE,
-        HUD_COLORS,
-        WEAPON_KEYWORDS
+        HUD_COLORS
     }
 }

@@ -112,6 +112,7 @@ public class EventManager {
     private static long lastAmmoAlertTime = 0;
     private static final long AMMO_DEPLETED_COOLDOWN = 2000;
     private static final long INITIAL_ALERT_SUPPRESSION_MS = 4000;
+    private static final Set<Item> WEAPON_ITEMS = initWeaponItems();
     private static final Set<Item> ADDITIONAL_AMMO_ITEMS = Set.of(
             Items.SNOWBALL,
             Items.EGG,
@@ -611,19 +612,7 @@ public class EventManager {
 
     private static boolean isWeaponItem(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        Identifier id = Registries.ITEM.getId(stack.getItem());
-        if (id == null) return false;
-        String path = id.getPath();
-        List<String> keywords = SettingsManager.weaponKeywords;
-        if (keywords == null || keywords.isEmpty()) {
-            return false;
-        }
-        for (String keyword : keywords) {
-            if (path.contains(keyword)) {
-                return true;
-            }
-        }
-        return false;
+        return WEAPON_ITEMS.contains(stack.getItem());
     }
 
     private static void trackAmmunition(PlayerEntity player) {
@@ -704,20 +693,6 @@ public class EventManager {
         return total;
     }
 
-    private static void handleElytraDamage(int damageDelta) {
-        if (!SettingsManager.fracturesEnabled) return;
-        long now = System.currentTimeMillis();
-        if (now - lastFractureTime < FRACTURE_COOLDOWN) return;
-
-        if (damageDelta >= 6) {
-            SoundManager.queueSound("major_fracture");
-            lastFractureTime = now;
-        } else if (damageDelta >= 2) {
-            SoundManager.queueSound("minor_fracture");
-            lastFractureTime = now;
-        }
-    }
-
     private static boolean isElytra(ItemStack stack) {
         return stack != null && !stack.isEmpty() && stack.getItem().getTranslationKey().toLowerCase().contains("elytra");
     }
@@ -730,6 +705,24 @@ public class EventManager {
 
     private static Vec3d getEntityPosition(Entity entity) {
         return new Vec3d(entity.getX(), entity.getY(), entity.getZ());
+    }
+
+    private static Set<Item> initWeaponItems() {
+        Set<Item> items = new HashSet<>();
+        addIfPresent(items, Identifier.of("minecraft", "trident"));
+        addIfPresent(items, Identifier.of("minecraft", "bow"));
+        addIfPresent(items, Identifier.of("minecraft", "crossbow"));
+        addIfPresent(items, Identifier.of("minecraft", "mace"));
+        for (String material : List.of("copper", "iron", "diamond", "netherite")) {
+            addIfPresent(items, Identifier.of("minecraft", material + "_sword"));
+        }
+        return items;
+    }
+
+    private static void addIfPresent(Set<Item> items, Identifier id) {
+        if (Registries.ITEM.containsId(id)) {
+            items.add(Registries.ITEM.get(id));
+        }
     }
 
     private static class AmmoSnapshot {
@@ -782,11 +775,6 @@ public class EventManager {
                     lastKnownDurability.put(slotIndex, durabilityPercent);
                     int previousDamage = lastRecordedItemDamage.getOrDefault(slotIndex, currentDamage);
                     int damageDelta = currentDamage - previousDamage;
-                    if (armorSlot == EquipmentSlot.CHEST && isElytra(stack)) {
-                        if (damageDelta > 0) {
-                            handleElytraDamage(damageDelta);
-                        }
-                    }
                     lastRecordedItemDamage.put(slotIndex, currentDamage);
                     if (damageDelta > 0) {
                         double breakThreshold = Math.max(0.01, 1.0 / maxDurability);

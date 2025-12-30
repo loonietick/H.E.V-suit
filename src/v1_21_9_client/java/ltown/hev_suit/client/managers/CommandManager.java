@@ -14,9 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -157,7 +155,6 @@ public class CommandManager {
     private static LiteralArgumentBuilder<FabricClientCommandSource> buildEditCommands() {
         LiteralArgumentBuilder<FabricClientCommandSource> edit = ClientCommandManager.literal("edit");
         edit.then(buildHudColorCommands());
-        edit.then(buildWeaponKeywordCommands());
         return edit;
     }
 
@@ -178,23 +175,6 @@ public class CommandManager {
                         .executes(context -> setBothHudColors(context, StringArgumentType.getString(context, "hexcolor")))));
         hud.then(color);
         return hud;
-    }
-
-    private static LiteralArgumentBuilder<FabricClientCommandSource> buildWeaponKeywordCommands() {
-        LiteralArgumentBuilder<FabricClientCommandSource> weapons = ClientCommandManager.literal("weapons");
-        LiteralArgumentBuilder<FabricClientCommandSource> keywords = ClientCommandManager.literal("keywords");
-        keywords.then(ClientCommandManager.literal("list").executes(CommandManager::listWeaponKeywords));
-        keywords.then(ClientCommandManager.literal("set")
-                .then(ClientCommandManager.argument("keywords", StringArgumentType.greedyString())
-                        .executes(context -> setWeaponKeywords(context, StringArgumentType.getString(context, "keywords")))));
-        keywords.then(ClientCommandManager.literal("add")
-                .then(ClientCommandManager.argument("keyword", StringArgumentType.word())
-                        .executes(context -> addWeaponKeyword(context, StringArgumentType.getString(context, "keyword")))));
-        keywords.then(ClientCommandManager.literal("remove")
-                .then(ClientCommandManager.argument("keyword", StringArgumentType.word())
-                        .executes(context -> removeWeaponKeyword(context, StringArgumentType.getString(context, "keyword")))));
-        weapons.then(keywords);
-        return weapons;
     }
 
     private static LiteralArgumentBuilder<FabricClientCommandSource> buildListQueueCommand() {
@@ -386,51 +366,6 @@ public class CommandManager {
         return 1;
     }
 
-    private static int listWeaponKeywords(CommandContext<FabricClientCommandSource> context) {
-        List<String> keywords = SettingsManager.weaponKeywords;
-        if (keywords.isEmpty()) {
-            sendPrimaryFeedback(context.getSource(), "No weapon keywords configured.");
-        } else {
-            sendPrimaryFeedback(context.getSource(), "Weapon keywords: " + String.join(", ", keywords));
-        }
-        return 1;
-    }
-
-    private static int setWeaponKeywords(CommandContext<FabricClientCommandSource> context, String raw) {
-        List<String> parsed = parseKeywords(raw);
-        SettingsManager.weaponKeywords = parsed;
-        SettingsManager.saveSettings();
-        sendPrimaryFeedback(context.getSource(), "Weapon keywords updated (" + parsed.size() + ").");
-        return 1;
-    }
-
-    private static int addWeaponKeyword(CommandContext<FabricClientCommandSource> context, String keyword) {
-        String cleaned = keyword.trim().toLowerCase();
-        if (cleaned.isEmpty()) {
-            sendPrimaryFeedback(context.getSource(), "Keyword cannot be empty.");
-            return 0;
-        }
-        if (!SettingsManager.weaponKeywords.contains(cleaned)) {
-            SettingsManager.weaponKeywords.add(cleaned);
-            SettingsManager.saveSettings();
-            sendPrimaryFeedback(context.getSource(), "Added weapon keyword: " + cleaned);
-        } else {
-            sendPrimaryFeedback(context.getSource(), "Keyword already present: " + cleaned);
-        }
-        return 1;
-    }
-
-    private static int removeWeaponKeyword(CommandContext<FabricClientCommandSource> context, String keyword) {
-        String cleaned = keyword.trim().toLowerCase();
-        if (SettingsManager.weaponKeywords.remove(cleaned)) {
-            SettingsManager.saveSettings();
-            sendPrimaryFeedback(context.getSource(), "Removed weapon keyword: " + cleaned);
-        } else {
-            sendPrimaryFeedback(context.getSource(), "Keyword not found: " + cleaned);
-        }
-        return 1;
-    }
-
     private static Integer parseColor(String hexColor) {
         if (!isValidHexColor(hexColor)) {
             return null;
@@ -442,20 +377,6 @@ public class CommandManager {
             LOGGER.warn("Invalid color value supplied: {}", hexColor, e);
             return null;
         }
-    }
-
-    private static List<String> parseKeywords(String raw) {
-        Set<String> unique = new LinkedHashSet<>();
-        if (raw != null) {
-            String[] parts = raw.split(",");
-            for (String part : parts) {
-                String value = part.trim().toLowerCase();
-                if (!value.isEmpty()) {
-                    unique.add(value);
-                }
-            }
-        }
-        return new ArrayList<>(unique);
     }
 
     private static void sendInvalidColor(CommandContext<FabricClientCommandSource> context) {

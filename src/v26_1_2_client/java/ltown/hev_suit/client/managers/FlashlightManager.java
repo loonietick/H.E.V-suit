@@ -35,7 +35,7 @@ public class FlashlightManager {
             new KeyMapping(
                     "key.hev_suit.toggle_flashlight",
                     InputConstants.Type.KEYSYM,
-                    GLFW.GLFW_KEY_F,
+                    GLFW.GLFW_KEY_G,
                     EventManager.CONFIG_CATEGORY
             )
     );

@@ -566,7 +566,30 @@ public class EventManager {
         } else if (wasPlayerDead) {
             SoundManager.stopFlatline();
             wasPlayerDead = false;
+            resetAlertCooldowns();
         }
+    }
+
+    // Respawning is a fresh life -- alerts shouldn't stay silenced by cooldowns carried over
+    // from whatever the player was doing right before they died.
+    private static void resetAlertCooldowns() {
+        lastMorphineTime = 0;
+        lastBloodLossTime = 0;
+        lastFractureTime = 0;
+        lastGeneralAlertTime = 0;
+        lastHeatDamageTime = 0;
+        lastShockDamageTime = 0;
+        lastMajorLacerationTime = 0;
+        lastMinorLacerationTime = 0;
+        lastHealthCritical2Time = 0;
+        lastNearDeathTime = 0;
+        lastHealthCriticalTime = 0;
+        lastRadiationDetectedTime = 0;
+        lastInsufficientMedicalTime = 0;
+        lastSeekMedicalTime = 0;
+        lastInternalBleedingTime = 0;
+        lastArmorBreakTime = 0;
+        lastAmmoAlertTime = 0;
     }
 
     private static void handleBasaltExposure(Minecraft client, Player player) {

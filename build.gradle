@@ -6,6 +6,8 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.17.0-alpha.7' apply false
     id 'net.fabricmc.fabric-loom-remap' version '1.17.0-alpha.7' apply false
     id 'maven-publish'
+    id 'com.modrinth.minotaur' version '2.9.0'
+    id 'net.darkhax.curseforgegradle' version '1.1.18'
 }
 
 import org.gradle.api.file.DuplicatesStrategy
@@ -17,6 +19,7 @@ def mcVersionSelected = (findProperty('mcVersion') ?: project.findProperty('mine
 def supported = [
         // Keep these up to date as new Minecraft releases drop
         // ldl = LambDynamicLights API version, from https://maven.gegy.dev/releases (compile-only, optional flashlight integration)
+        '1.20.1' : [ yarn: '1.20.1+build.10', fabricApi: '0.92.11+1.20.1', loader: '0.19.3', modmenu: '7.2.2',           ldl: '4.4.0+1.20.1'],
         '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8',  loader: '0.17.2', modmenu: '15.0.0',          ldl: '4.8.7+1.21.8'],
         '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9',  loader: '0.17.2', modmenu: '16.0.0-rc.1',     ldl: '4.7.2+1.21.9'],
         '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.3', modmenu: '16.0.0-rc.1',     ldl: '4.8.7+1.21.10'],
@@ -73,6 +76,7 @@ def variantFor = { String mc ->
     if (mc.startsWith('1.21.10')) return 'v1_21_10'
     if (mc.startsWith('1.21.9'))  return 'v1_21_9'
     if (mc.startsWith('1.21.8'))  return 'v1_21_8'
+    if (mc.startsWith('1.20.1')) return 'v1_20_1'
     // 26.1.x series — dots become underscores, e.g. "26.1.2" -> "v26_1_2"
     if (mc.startsWith('26.'))     return 'v' + mc.replace('.', '_')
     throw new GradleException("No source variant available for Minecraft ${mc}. Update variantFor in build.gradle.")
@@ -223,4 +227,57 @@ publishing {
         // The repositories here will be used for publishing your artifact, not for
         // retrieving dependencies.
     }
+}
+
+// ---- Modrinth publishing (Minotaur) ----
+// Run for a single -PmcVersion at a time, same as every other task here — see
+// publish-modrinth.sh to loop this across every entry in `supported`.
+// Token: set `modrinthToken` in ~/.gradle/gradle.properties (global, never committed) or the
+// MODRINTH_TOKEN env var. Changelog: pass -PchangelogText="..." or it falls back to a stub.
+modrinth {
+    token = project.findProperty('modrinthToken') ?: System.getenv('MODRINTH_TOKEN')
+    projectId = 'hev-suit-voice-system'
+    // Unique per upload (includes the MC version) even though versionName below doesn't --
+    // Modrinth shows the supported game version as its own badge per entry regardless.
+    versionNumber = project.version.toString()
+    versionName = "HEV Suit Voice System ${project.mod_version}"
+    versionType = (project.findProperty('modrinthVersionType') ?: 'release').toString()
+    changelog = (project.findProperty('changelogText') ?: 'See the GitHub commit history for this release.').toString()
+    // 26.1+ (Mojang mappings, no-remap loom variant) never produces a remapJar task; every
+    // other version does, and that's the one with the real (non-dev) classes in it.
+    uploadFile = vconf.mojang ? tasks.jar : tasks.remapJar
+    gameVersions = [mcVersionSelected]
+    loaders = ['fabric']
+    dependencies {
+        required.project 'fabric-api'
+        optional.project 'modmenu'
+        optional.project 'lambdynamiclights'
+    }
+}
+
+// ---- CurseForge publishing (CurseForgeGradle) ----
+// Same per-invocation model as the modrinth task above. Project: "Half-Life HEV Suit Voice
+// System" (slug hev-suit-sound-system, id 1191594) -- verified against the live CurseForge page,
+// not just the id the user recalled from memory.
+// Token: set `curseforgeToken` in ~/.gradle/gradle.properties (global, never committed) or the
+// CURSEFORGE_TOKEN env var. Uses the same -PchangelogText as Modrinth.
+tasks.register('publishCurseForge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+    apiToken = project.findProperty('curseforgeToken') ?: System.getenv('CURSEFORGE_TOKEN')
+
+    def mainFile = upload(1191594, vconf.mojang ? tasks.jar : tasks.remapJar)
+    mainFile.changelogType = 'markdown'
+    mainFile.changelog = (project.findProperty('changelogText') ?: 'See the GitHub commit history for this release.').toString()
+    mainFile.releaseType = (project.findProperty('curseforgeReleaseType') ?: 'release').toString()
+    // CurseForge maintains its own known-game-version list; if `mcVersionSelected` (e.g. a
+    // brand-new 26.x release) isn't recognized yet, this call fails loudly rather than silently
+    // uploading with the wrong version tag.
+    mainFile.addGameVersion(mcVersionSelected)
+    mainFile.addModLoader('Fabric')
+    // No addEnvironment() method in this plugin version (1.1.18, pinned for JDK 21 compat --
+    // newer releases need JVM 25+), but CurseForge's "environment" tag is just another entry in
+    // the same flat version-name list addGameVersion() resolves against, so this works fine.
+    mainFile.addGameVersion('Client')
+    mainFile.addRequirement('fabric-api')
+    mainFile.addOptional('modmenu')
+    mainFile.addOptional('lambdynamiclights')
 }

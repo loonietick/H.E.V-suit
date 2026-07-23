@@ -1,5 +1,7 @@
 package ltown.hev_suit.client.managers;
 
+import net.fabricmc.loader.api.FabricLoader;
+
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 // Avoid importing DrawContext directly to support 1.19.4
@@ -30,6 +32,10 @@ import net.minecraft.client.texture.NativeImage;
 import java.io.IOException;
 
 public class HudManager {
+
+    // Flashlight HUD icon is pointless without LambDynamicLights actually installed -- there'd be
+    // no light to show a battery/beam state for. Checked once at class load, not per frame.
+    private static final boolean LAMBDYNLIGHTS_LOADED = FabricLoader.getInstance().isModLoaded("lambdynlights");
 
     // === hud tuning (edit these variables; rebuild to apply) ===
     private static class Vec2i { int x; int y; Vec2i(){} Vec2i(int x,int y){this.x=x;this.y=y;} }
@@ -689,7 +695,7 @@ public class HudManager {
             }
 
             // Flashlight gauge -- top-right corner, independent of the bottom-anchored row.
-            if (SettingsManager.hudFlashlightEnabled) {
+            if (SettingsManager.hudFlashlightEnabled && LAMBDYNLIGHTS_LOADED) {
                 int[] flashBaseSize = sizeOf(ICON_FLASH_EMPTY);
                 int[] flashFullSize = sizeOf(ICON_FLASH_FULL);
                 int[] flashBeamSize = sizeOf(ICON_FLASH_BEAM);

@@ -8,7 +8,7 @@
   "armor_compromised": {"sounds": [{"name": "hev_suit:armor_compromised"}]},
   "radiation_detected": {"sounds": [{"name": "hev_suit:radiation_detected"}]},
   "geiger": {"sounds": [{"name": "hev_suit:geiger", "stream": true}]},
-  "flatline": {"sounds": [{"name": "hev_suit:flatline", "stream": true}]},
+  "flatline": {"sounds": [{"name": "hev_suit:flatline"}]},
   "ammo_pickup": {"sounds": [{"name": "hev_suit:ammo_pickup"}]},
   "hev_general_fail": {"sounds": [{"name": "hev_suit:hev_general_fail"}]},
   "major_laceration": {"sounds": [{"name": "hev_suit:major_lacerations"}]},

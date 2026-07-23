@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import ltown.hev_suit.client.managers.CommandManager;
 import ltown.hev_suit.client.managers.EventManager;
+import ltown.hev_suit.client.managers.FlashlightManager;
 import ltown.hev_suit.client.managers.HudManager;
 import ltown.hev_suit.client.managers.ResourcePackManager;
 import ltown.hev_suit.client.managers.SettingsManager;
@@ -33,6 +34,7 @@ public class Hev_suitClient implements ClientModInitializer {
         EventManager.registerEventListeners();
         CommandManager.registerToggleCommands();
         HudManager.registerHud();
+        FlashlightManager.registerFlashlight();
         LOGGER.debug("HEV Suit Client Initialized");
     }
 }

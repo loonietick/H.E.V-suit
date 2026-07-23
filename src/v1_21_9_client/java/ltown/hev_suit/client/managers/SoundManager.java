@@ -501,7 +501,7 @@ public class SoundManager {
     private static class ImmediateSoundInstance extends AbstractSoundInstance {
         ImmediateSoundInstance(SoundEvent sound, float pitch) {
             super(sound, SoundCategory.MASTER, SoundInstance.createRandom());
-            this.volume = 1.0f;
+            this.volume = Math.max(0.0f, Math.min(1.0f, SettingsManager.hevVolumeMul));
             this.pitch = pitch;
             this.repeat = false;
             this.repeatDelay = 0;

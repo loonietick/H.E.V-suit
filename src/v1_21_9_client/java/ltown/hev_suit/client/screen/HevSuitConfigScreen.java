@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
+import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 
@@ -29,6 +30,7 @@ public class HevSuitConfigScreen extends Screen {
     private ConfigSection currentSection;
     private TextFieldWidget primaryColorField;
     private TextFieldWidget secondaryColorField;
+    private SliderWidget hevVolumeSlider;
     private Text statusMessage;
     private int statusMessageColor = 0xFFFFFFFF;
     private int statusMessageTicks;
@@ -74,7 +76,9 @@ public class HevSuitConfigScreen extends Screen {
                         List.of(
                                 new ConfigToggle(Text.literal("Enabled"), Text.literal("Turn every single feature on or off."), () -> SettingsManager.hevSuitEnabled, value -> SettingsManager.hevSuitEnabled = value),
                                 new ConfigToggle(Text.literal("PVP Mode"), Text.literal("Minimize non essential alerts."), () -> SettingsManager.pvpModeEnabled, value -> SettingsManager.pvpModeEnabled = value),
-                                new ConfigToggle(Text.literal("Captions"), Text.literal("Display subtitles."), () -> SettingsManager.captionsEnabled, value -> SettingsManager.captionsEnabled = value)
+                                new ConfigToggle(Text.literal("Captions"), Text.literal("Display subtitles."), () -> SettingsManager.captionsEnabled, value -> SettingsManager.captionsEnabled = value),
+                                new ConfigToggle(Text.literal("HL2-Style Flashlight"), Text.literal("Off: HL1 point light on whatever you aim at. On: HL2 cone floodlight following your view."), () -> SettingsManager.hl2FlashlightEnabled, value -> SettingsManager.hl2FlashlightEnabled = value),
+                                new ConfigToggle(Text.literal("Chatty Suit"), Text.literal("Use the original shorter voice line cooldowns instead of the accurate HL1 timings."), () -> SettingsManager.chattySuitEnabled, value -> SettingsManager.chattySuitEnabled = value)
                         ),
                         SectionContent.NONE,
                         List.of(),
@@ -88,6 +92,7 @@ public class HevSuitConfigScreen extends Screen {
                                 new ConfigToggle(Text.literal("HUD Health"), Text.literal("Show your health converted to 100 to 0 on screen"), () -> SettingsManager.hudHealthEnabled, value -> SettingsManager.hudHealthEnabled = value),
                                 new ConfigToggle(Text.literal("HUD Armor"), Text.literal("Show your armor durability and protective value on screen."), () -> SettingsManager.hudArmorEnabled, value -> SettingsManager.hudArmorEnabled = value),
                                 new ConfigToggle(Text.literal("HUD Ammo"), Text.literal("Show the amount of blocks you are holding and how much is in your inventory."), () -> SettingsManager.hudAmmoEnabled, value -> SettingsManager.hudAmmoEnabled = value),
+                                new ConfigToggle(Text.literal("HUD Flashlight"), Text.literal("Show the flashlight battery gauge in the top-right corner."), () -> SettingsManager.hudFlashlightEnabled, value -> SettingsManager.hudFlashlightEnabled = value),
                                 new ConfigToggle(Text.literal("Damage Indicators"), Text.literal("Show directional hit indicators when you take damage."), () -> SettingsManager.damageIndicatorsEnabled, value -> SettingsManager.damageIndicatorsEnabled = value),
                                 new ConfigToggle(Text.literal("Threat Indicators"), Text.literal("Show directional indicators pointing to where hostile entitys are."), () -> SettingsManager.threatIndicatorsEnabled, value -> SettingsManager.threatIndicatorsEnabled = value)
                         ),
@@ -120,7 +125,7 @@ public class HevSuitConfigScreen extends Screen {
                                 new ConfigToggle(Text.literal("Elytra Equip SFX"), Text.literal("Play the power-move sound when equipping elytra."), () -> SettingsManager.elytraEquipSfxEnabled, value -> SettingsManager.elytraEquipSfxEnabled = value),
                                 new ConfigToggle(Text.literal("Radiation Alerts"), Text.literal("Enable Geiger counter effects inside basalt deltas."), () -> SettingsManager.radiationSfxEnabled, value -> SettingsManager.radiationSfxEnabled = value)
                         ),
-                        SectionContent.NONE,
+                        SectionContent.VOLUME,
                         List.of(healthAlertsSubmenu, weaponAlertsSubmenu),
                         SettingsManager::resetAudibleAlerts
                 )
@@ -134,6 +139,7 @@ public class HevSuitConfigScreen extends Screen {
         this.tooltips.clear();
         this.primaryColorField = null;
         this.secondaryColorField = null;
+        this.hevVolumeSlider = null;
         this.clearStatus();
         if (this.currentSection == null) {
             this.sectionStack.clear();
@@ -185,8 +191,7 @@ public class HevSuitConfigScreen extends Screen {
             int x = startX + column * (buttonWidth + horizontalSpacing);
             int y = startY + row * verticalSpacing;
 
-            CyclingButtonWidget<Boolean> button = CyclingButtonWidget.onOffBuilder()
-                    .initially(toggle.get())
+            CyclingButtonWidget<Boolean> button = CyclingButtonWidget.onOffBuilder(toggle.get())
                     .build(x, y, buttonWidth, buttonHeight, toggle.label(), (widget, value) -> {
                         toggle.set(value);
                         SettingsManager.saveSettings();
@@ -223,6 +228,17 @@ public class HevSuitConfigScreen extends Screen {
             }
             int colorsBottom = initColorControls(colorStartY);
             contentBottom = Math.max(contentBottom, colorsBottom);
+        }
+
+        if (section.content() == SectionContent.VOLUME) {
+            int volumeStartY = contentBottom;
+            if (!toggles.isEmpty()) {
+                volumeStartY += 24;
+            } else {
+                volumeStartY += 8;
+            }
+            int volumeBottom = initVolumeControl(volumeStartY);
+            contentBottom = Math.max(contentBottom, volumeBottom);
         }
 
         if (section.resetAction() != null) {
@@ -312,6 +328,35 @@ public class HevSuitConfigScreen extends Screen {
         registerTooltip(syncButton, Text.literal("Set both colors using the primary value and auto-calculate a darker secondary."));
 
         return y + 20;
+    }
+
+    private int initVolumeControl(int startY) {
+        int sliderWidth = 200;
+        int sliderHeight = 20;
+        int x = (this.width - sliderWidth) / 2;
+        int y = startY;
+
+        double initialValue = Math.max(0.0, Math.min(1.0, SettingsManager.hevVolumeMul));
+        this.hevVolumeSlider = new SliderWidget(x, y, sliderWidth, sliderHeight, volumeSliderText(initialValue), initialValue) {
+            @Override
+            protected void updateMessage() {
+                this.setMessage(volumeSliderText(this.value));
+            }
+
+            @Override
+            protected void applyValue() {
+                SettingsManager.hevVolumeMul = (float) this.value;
+                SettingsManager.saveSettings();
+            }
+        };
+        this.addDrawableChild(this.hevVolumeSlider);
+        registerTooltip(this.hevVolumeSlider, Text.literal("Adjust Voice Volume"));
+
+        return y + sliderHeight;
+    }
+
+    private static Text volumeSliderText(double value) {
+        return Text.literal("HEV Volume: " + Math.round(value * 100) + "%");
     }
 
     private void openSection(ConfigSection section) {
@@ -525,6 +570,7 @@ public class HevSuitConfigScreen extends Screen {
 
     private enum SectionContent {
         NONE,
-        HUD_COLORS
+        HUD_COLORS,
+        VOLUME
     }
 }

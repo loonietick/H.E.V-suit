@@ -8,13 +8,3 @@ pluginManagement {
     }
 }
 
-// Automatically enable Loom's non-obfuscated mode for Minecraft 26.1+ (unobfuscated MC).
-// Must be set BEFORE Loom's LoomConfigurations job runs (during plugin application),
-// which is why this lives here rather than in build.gradle.
-gradle.beforeProject { project ->
-    def mcVersion = project.gradle.startParameter.projectProperties.get('mcVersion') ?: ''
-    if (mcVersion.startsWith('26.')) {
-        project.extensions.extraProperties.set('fabric.loom.disableObfuscation', 'true')
-    }
-}
-

@@ -20,6 +20,9 @@
     ],
     "modmenu": [
       "ltown.hev_suit.client.integration.HevSuitModMenuPlugin"
+    ],
+    "lambdynlights:initializer": [
+      "ltown.hev_suit.client.integration.HevSuitDynamicLights"
     ]
   },
   "mixins": [
@@ -35,6 +38,7 @@
     "minecraft": "${minecraft_version}"
   },
   "suggests": {
-    "com.terraformersmc.modmenu": "*"
+    "com.terraformersmc.modmenu": "*",
+    "lambdynlights": "*"
   }
 }

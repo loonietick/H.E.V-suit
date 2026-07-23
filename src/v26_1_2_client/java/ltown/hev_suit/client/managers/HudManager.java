@@ -247,7 +247,7 @@ public class HudManager {
         "eletrical", "eletricalsm",
         "fire", "firesm",
         "health",
-        "lightoff", "lighton",
+        "flash_empty", "flash_full", "flash_beam",
         "nervegas", "nervegassm",
         "noarmor", "noarmorsmall",
         "oxygen", "oxygensm",
@@ -266,6 +266,9 @@ public class HudManager {
     private static final Identifier ICON_ELECTRICAL    = tex("eletrical");
     private static final Identifier ICON_RADIATION     = tex("radiation");
     private static final Identifier ICON_BIOHAZARD     = tex("biohazard");
+    private static final Identifier ICON_FLASH_EMPTY  = tex("flash_empty");
+    private static final Identifier ICON_FLASH_FULL   = tex("flash_full");
+    private static final Identifier ICON_FLASH_BEAM   = tex("flash_beam");
 
     // === HL1 sizing + tint ===
     // (unused HL1 tuning constants removed)
@@ -337,6 +340,104 @@ public class HudManager {
         int yTop = baselineY - Math.round(s[1] * scale) + offY;
         drawImageScaled(g, pid, xLeft + offX, yTop, scale, color);
         return Math.round(s[0] * scale);
+    }
+
+    // Draws a sub-rectangle of a texture inside a scaled matrix, same convention as
+    // drawImageScaled: x/y are final screen coordinates, destW/destH are in pre-scale texture
+    // pixels (matching prc's width/height so no extra stretch happens).
+    private static void drawCroppedImageScaled(GuiGraphicsExtractor g, Identifier id, int x, int y, float scale, int color, Rect prc, int destW, int destH) {
+        var m = ((GuiGraphicsExtractor) g).pose();
+        m.pushMatrix();
+        m.scale(scale, scale);
+        sprDrawGeneric(g, id, Math.round(x / scale), Math.round(y / scale), destW, destH, prc, color);
+        m.popMatrix();
+    }
+
+    /**
+     * Suit-power gauge for the armor icon, same technique as HL1's CHudBattery::Draw: the dim
+     * "noarmor" silhouette is always drawn as a static background, then the bright "armoron"
+     * silhouette is drawn on top cropped from the TOP down by armor percentage (rc.top +=
+     * height * (100 - pct) * 0.01), so it visually fills from the bottom up as armor increases.
+     * armoron.png also carries a tick-mark gauge bar to the left of the person and is padded
+     * 3px wider on each side than noarmor.png to fit it, so it's shifted left to keep both
+     * silhouettes aligned on the same person.
+     */
+    private static int drawArmorGauge(GuiGraphicsExtractor g, int xLeft, int baselineY, float scale, int color, int armorPctClamped) {
+        int[] baseSize = sizeOf(ICON_NOARMOR);
+        if (baseSize[0] <= 0 || baseSize[1] <= 0) return 0;
+        int[] fullSize = sizeOf(ICON_ARMOR_ON);
+
+        int baseOffX = Math.round(iconOffX(ICON_NOARMOR, "armor_icon") * scale);
+        int baseOffY = Math.round(iconOffY(ICON_NOARMOR, "armor_icon") * scale);
+        int baseYTop = baselineY - Math.round(baseSize[1] * scale) + baseOffY;
+        drawImageScaled(g, ICON_NOARMOR, xLeft + baseOffX, baseYTop, scale, color);
+
+        int alignShiftX = (fullSize[0] > baseSize[0]) ? (fullSize[0] - baseSize[0]) / 2 : 0;
+        int advanceWidthPx = Math.max(baseSize[0], fullSize[0] - alignShiftX);
+
+        if (armorPctClamped > 0 && fullSize[0] > 0 && fullSize[1] > 0) {
+            int pctClamped100 = Math.min(100, armorPctClamped);
+            int cropTop = Math.round(fullSize[1] * (100 - pctClamped100) * 0.01f);
+            if (cropTop < fullSize[1]) {
+                int fullOffX = Math.round(iconOffX(ICON_ARMOR_ON, "armor_icon") * scale) - Math.round(alignShiftX * scale);
+                int fullOffY = Math.round(iconOffY(ICON_ARMOR_ON, "armor_icon") * scale);
+                int fullYTopUncropped = baselineY - Math.round(fullSize[1] * scale) + fullOffY;
+                int croppedYTop = fullYTopUncropped + Math.round(cropTop * scale);
+                Rect prc = new Rect(0, cropTop, fullSize[0], fullSize[1]);
+                drawCroppedImageScaled(g, ICON_ARMOR_ON, xLeft + fullOffX, croppedYTop, scale, color, prc, fullSize[0], fullSize[1] - cropTop);
+            }
+        }
+
+        return Math.round(advanceWidthPx * scale);
+    }
+
+    // Flashlight battery gauge -- same crop technique as drawArmorGauge (flash_empty always
+    // drawn dim, flash_full drawn on top cropped from the top by battery %), plus flash_beam
+    // drawn at full brightness whenever the light is on, matching HL1's CHudFlashlight::Draw
+    // (the beam sprite isn't battery-cropped, it just disappears when m_fOn is false).
+    private static final int FLASH_BEAM_OFFSET_X = 28;
+    // flash_full.png (solid/filled casing) is a separate sprite from flash_empty.png (hollow
+    // outline) and its silhouette sits 1px right of empty's in the source crop -- shift it to
+    // keep both aligned on the same casing shape.
+    private static final int FLASH_FULL_OFFSET_X = 1;
+
+    private static int drawFlashlightGauge(GuiGraphicsExtractor g, int xLeft, int baselineY, float scale, int color, int battery, boolean isOn) {
+        int[] baseSize = sizeOf(ICON_FLASH_EMPTY);
+        if (baseSize[0] <= 0 || baseSize[1] <= 0) return 0;
+        int[] fullSize = sizeOf(ICON_FLASH_FULL);
+        int[] beamSize = sizeOf(ICON_FLASH_BEAM);
+
+        int baseOffX = Math.round(iconOffX(ICON_FLASH_EMPTY, "flashlight_icon") * scale);
+        int baseOffY = Math.round(iconOffY(ICON_FLASH_EMPTY, "flashlight_icon") * scale);
+        int baseYTop = baselineY - Math.round(baseSize[1] * scale) + baseOffY;
+        drawImageScaled(g, ICON_FLASH_EMPTY, xLeft + baseOffX, baseYTop, scale, color);
+
+        int advanceWidthPx = Math.max(baseSize[0], fullSize[0] + FLASH_FULL_OFFSET_X);
+
+        // HL1's real CHudFlashlight::Draw crops this HORIZONTALLY (rc.left += width * (1 -
+        // battery)), unlike the vertical top-down crop used for the suit-power armor gauge --
+        // the casing is drawn full and the LEFT side (the body, away from the beam) disappears
+        // first as it drains, while the opening nearest the beam stays lit longest.
+        int pctClamped = Math.max(0, Math.min(100, battery));
+        if (pctClamped > 0 && fullSize[0] > 0 && fullSize[1] > 0) {
+            int cropLeft = Math.round(fullSize[0] * (100 - pctClamped) * 0.01f);
+            if (cropLeft < fullSize[0]) {
+                int fullOffX = Math.round(iconOffX(ICON_FLASH_FULL, "flashlight_icon") * scale) + Math.round(FLASH_FULL_OFFSET_X * scale);
+                int fullOffY = Math.round(iconOffY(ICON_FLASH_FULL, "flashlight_icon") * scale);
+                int fullYTop = baselineY - Math.round(fullSize[1] * scale) + fullOffY;
+                int croppedXLeft = xLeft + fullOffX + Math.round(cropLeft * scale);
+                Rect prc = new Rect(cropLeft, 0, fullSize[0], fullSize[1]);
+                drawCroppedImageScaled(g, ICON_FLASH_FULL, croppedXLeft, fullYTop, scale, color, prc, fullSize[0] - cropLeft, fullSize[1]);
+            }
+        }
+
+        if (isOn && beamSize[0] > 0 && beamSize[1] > 0) {
+            int beamOffX = Math.round(FLASH_BEAM_OFFSET_X * scale) + baseOffX;
+            drawImageScaled(g, ICON_FLASH_BEAM, xLeft + beamOffX, baseYTop, scale, color);
+            advanceWidthPx = Math.max(advanceWidthPx, FLASH_BEAM_OFFSET_X + beamSize[0]);
+        }
+
+        return Math.round(advanceWidthPx * scale);
     }
     // (unused overload removed)
 
@@ -587,6 +688,23 @@ public class HudManager {
                 }
             }
 
+            // Flashlight gauge -- top-right corner, independent of the bottom-anchored row.
+            if (SettingsManager.hudFlashlightEnabled) {
+                int[] flashBaseSize = sizeOf(ICON_FLASH_EMPTY);
+                int[] flashFullSize = sizeOf(ICON_FLASH_FULL);
+                int[] flashBeamSize = sizeOf(ICON_FLASH_BEAM);
+                boolean flashOn = FlashlightManager.isOn();
+                // Always reserve room for the beam, even when off, so the casing anchors to the
+                // same screen position either way -- toggling on should only add the beam, not
+                // shift or resize the casing itself.
+                int flashWidthPx = Math.max(flashBaseSize[0], flashFullSize[0] + FLASH_FULL_OFFSET_X);
+                flashWidthPx = Math.max(flashWidthPx, FLASH_BEAM_OFFSET_X + flashBeamSize[0]);
+                int flashX = width - uiPAD - Math.round(flashWidthPx * uiIconScale);
+                int flashBaselineY = uiPAD + Math.round(flashBaseSize[1] * uiIconScale);
+                int flashColor = FlashlightManager.isLowBattery() ? RED : PRIMARY;
+                drawFlashlightGauge(graphics, flashX, flashBaselineY, uiIconScale, flashColor, FlashlightManager.getBattery(), flashOn);
+            }
+
             // Left row: health and armor
             int xLeft = uiPAD;
             if (SettingsManager.hudHealthEnabled) {
@@ -610,13 +728,12 @@ public class HudManager {
                     ((GuiGraphicsExtractor) graphics).fill(barX1, barTop, barX2, barBot, withOpacity(PRIMARY, HUD_OPACITY));
                     xLeft = barX2 + uiCOL_GAP;
                 }
-                Identifier armorIcon = (armorPctClamped > 0 ? ICON_ARMOR_ON : ICON_NOARMOR);
-                xLeft += drawIconBottomAlignedScaled(graphics, armorIcon, xLeft, uiBaseline, uiIconScale, PRIMARY, "armor_icon") + uiGAP;
+                xLeft += drawArmorGauge(graphics, xLeft, uiBaseline, uiIconScale, PRIMARY, armorPctClamped) + uiGAP;
                 drawDigitStringScaled(graphics, Integer.toString(armorPctClamped), xLeft, armorDigitsBase, uiDigitScale, PRIMARY, "armor_digits");
             }
 
             // Right: ammo (reserve | divider | loaded)
-            if (SettingsManager.hudAmmoEnabled) {
+            if (SettingsManager.hudAmmoEnabled && !mainHand.isEmpty()) {
                 int rWidth = measureDigitString(rStr, uiDigitScale);
                 int dividerGap = Math.max(6, Math.round(targetDigitH * 0.45f));
                 int startR = width - uiPAD - rWidth;

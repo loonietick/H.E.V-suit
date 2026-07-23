@@ -39,6 +39,7 @@ public class SettingsManager {
     private static final boolean DEFAULT_HUD_HEALTH_ENABLED = true;
     private static final boolean DEFAULT_HUD_ARMOR_ENABLED = true;
     private static final boolean DEFAULT_HUD_AMMO_ENABLED = true;
+    private static final boolean DEFAULT_HUD_FLASHLIGHT_ENABLED = true;
     private static final boolean DEFAULT_THREAT_INDICATORS_ENABLED = false;
     private static final boolean DEFAULT_HUD_ALIGNMENT_MODE = false;
     private static final boolean DEFAULT_INSUFFICIENT_MEDICAL_ENABLED = false;
@@ -54,6 +55,9 @@ public class SettingsManager {
     private static final boolean DEFAULT_RADIATION_SFX_ENABLED = true;
     private static final int DEFAULT_HUD_PRIMARY_COLOR = 0xFFFFAE00;
     private static final int DEFAULT_HUD_SECONDARY_COLOR = 0xFF8B5E00;
+    private static final float DEFAULT_HEV_VOLUME_MUL = 1.0f;
+    private static final boolean DEFAULT_HL2_FLASHLIGHT_ENABLED = false;
+    private static final boolean DEFAULT_CHATTY_SUIT_ENABLED = false;
 
     public static boolean hevSuitEnabled = DEFAULT_HEV_SUIT_ENABLED;
     public static boolean armorDurabilityEnabled = DEFAULT_ARMOR_DURABILITY_ENABLED;
@@ -75,6 +79,7 @@ public class SettingsManager {
     public static boolean hudHealthEnabled = DEFAULT_HUD_HEALTH_ENABLED;
     public static boolean hudArmorEnabled = DEFAULT_HUD_ARMOR_ENABLED;
     public static boolean hudAmmoEnabled = DEFAULT_HUD_AMMO_ENABLED;
+    public static boolean hudFlashlightEnabled = DEFAULT_HUD_FLASHLIGHT_ENABLED;
     public static boolean threatIndicatorsEnabled = DEFAULT_THREAT_INDICATORS_ENABLED;
     public static boolean hudAlignmentMode = DEFAULT_HUD_ALIGNMENT_MODE; // render all assets centered for offset tuning
     public static boolean insufficientMedicalEnabled = DEFAULT_INSUFFICIENT_MEDICAL_ENABLED;
@@ -88,9 +93,12 @@ public class SettingsManager {
     public static boolean elytraEquipSfxEnabled = DEFAULT_ELYTRA_EQUIP_SFX_ENABLED;
     public static boolean internalBleedingEnabled = DEFAULT_INTERNAL_BLEEDING_ENABLED;
     public static boolean radiationSfxEnabled = DEFAULT_RADIATION_SFX_ENABLED;
+    public static boolean hl2FlashlightEnabled = DEFAULT_HL2_FLASHLIGHT_ENABLED; // false = HL1 point light (default), true = HL2 cone floodlight
+    public static boolean chattySuitEnabled = DEFAULT_CHATTY_SUIT_ENABLED; // false = accurate HL1 cooldowns (default), true = original shorter/chattier cooldowns
 
     public static int hudPrimaryColor = DEFAULT_HUD_PRIMARY_COLOR;
     public static int hudSecondaryColor = DEFAULT_HUD_SECONDARY_COLOR;
+    public static float hevVolumeMul = DEFAULT_HEV_VOLUME_MUL;
     public static List<String> weaponKeywords = new ArrayList<>(DEFAULT_WEAPON_KEYWORDS);
 
     public static void loadSettings() {
@@ -119,6 +127,7 @@ public class SettingsManager {
             hudHealthEnabled = getOrDefault(json, "hudHealthEnabled", DEFAULT_HUD_HEALTH_ENABLED);
             hudArmorEnabled = getOrDefault(json, "hudArmorEnabled", DEFAULT_HUD_ARMOR_ENABLED);
             hudAmmoEnabled = getOrDefault(json, "hudAmmoEnabled", DEFAULT_HUD_AMMO_ENABLED);
+            hudFlashlightEnabled = getOrDefault(json, "hudFlashlightEnabled", DEFAULT_HUD_FLASHLIGHT_ENABLED);
             threatIndicatorsEnabled = getOrDefault(json, "threatIndicatorsEnabled", DEFAULT_THREAT_INDICATORS_ENABLED);
             hudAlignmentMode = getOrDefault(json, "hudAlignmentMode", DEFAULT_HUD_ALIGNMENT_MODE);
             insufficientMedicalEnabled = getOrDefault(json, "insufficientMedicalEnabled", DEFAULT_INSUFFICIENT_MEDICAL_ENABLED);
@@ -132,8 +141,11 @@ public class SettingsManager {
             elytraEquipSfxEnabled = getOrDefault(json, "elytraEquipSfxEnabled", DEFAULT_ELYTRA_EQUIP_SFX_ENABLED);
             internalBleedingEnabled = getOrDefault(json, "internalBleedingEnabled", DEFAULT_INTERNAL_BLEEDING_ENABLED);
             radiationSfxEnabled = getOrDefault(json, "radiationSfxEnabled", DEFAULT_RADIATION_SFX_ENABLED);
+            hl2FlashlightEnabled = getOrDefault(json, "hl2FlashlightEnabled", DEFAULT_HL2_FLASHLIGHT_ENABLED);
+            chattySuitEnabled = getOrDefault(json, "chattySuitEnabled", DEFAULT_CHATTY_SUIT_ENABLED);
             hudPrimaryColor = getOrDefaultInt(json, "hudPrimaryColor", DEFAULT_HUD_PRIMARY_COLOR);
             hudSecondaryColor = getOrDefaultInt(json, "hudSecondaryColor", DEFAULT_HUD_SECONDARY_COLOR);
+            hevVolumeMul = getOrDefaultFloat(json, "hevVolumeMul", DEFAULT_HEV_VOLUME_MUL);
             weaponKeywords = getStringList(json, "weaponKeywords", DEFAULT_WEAPON_KEYWORDS);
         } catch (IOException e) {
             LOGGER.error("Failed to load settings", e);
@@ -146,6 +158,13 @@ public class SettingsManager {
 
     private static int getOrDefaultInt(JsonObject json, String key, int defaultValue) {
         return json.has(key) ? json.get(key).getAsInt() : defaultValue;
+    }
+
+    private static float getOrDefaultFloat(JsonObject json, String key, float defaultValue) {
+        if (!json.has(key)) {
+            return defaultValue;
+        }
+        return Math.max(0.0f, Math.min(1.0f, json.get(key).getAsFloat()));
     }
 
     private static List<String> getStringList(JsonObject json, String key, List<String> defaultValue) {
@@ -200,6 +219,7 @@ public class SettingsManager {
         json.addProperty("hudHealthEnabled", hudHealthEnabled);
         json.addProperty("hudArmorEnabled", hudArmorEnabled);
         json.addProperty("hudAmmoEnabled", hudAmmoEnabled);
+        json.addProperty("hudFlashlightEnabled", hudFlashlightEnabled);
         json.addProperty("threatIndicatorsEnabled", threatIndicatorsEnabled);
         json.addProperty("hudAlignmentMode", hudAlignmentMode);
         json.addProperty("insufficientMedicalEnabled", insufficientMedicalEnabled);
@@ -213,8 +233,11 @@ public class SettingsManager {
         json.addProperty("elytraEquipSfxEnabled", elytraEquipSfxEnabled);
         json.addProperty("internalBleedingEnabled", internalBleedingEnabled);
         json.addProperty("radiationSfxEnabled", radiationSfxEnabled);
+        json.addProperty("hl2FlashlightEnabled", hl2FlashlightEnabled);
+        json.addProperty("chattySuitEnabled", chattySuitEnabled);
         json.addProperty("hudPrimaryColor", hudPrimaryColor);
         json.addProperty("hudSecondaryColor", hudSecondaryColor);
+        json.addProperty("hevVolumeMul", hevVolumeMul);
 
         JsonArray keywordArray = new JsonArray();
         for (String keyword : weaponKeywords) {
@@ -233,6 +256,8 @@ public class SettingsManager {
         hevSuitEnabled = DEFAULT_HEV_SUIT_ENABLED;
         pvpModeEnabled = DEFAULT_PVP_MODE_ENABLED;
         captionsEnabled = DEFAULT_CAPTIONS_ENABLED;
+        hl2FlashlightEnabled = DEFAULT_HL2_FLASHLIGHT_ENABLED;
+        chattySuitEnabled = DEFAULT_CHATTY_SUIT_ENABLED;
     }
 
     public static void resetHudToggles() {
@@ -240,6 +265,7 @@ public class SettingsManager {
         hudHealthEnabled = DEFAULT_HUD_HEALTH_ENABLED;
         hudArmorEnabled = DEFAULT_HUD_ARMOR_ENABLED;
         hudAmmoEnabled = DEFAULT_HUD_AMMO_ENABLED;
+        hudFlashlightEnabled = DEFAULT_HUD_FLASHLIGHT_ENABLED;
         damageIndicatorsEnabled = DEFAULT_DAMAGE_INDICATORS_ENABLED;
         threatIndicatorsEnabled = DEFAULT_THREAT_INDICATORS_ENABLED;
     }
@@ -250,6 +276,7 @@ public class SettingsManager {
     }
 
     public static void resetAudibleAlerts() {
+        hevVolumeMul = DEFAULT_HEV_VOLUME_MUL;
         fracturesEnabled = DEFAULT_FRACTURES_ENABLED;
         bloodLossEnabled = DEFAULT_BLOOD_LOSS_ENABLED;
         morphineEnabled = DEFAULT_MORPHINE_ENABLED;

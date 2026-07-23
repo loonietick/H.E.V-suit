@@ -78,6 +78,13 @@ public class EventManager {
     private static int lastArmorValue = -1;
     private static float lastHealth = 20.0f;
     private static boolean wasPoisoned = false;
+    // getRecentDamageSource() is only valid for ~40 ticks (2s) after the hurt event lands on the
+    // client, and can be overwritten by a second damage instance before we get to read it. Health
+    // sync can lag a tick or two behind the hurt event, so sampling live every tick and caching the
+    // last non-null value bridges that gap instead of racing the vanilla TTL.
+    private static DamageSource cachedDamageSource = null;
+    private static long cachedDamageSourceAt = 0L;
+    private static final long DAMAGE_SOURCE_CACHE_GRACE_MS = 750;
     private static long lastMorphineTime = 0;
     private static long lastBloodLossTime = 0;
     private static long lastFractureTime = 0;
@@ -87,14 +94,25 @@ public class EventManager {
     private static long lastMajorLacerationTime = 0;
     private static long lastMinorLacerationTime = 0;
     private static long lastHealthCritical2Time = 0;
-    private static final long HEALTH_CRITICAL2_COOLDOWN = 5000; // 5 seconds
+    private static final long HEALTH_CRITICAL2_COOLDOWN_ACCURATE = 600000; // 10 minutes (HL1 !HEV_HLTH1 SUIT_NEXT_IN_10MIN)
+    private static final long HEALTH_CRITICAL2_COOLDOWN_CLASSIC = 5000; // pre-accuracy-pass value
+    private static long lastNearDeathTime = 0;
+    private static final long NEAR_DEATH_COOLDOWN_ACCURATE = 600000; // 10 minutes (HL1 !HEV_HLTH3 SUIT_NEXT_IN_10MIN)
+    private static final long NEAR_DEATH_COOLDOWN_CLASSIC = 0; // pre-accuracy-pass had no cooldown at all, just the crossing edge
+    private static long lastHealthCriticalTime = 0;
+    private static final long HEALTH_CRITICAL_COOLDOWN_ACCURATE = 600000; // 10 minutes (HL1 !HEV_HLTH2 SUIT_NEXT_IN_10MIN)
+    private static final long HEALTH_CRITICAL_COOLDOWN_CLASSIC = 0; // pre-accuracy-pass had no cooldown at all, just the crossing edge
     private static boolean lastChestHadElytra = false;
 
     private static final long HEAT_DAMAGE_COOLDOWN = 8000;
-    private static final long GENERAL_COOLDOWN = 5000;
-    private static final long BLOOD_LOSS_COOLDOWN = 8000;
-    private static final long FRACTURE_COOLDOWN = 5000;
-    private static final long LACERATION_COOLDOWN = 7000;
+    private static final long GENERAL_COOLDOWN_ACCURATE = 60000; // 1 minute (HL1 DET0/DET1/DMG3 SUIT_NEXT_IN_1MIN)
+    private static final long GENERAL_COOLDOWN_CLASSIC = 5000; // pre-accuracy-pass value
+    private static final long BLOOD_LOSS_COOLDOWN_ACCURATE = 30000; // 30 seconds (HL1 !HEV_DMG6 SUIT_NEXT_IN_30SEC)
+    private static final long BLOOD_LOSS_COOLDOWN_CLASSIC = 8000; // pre-accuracy-pass value
+    private static final long FRACTURE_COOLDOWN_ACCURATE = 30000; // 30 seconds (HL1 !HEV_DMG4/5 SUIT_NEXT_IN_30SEC)
+    private static final long FRACTURE_COOLDOWN_CLASSIC = 5000; // pre-accuracy-pass value
+    private static final long LACERATION_COOLDOWN_ACCURATE = 30000; // 30 seconds (HL1 !HEV_DMG0/1 SUIT_NEXT_IN_30SEC)
+    private static final long LACERATION_COOLDOWN_CLASSIC = 7000; // pre-accuracy-pass value
     private static final long MORPHINE_COOLDOWN = 1800000;
     private static final long RADIATION_ALERT_COOLDOWN = 10000;
     private static final long INSUFFICIENT_MEDICAL_COOLDOWN = 30000;
@@ -102,7 +120,8 @@ public class EventManager {
     private static long lastRadiationDetectedTime = 0;
     private static long lastInsufficientMedicalTime = 0;
     private static long lastSeekMedicalTime = 0;
-    private static final long SEEK_MEDICAL_COOLDOWN = 5000;
+    private static final long SEEK_MEDICAL_COOLDOWN_ACCURATE = 300000; // 5 minutes (HL1 !HEV_DMG7 SUIT_NEXT_IN_5MIN)
+    private static final long SEEK_MEDICAL_COOLDOWN_CLASSIC = 5000; // pre-accuracy-pass value
     private static boolean totemEffectsActive = false;
     private static long lastTotemActivationTime = 0;
     private static final long TOTEM_ACTIVATION_COOLDOWN = 1000;
@@ -112,7 +131,8 @@ public class EventManager {
     private static long lastWeaponPickupTime = 0;
     private static final long WEAPON_PICKUP_COOLDOWN = 1000;
     private static long lastInternalBleedingTime = 0;
-    private static final long INTERNAL_BLEEDING_COOLDOWN = 10000;
+    private static final long INTERNAL_BLEEDING_COOLDOWN_ACCURATE = 60000; // 1 minute (HL1 !HEV_DMG2 SUIT_NEXT_IN_1MIN)
+    private static final long INTERNAL_BLEEDING_COOLDOWN_CLASSIC = 10000; // pre-accuracy-pass value
     private static long lastArmorBreakTime = 0;
     private static final long ARMOR_BREAK_COOLDOWN = 3000;
     private static long lastAmmoAlertTime = 0;
@@ -169,6 +189,9 @@ public class EventManager {
         lastRadiationDetectedTime = 0;
         lastInsufficientMedicalTime = 0;
         lastSeekMedicalTime = 0;
+        lastHealthCritical2Time = 0;
+        lastNearDeathTime = 0;
+        lastHealthCriticalTime = 0;
         totemEffectsActive = false;
         lastTotemActivationTime = 0;
         wasPlayerDead = false;
@@ -201,6 +224,10 @@ public class EventManager {
 
             PlayerEntity player = client.player;
             if (player == null) return;
+
+            // Refresh the damage-source cache every tick (not just when we already see a health
+            // drop) so a hurt event that lands this tick isn't lost if the health sync arrives late.
+            resolveDamageSource(player);
 
             boolean inPowderSnow = player.getFrozenTicks() > 0
                     || client.world != null && (
@@ -311,24 +338,37 @@ public class EventManager {
 
         if (currentHealth < lastHealth) {
             float damage = lastHealth - currentHealth;
-            handleDamage(client, damage, player.getRecentDamageSource());
+            handleDamage(client, damage, resolveDamageSource(player));
         }
 
-        if (SettingsManager.healthAlertsEnabled) {
-            if (currentHealth <= 3.0 && lastHealth > 3.0 && SettingsManager.nearDeathEnabled) {
+        // Real HEV suit re-checks these on every damage event while health stays low, gated
+        // only by each line's own no-repeat cooldown (HL1 CBasePlayer::TakeDamage) -- not a
+        // one-shot notice fired only the instant you first cross the line. "Chatty suit" mode
+        // reverts to the original shorter cooldowns, and for near_death/health_critical
+        // specifically (which had no cooldown at all pre-accuracy-pass) restores the original
+        // one-shot crossing requirement instead of the 10-minute gate.
+        boolean chatty = SettingsManager.chattySuitEnabled;
+        if (SettingsManager.healthAlertsEnabled && currentHealth < lastHealth) {
+            if (currentHealth <= 3.0 && SettingsManager.nearDeathEnabled
+                    && (!chatty || lastHealth > 3.0)
+                    && currentTime - lastNearDeathTime >= cooldownFor(NEAR_DEATH_COOLDOWN_ACCURATE, NEAR_DEATH_COOLDOWN_CLASSIC)) {
                 SoundManager.queueSound("near_death");
-            } else if (currentHealth <= 5.0 && lastHealth > 5.0 && SettingsManager.healthCriticalEnabled) {
+                lastNearDeathTime = currentTime;
+            } else if (currentHealth <= 5.0 && SettingsManager.healthCriticalEnabled
+                    && (!chatty || lastHealth > 5.0)
+                    && currentTime - lastHealthCriticalTime >= cooldownFor(HEALTH_CRITICAL_COOLDOWN_ACCURATE, HEALTH_CRITICAL_COOLDOWN_CLASSIC)) {
                 SoundManager.queueSound("health_critical");
-            } else if (currentHealth <= 10.0 && lastHealth > 10.0 && SettingsManager.seekMedicalEnabled) {
-                if (currentTime - lastSeekMedicalTime >= SEEK_MEDICAL_COOLDOWN) {
-                    SoundManager.queueSound("seek_medical");
-                    lastSeekMedicalTime = currentTime;
-                }
-            } else if (currentHealth <= 15.0 && lastHealth > 15.0 && SettingsManager.healthCritical2Enabled) {
-                if (currentTime - lastHealthCritical2Time >= HEALTH_CRITICAL2_COOLDOWN) {
-                    SoundManager.queueSound("health_critical2");
-                    lastHealthCritical2Time = currentTime;
-                }
+                lastHealthCriticalTime = currentTime;
+            } else if (currentHealth <= 10.0 && SettingsManager.seekMedicalEnabled
+                    && (!chatty || lastHealth > 10.0)
+                    && currentTime - lastSeekMedicalTime >= cooldownFor(SEEK_MEDICAL_COOLDOWN_ACCURATE, SEEK_MEDICAL_COOLDOWN_CLASSIC)) {
+                SoundManager.queueSound("seek_medical");
+                lastSeekMedicalTime = currentTime;
+            } else if (currentHealth <= 15.0 && SettingsManager.healthCritical2Enabled
+                    && (!chatty || lastHealth > 15.0)
+                    && currentTime - lastHealthCritical2Time >= cooldownFor(HEALTH_CRITICAL2_COOLDOWN_ACCURATE, HEALTH_CRITICAL2_COOLDOWN_CLASSIC)) {
+                SoundManager.queueSound("health_critical2");
+                lastHealthCritical2Time = currentTime;
             }
         }
 
@@ -356,6 +396,27 @@ public class EventManager {
         }
 
         lastHealth = currentHealth;
+    }
+
+
+    // Resolves a cooldown to its classic (pre-accuracy-pass) value when "chatty suit" mode is
+    // on, otherwise the real HL1-derived value.
+    private static long cooldownFor(long accurate, long classic) {
+        return SettingsManager.chattySuitEnabled ? classic : accurate;
+    }
+
+    private static DamageSource resolveDamageSource(PlayerEntity player) {
+        DamageSource live = player.getRecentDamageSource();
+        long now = System.currentTimeMillis();
+        if (live != null) {
+            cachedDamageSource = live;
+            cachedDamageSourceAt = now;
+            return live;
+        }
+        if (cachedDamageSource != null && now - cachedDamageSourceAt <= DAMAGE_SOURCE_CACHE_GRACE_MS) {
+            return cachedDamageSource;
+        }
+        return null;
     }
 
     private static void handleDamage(MinecraftClient client, float damage, DamageSource damageSource) {
@@ -390,7 +451,7 @@ public class EventManager {
         }
 
         // Fall damage and fractures with cooldown
-        if (damageSource.isOf(DamageTypes.FALL) && SettingsManager.fracturesEnabled && currentTime - lastFractureTime >= FRACTURE_COOLDOWN) {
+        if (damageSource.isOf(DamageTypes.FALL) && SettingsManager.fracturesEnabled && currentTime - lastFractureTime >= cooldownFor(FRACTURE_COOLDOWN_ACCURATE, FRACTURE_COOLDOWN_CLASSIC)) {
             if (damage >= 6) {
                 SoundManager.queueSound("major_fracture");
                 lastFractureTime = currentTime;
@@ -407,7 +468,7 @@ public class EventManager {
         }
 
         // Chemical damage with cooldown
-        if (SettingsManager.chemicalDamageEnabled && currentTime - lastGeneralAlertTime >= GENERAL_COOLDOWN) {
+        if (SettingsManager.chemicalDamageEnabled && currentTime - lastGeneralAlertTime >= cooldownFor(GENERAL_COOLDOWN_ACCURATE, GENERAL_COOLDOWN_CLASSIC)) {
             if ((client.player.hasStatusEffect(StatusEffects.POISON) || client.player.hasStatusEffect(StatusEffects.WITHER)) && !wasPoisoned) {
                 SoundManager.queueSound("chemical");
                 wasPoisoned = true;
@@ -420,7 +481,7 @@ public class EventManager {
         // Shock damage with cooldown
         if (damageSource.isOf(DamageTypes.LIGHTNING_BOLT)) {
             HudManager.triggerElectricalAlert();
-            if (SettingsManager.shockDamageEnabled && currentTime - lastShockDamageTime >= GENERAL_COOLDOWN) {
+            if (SettingsManager.shockDamageEnabled && currentTime - lastShockDamageTime >= cooldownFor(GENERAL_COOLDOWN_ACCURATE, GENERAL_COOLDOWN_CLASSIC)) {
                 SoundManager.queueSound("shock_damage");
                 lastShockDamageTime = currentTime;
             }
@@ -429,7 +490,7 @@ public class EventManager {
         Entity damageEntity = damageSource.getSource();
         if (SettingsManager.bloodLossEnabled
                 && damage >= 4.0f
-                && currentTime - lastBloodLossTime >= BLOOD_LOSS_COOLDOWN
+                && currentTime - lastBloodLossTime >= cooldownFor(BLOOD_LOSS_COOLDOWN_ACCURATE, BLOOD_LOSS_COOLDOWN_CLASSIC)
                 && (damageSource.isIn(DamageTypeTags.IS_PROJECTILE)
                     || damageEntity instanceof ArrowEntity
                     || damageEntity instanceof FireballEntity)) {
@@ -440,17 +501,17 @@ public class EventManager {
         if (SettingsManager.internalBleedingEnabled
                 && damage > 2.0f
                 && damageSource.isIn(DamageTypeTags.IS_EXPLOSION)
-                && currentTime - lastInternalBleedingTime >= INTERNAL_BLEEDING_COOLDOWN) {
+                && currentTime - lastInternalBleedingTime >= cooldownFor(INTERNAL_BLEEDING_COOLDOWN_ACCURATE, INTERNAL_BLEEDING_COOLDOWN_CLASSIC)) {
             SoundManager.queueSound("internal_bleeding");
             lastInternalBleedingTime = currentTime;
         }
 
         if (damageEntity instanceof HostileEntity && !(damageEntity instanceof CreeperEntity)) {
             if (SettingsManager.fracturesEnabled) {
-                if (damage >= 4 && currentTime - lastMajorLacerationTime >= LACERATION_COOLDOWN) {
+                if (damage >= 4 && currentTime - lastMajorLacerationTime >= cooldownFor(LACERATION_COOLDOWN_ACCURATE, LACERATION_COOLDOWN_CLASSIC)) {
                     SoundManager.queueSound("major_laceration");
                     lastMajorLacerationTime = currentTime;
-                } else if (damage < 3 && currentTime - lastMinorLacerationTime >= LACERATION_COOLDOWN) {
+                } else if (damage < 3 && currentTime - lastMinorLacerationTime >= cooldownFor(LACERATION_COOLDOWN_ACCURATE, LACERATION_COOLDOWN_CLASSIC)) {
                     SoundManager.queueSound("minor_laceration");
                     lastMinorLacerationTime = currentTime;
                 }

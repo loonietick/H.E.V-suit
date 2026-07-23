@@ -1,16 +1,14 @@
 plugins {
-    // Loom supports 1.21.x; keep in sync with Fabric docs
-    id 'fabric-loom' version '1.17.0-alpha.7'
+    // Two distinct plugin ids depending on target: the legacy id is backwards-compat for
+    // *obfuscated* Minecraft only (<=1.21.11); non-obfuscated 26.1+ needs the new id, which
+    // skips remap setup entirely and sets up mod dependency configs differently. Both are
+    // declared here with apply false; the correct one is applied below once mcVersion is known.
+    id 'net.fabricmc.fabric-loom' version '1.17.0-alpha.7' apply false
+    id 'net.fabricmc.fabric-loom-remap' version '1.17.0-alpha.7' apply false
     id 'maven-publish'
 }
 
 import org.gradle.api.file.DuplicatesStrategy
-
-version = project.mod_version
-group = project.maven_group
-base {
-    archivesName = project.archives_base_name
-}
 
 // ---- Multi-version configuration (1.21.8 → 26.1.2) ----
 // Select with: ./gradlew build -PmcVersion=1.21.8 (or 1.21.9, ..., 26.1, 26.1.1, 26.1.2)
@@ -18,14 +16,16 @@ base {
 def mcVersionSelected = (findProperty('mcVersion') ?: project.findProperty('minecraft_version'))?.toString()
 def supported = [
         // Keep these up to date as new Minecraft releases drop
-        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8',  loader: '0.17.2', modmenu: '15.0.0'],
-        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9',  loader: '0.17.2', modmenu: '16.0.0-rc.1'],
-        '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.3', modmenu: '16.0.0-rc.1'],
-        '1.21.11': [ yarn: '1.21.11+build.3', fabricApi: '0.140.2+1.21.11', loader: '0.18.4', modmenu: '17.0.0-beta.1'],
+        // ldl = LambDynamicLights API version, from https://maven.gegy.dev/releases (compile-only, optional flashlight integration)
+        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8',  loader: '0.17.2', modmenu: '15.0.0',          ldl: '4.8.7+1.21.8'],
+        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9',  loader: '0.17.2', modmenu: '16.0.0-rc.1',     ldl: '4.7.2+1.21.9'],
+        '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.3', modmenu: '16.0.0-rc.1',     ldl: '4.8.7+1.21.10'],
+        '1.21.11': [ yarn: '1.21.11+build.3', fabricApi: '0.140.2+1.21.11', loader: '0.18.4', modmenu: '17.0.0-beta.1',   ldl: '4.9.1+1.21.11'],
         // 26.1.x — Mojang official mappings (no Yarn published for these)
-        '26.1'   : [ mojang: true, fabricApi: '0.145.1+26.1',   loader: '0.19.2', modmenu: '18.0.0-alpha.8'],
-        '26.1.1' : [ mojang: true, fabricApi: '0.145.4+26.1.1', loader: '0.19.2', modmenu: '18.0.0-alpha.8'],
-        '26.1.2' : [ mojang: true, fabricApi: '0.147.0+26.1.2', loader: '0.19.2', modmenu: '18.0.0-alpha.8'],
+        '26.1'   : [ mojang: true, fabricApi: '0.145.1+26.1',   loader: '0.19.2', modmenu: '18.0.0-alpha.8', ldl: '4.10.0+26.1'],
+        '26.1.1' : [ mojang: true, fabricApi: '0.145.4+26.1.1', loader: '0.19.2', modmenu: '18.0.0-alpha.8', ldl: '4.10.1+26.1.1'],
+        '26.1.2' : [ mojang: true, fabricApi: '0.147.0+26.1.2', loader: '0.19.2', modmenu: '18.0.0-alpha.8', ldl: '4.11.0+26.1.2'],
+        '26.2'   : [ mojang: true, fabricApi: '0.155.2+26.2',   loader: '0.19.3', modmenu: '20.0.1',         ldl: '4.12.2+26.2'],
 ]
 
 if (!supported.containsKey(mcVersionSelected)) {
@@ -35,6 +35,20 @@ def vconf = supported[mcVersionSelected]
 
 def mappingsLabel = vconf.mojang ? 'Mojang official (unobfuscated)' : "Yarn ${vconf.yarn}"
 println "[build] Targeting Minecraft ${mcVersionSelected} (${mappingsLabel}, Fabric API ${vconf.fabricApi}, Loader ${vconf.loader})"
+
+// Must apply before referencing the `base`/`loom` extensions below, which come from whichever
+// loom plugin variant gets applied here.
+apply plugin: vconf.mojang ? 'net.fabricmc.fabric-loom' : 'net.fabricmc.fabric-loom-remap'
+
+// Append the target MC version to the jar's version string (e.g. "1.1+1.21.11") so every
+// -PmcVersion build produces a distinctly-named jar in build/libs instead of silently
+// overwriting the same filename — matches the +<mcversion> convention already used by our own
+// dependencies (fabric-api, lambdynamiclights, etc.).
+version = "${project.mod_version}+${mcVersionSelected}"
+group = project.maven_group
+base {
+    archivesName = project.archives_base_name
+}
 
 loom {
     splitEnvironmentSourceSets()
@@ -84,16 +98,28 @@ repositories {
     maven { url = uri("https://maven.shedaniel.me/") }
     // Terraformers' own maven has been down (502); Modrinth mirrors the same artifacts under maven.modrinth.
     maven { url = uri("https://api.modrinth.com/maven") }
+    // LambDynamicLights' own maven, hosts the lambdynamiclights-api artifact used for the optional flashlight integration.
+    maven { url = uri("https://maven.gegy.dev/releases/") }
 }
+
+// Populated below (inside dependencies{}) only for the mojang/no-remap branch, then used to
+// register those exact Dependency instances with loom.mods so Fabric Loader's runtime mod scan
+// picks them up. ModSettings.dependency(...) needs the same Dependency reference that's already
+// attached to a resolvable configuration — a fresh dependencies.create(...) is an orphan that
+// never reaches the runtime classpath, which is why the game reported fabric-api as missing.
+def fabricApiDependency
+def modmenuDependency
 
 dependencies {
     minecraft "com.mojang:minecraft:${mcVersionSelected}"
 
-    // 26.1+ is unobfuscated — no mappings file exists; use plain implementation (no remapping).
-    // 1.21.x uses Yarn mappings and modImplementation (Loom remaps the jar).
+    // net.fabricmc.fabric-loom (26.1+, unobfuscated) is backed by LoomNoRemapGradlePlugin, which
+    // deliberately doesn't set up remap/mod* configurations at all — no mappings(...) dependency
+    // either, plain Gradle configs are correct here. net.fabricmc.fabric-loom-remap (<=1.21.11)
+    // is the one that needs Yarn + modImplementation for jar remapping.
     if (vconf.mojang) {
         implementation "net.fabricmc:fabric-loader:${vconf.loader}"
-        implementation "net.fabricmc.fabric-api:fabric-api:${vconf.fabricApi}"
+        fabricApiDependency = implementation("net.fabricmc.fabric-api:fabric-api:${vconf.fabricApi}")
     } else {
         mappings "net.fabricmc:yarn:${vconf.yarn}:v2"
         modImplementation "net.fabricmc:fabric-loader:${vconf.loader}"
@@ -105,10 +131,34 @@ dependencies {
     if (vconf.modmenu != null) {
         if (vconf.mojang) {
             compileOnly "maven.modrinth:modmenu:${vconf.modmenu}"
-            runtimeOnly "maven.modrinth:modmenu:${vconf.modmenu}"
+            modmenuDependency = runtimeOnly("maven.modrinth:modmenu:${vconf.modmenu}")
         } else {
             modCompileOnly "maven.modrinth:modmenu:${vconf.modmenu}"
             modRuntimeOnly "maven.modrinth:modmenu:${vconf.modmenu}"
+        }
+    }
+
+    // LambDynamicLights — compile-only, optional flashlight integration. Not added at runtime:
+    // unlike ModMenu this isn't needed to exercise the rest of the mod, so we don't force it into
+    // every dev environment. Drop the real mod jar into run/mods manually to test the flashlight.
+    if (vconf.mojang) {
+        compileOnly "dev.lambdaurora.lambdynamiclights:lambdynamiclights-api:${vconf.ldl}"
+    } else {
+        modCompileOnly "dev.lambdaurora.lambdynamiclights:lambdynamiclights-api:${vconf.ldl}"
+    }
+}
+
+if (vconf.mojang) {
+    loom {
+        mods {
+            "fabric-api" {
+                dependency fabricApiDependency
+            }
+            if (modmenuDependency != null) {
+                "modmenu" {
+                    dependency modmenuDependency
+                }
+            }
         }
     }
 }

@@ -492,7 +492,7 @@ public class SoundManager {
     private static class ImmediateSoundInstance extends AbstractSoundInstance {
         ImmediateSoundInstance(SoundEvent sound, float pitch) {
             super(sound, SoundSource.MASTER, SoundInstance.createUnseededRandom());
-            this.volume = 1.0f;
+            this.volume = Math.max(0.0f, Math.min(1.0f, SettingsManager.hevVolumeMul));
             this.pitch = pitch;
             this.looping = false;
             this.delay = 0;

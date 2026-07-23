@@ -1,6 +1,6 @@
 plugins {
     // Loom supports 1.21.x; keep in sync with Fabric docs
-    id 'fabric-loom' version '1.13.3'
+    id 'fabric-loom' version '1.17.0-alpha.7'
     id 'maven-publish'
 }
 
@@ -12,15 +12,20 @@ base {
     archivesName = project.archives_base_name
 }
 
-// ---- Multi-version configuration (1.21.8 → 1.21.11) ----
-// Select with: ./gradlew build -PmcVersion=1.21.8 (or 1.21.9, 1.21.10, 1.21.11, ...)
+// ---- Multi-version configuration (1.21.8 → 26.1.2) ----
+// Select with: ./gradlew build -PmcVersion=1.21.8 (or 1.21.9, ..., 26.1, 26.1.1, 26.1.2)
+// 26.1+ uses Mojang official mappings (mojang: true) instead of Yarn.
 def mcVersionSelected = (findProperty('mcVersion') ?: project.findProperty('minecraft_version'))?.toString()
 def supported = [
         // Keep these up to date as new Minecraft releases drop
-        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8', loader: '0.17.2', modmenu: '15.0.0'],
-        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9', loader: '0.17.2', modmenu: '16.0.0-rc.1'],
+        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8',  loader: '0.17.2', modmenu: '15.0.0'],
+        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9',  loader: '0.17.2', modmenu: '16.0.0-rc.1'],
         '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.3', modmenu: '16.0.0-rc.1'],
-        '1.21.11': [ yarn: '1.21.11+build.3', fabricApi: '0.140.2+1.21.11', loader: '0.18.4', modmenu: '17.0.0-beta.1' ]
+        '1.21.11': [ yarn: '1.21.11+build.3', fabricApi: '0.140.2+1.21.11', loader: '0.18.4', modmenu: '17.0.0-beta.1'],
+        // 26.1.x — Mojang official mappings (no Yarn published for these)
+        '26.1'   : [ mojang: true, fabricApi: '0.145.1+26.1',   loader: '0.19.2', modmenu: '18.0.0-alpha.8'],
+        '26.1.1' : [ mojang: true, fabricApi: '0.145.4+26.1.1', loader: '0.19.2', modmenu: '18.0.0-alpha.8'],
+        '26.1.2' : [ mojang: true, fabricApi: '0.147.0+26.1.2', loader: '0.19.2', modmenu: '18.0.0-alpha.8'],
 ]
 
 if (!supported.containsKey(mcVersionSelected)) {
@@ -28,7 +33,8 @@ if (!supported.containsKey(mcVersionSelected)) {
 }
 def vconf = supported[mcVersionSelected]
 
-println "[build] Targeting Minecraft ${mcVersionSelected} (Yarn ${vconf.yarn}, Fabric API ${vconf.fabricApi}, Loader ${vconf.loader})"
+def mappingsLabel = vconf.mojang ? 'Mojang official (unobfuscated)' : "Yarn ${vconf.yarn}"
+println "[build] Targeting Minecraft ${mcVersionSelected} (${mappingsLabel}, Fabric API ${vconf.fabricApi}, Loader ${vconf.loader})"
 
 loom {
     splitEnvironmentSourceSets()
@@ -51,8 +57,10 @@ loom {
 def variantFor = { String mc ->
     if (mc.startsWith('1.21.11')) return 'v1_21_11'
     if (mc.startsWith('1.21.10')) return 'v1_21_10'
-    if (mc.startsWith('1.21.9')) return 'v1_21_9'
-    if (mc.startsWith('1.21.8')) return 'v1_21_8'
+    if (mc.startsWith('1.21.9'))  return 'v1_21_9'
+    if (mc.startsWith('1.21.8'))  return 'v1_21_8'
+    // 26.1.x series — dots become underscores, e.g. "26.1.2" -> "v26_1_2"
+    if (mc.startsWith('26.'))     return 'v' + mc.replace('.', '_')
     throw new GradleException("No source variant available for Minecraft ${mc}. Update variantFor in build.gradle.")
 }
 def variant = variantFor(mcVersionSelected)
@@ -74,22 +82,34 @@ sourceSets {
 repositories {
     // Additional maven repos if needed
     maven { url = uri("https://maven.shedaniel.me/") }
-    maven { url = uri("https://maven.terraformersmc.com/releases/") }
+    // Terraformers' own maven has been down (502); Modrinth mirrors the same artifacts under maven.modrinth.
+    maven { url = uri("https://api.modrinth.com/maven") }
 }
 
 dependencies {
-    // Controlled by mcVersion (-PmcVersion=1.21.4 or 1.21.7)
     minecraft "com.mojang:minecraft:${mcVersionSelected}"
-    mappings "net.fabricmc:yarn:${vconf.yarn}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${vconf.loader}"
 
-    // Fabric API (optional but recommended)
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${vconf.fabricApi}"
+    // 26.1+ is unobfuscated — no mappings file exists; use plain implementation (no remapping).
+    // 1.21.x uses Yarn mappings and modImplementation (Loom remaps the jar).
+    if (vconf.mojang) {
+        implementation "net.fabricmc:fabric-loader:${vconf.loader}"
+        implementation "net.fabricmc.fabric-api:fabric-api:${vconf.fabricApi}"
+    } else {
+        mappings "net.fabricmc:yarn:${vconf.yarn}:v2"
+        modImplementation "net.fabricmc:fabric-loader:${vconf.loader}"
+        modImplementation "net.fabricmc.fabric-api:fabric-api:${vconf.fabricApi}"
+    }
 
-    // Optional integrations
+    // ModMenu — compile-only integration; also added at runtime so it's available in dev env
+    // Sourced from Modrinth's maven mirror (maven.modrinth) rather than com.terraformersmc directly.
     if (vconf.modmenu != null) {
-        modCompileOnly "com.terraformersmc:modmenu:${vconf.modmenu}"
-        modRuntimeOnly "com.terraformersmc:modmenu:${vconf.modmenu}"
+        if (vconf.mojang) {
+            compileOnly "maven.modrinth:modmenu:${vconf.modmenu}"
+            runtimeOnly "maven.modrinth:modmenu:${vconf.modmenu}"
+        } else {
+            modCompileOnly "maven.modrinth:modmenu:${vconf.modmenu}"
+            modRuntimeOnly "maven.modrinth:modmenu:${vconf.modmenu}"
+        }
     }
 }
 
@@ -115,17 +135,12 @@ tasks.named("processClientResources") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-def targetJavaVersion = 17
+// 26.1+ targets Java 25; older versions target Java 17
+def targetJavaVersion = vconf.mojang ? 25 : 17
 tasks.withType(JavaCompile).configureEach {
-    // ensure that the encoding is set to UTF-8, no matter what the system default is
-    // this fixes some edge cases with special characters not displaying correctly
-    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-    // If Javadoc is generated, this must be specified in that task too.
     it.options.encoding = "UTF-8"
     it.options.compilerArgs.add("-Xlint:deprecation")
-    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-        it.options.release.set(targetJavaVersion)
-    }
+    it.options.release.set(targetJavaVersion)
 }
 
 java {
@@ -133,9 +148,6 @@ java {
     if (JavaVersion.current() < javaVersion) {
         toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
     withSourcesJar()
 }
 

@@ -1,5 +1,6 @@
 package ltown.hev_suit.client.managers;
 
+import ltown.hev_suit.client.api.HevSuitApi;
 import net.fabricmc.loader.api.FabricLoader;
 
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
@@ -275,6 +276,8 @@ public class HudManager {
     private static final Identifier ICON_FLASH_EMPTY  = tex("flash_empty");
     private static final Identifier ICON_FLASH_FULL   = tex("flash_full");
     private static final Identifier ICON_FLASH_BEAM   = tex("flash_beam");
+    private static final Identifier ICON_NERVEGAS      = tex("nervegas");
+    private static final Identifier ICON_WASTE         = tex("waste");
 
     // === HL1 sizing + tint ===
     // (unused HL1 tuning constants removed)
@@ -292,7 +295,22 @@ public class HudManager {
     private static volatile boolean coldActive = false;
     private static volatile boolean radiationActive = false;
     private static volatile boolean biohazardActive = false;
+    private static volatile boolean nervegasActive = false;
+    private static volatile boolean wasteActive = false;
     private static volatile long electricalAlertUntilMs = 0;
+
+    // Suit power -- unset by default, meaning the armor/power readout below derives from vanilla
+    // armor value x durability exactly as it always has. A companion mod calling
+    // registerSuitPowerSource() switches the HUD over to rendering only what's pushed via
+    // setSuitPower(), so nothing changes for standalone users who never call it.
+    private static volatile boolean suitPowerSourceRegistered = false;
+    private static volatile int externalSuitPower = 0;
+
+    // Ammo override -- unset by default, meaning the ammo readout keeps guessing from the vanilla
+    // held item/inventory exactly as it always has.
+    private static volatile boolean ammoOverrideActive = false;
+    private static volatile int ammoOverrideLoaded = 0;
+    private static volatile int ammoOverrideReserve = 0;
 
     public static void setColdActive(boolean active) {
         coldActive = active;
@@ -314,8 +332,38 @@ public class HudManager {
         biohazardActive = active;
     }
 
+    public static void setNervegasActive(boolean active) {
+        nervegasActive = active;
+    }
+
+    public static void setWasteActive(boolean active) {
+        wasteActive = active;
+    }
+
     private static boolean isElectricalActive() {
         return electricalAlertUntilMs > System.currentTimeMillis();
+    }
+
+    public static void registerSuitPowerSource() {
+        suitPowerSourceRegistered = true;
+    }
+
+    public static void setSuitPower(int value) {
+        externalSuitPower = Math.max(0, Math.min(100, value));
+    }
+
+    public static int getSuitPower() {
+        return externalSuitPower;
+    }
+
+    public static void setAmmoOverride(int loaded, int reserve) {
+        ammoOverrideActive = true;
+        ammoOverrideLoaded = Math.max(0, loaded);
+        ammoOverrideReserve = Math.max(0, reserve);
+    }
+
+    public static void clearAmmoOverride() {
+        ammoOverrideActive = false;
     }
 
     // scaled draw helpers (use matrix scale so we don't need the larger drawTexture overloads)
@@ -570,6 +618,16 @@ public class HudManager {
 
             if (player == null || client.options.hudHidden) return;
 
+            // Real HL1: every HEV HUD element (health, battery, ammo, flashlight) is completely
+            // invisible without the suit equipped (HEV_SUIT.md §12). Specifically gated on the
+            // helmet (the visor the display reads off), not the body -- audio/flashlight stay
+            // live off the body alone via EventManager/FlashlightManager's own gates. This is the
+            // render callback's own gate, separate from those, since it's a distinct Fabric event
+            // with no shared code path. Standalone installs (no companion item mod) have
+            // isRealSuitAvailable() always false, so this never hides anything there -- unchanged
+            // behavior.
+            if (HevSuitApi.isRealSuitAvailable() && !HevSuitApi.isHelmetOn(player)) return;
+
             int width = client.getWindow().getScaledWidth();
             int height = client.getWindow().getScaledHeight();
             // removed unused variables: baseY, textRenderer
@@ -599,10 +657,19 @@ public class HudManager {
             float raw = player.getHealth() + player.getAbsorptionAmount();
             float maxH = Math.max(1f, player.getMaxHealth());
             int hp = Math.round(MathHelper.clamp((raw / maxH) * 100f, 0f, 100f));
-            int armorPct = Math.max(0, getScaledArmorValue(player));
+            int armorPct = suitPowerSourceRegistered
+                    ? Math.max(0, externalSuitPower)
+                    : Math.max(0, getScaledArmorValue(player));
             ItemStack mainHand = player.getMainHandStack();
-            int loaded = mainHand.isEmpty() ? 0 : mainHand.getCount();
-            int reserve = mainHand.isEmpty() ? 0 : calculateTotalAmmo(player, mainHand.getItem());
+            int loaded;
+            int reserve;
+            if (ammoOverrideActive) {
+                loaded = ammoOverrideLoaded;
+                reserve = ammoOverrideReserve;
+            } else {
+                loaded = mainHand.isEmpty() ? 0 : mainHand.getCount();
+                reserve = mainHand.isEmpty() ? 0 : calculateTotalAmmo(player, mainHand.getItem());
+            }
             String lStr = Integer.toString(Math.max(0, loaded));
             String rStr = Integer.toString(Math.max(0, reserve));
 
@@ -682,6 +749,14 @@ public class HudManager {
                 statusIcons.add(ICON_BIOHAZARD);
                 statusContexts.add("status_biohazard_icon");
             }
+            if (nervegasActive) {
+                statusIcons.add(ICON_NERVEGAS);
+                statusContexts.add("status_nervegas_icon");
+            }
+            if (wasteActive) {
+                statusIcons.add(ICON_WASTE);
+                statusContexts.add("status_waste_icon");
+            }
             if (!statusIcons.isEmpty()) {
                 int statusBaseline = uiBaseline - Math.round(targetIconH + targetDigitH * 0.9f);
                 int statusX = uiPAD;
@@ -739,7 +814,7 @@ public class HudManager {
             }
 
             // Right: ammo (reserve | divider | loaded)
-            if (SettingsManager.hudAmmoEnabled && !mainHand.isEmpty()) {
+            if (SettingsManager.hudAmmoEnabled && (ammoOverrideActive || !mainHand.isEmpty())) {
                 int rWidth = measureDigitString(rStr, uiDigitScale);
                 int dividerGap = Math.max(6, Math.round(targetDigitH * 0.45f));
                 int startR = width - uiPAD - rWidth;

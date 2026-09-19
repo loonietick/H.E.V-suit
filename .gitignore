@@ -27,7 +27,7 @@ build/
 run/
 .DS_Store
 # macOS
-.DS_Store
+*.DS_Store
 .AppleDouble
 .LSOverride
 

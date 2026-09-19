@@ -1,5 +1,6 @@
 package ltown.hev_suit.client.managers;
 
+import ltown.hev_suit.client.api.HevSuitApi;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -58,12 +59,22 @@ public class FlashlightManager {
     }
 
     private static void onClientTick(MinecraftClient client) {
+        // Real HL1 requires the suit equipped to turn the flashlight on at all. Standalone
+        // installs (no companion item mod) have no real suit to check, so isRealSuitAvailable()
+        // is always false there and this never restricts anything -- unchanged behavior.
+        boolean suitRequired = HevSuitApi.isRealSuitAvailable();
+        boolean suitOk = !suitRequired || (client.player != null && HevSuitApi.isWearingSuit(client.player));
+
         while (FLASHLIGHT_KEY.wasPressed()) {
             if (on) {
                 on = false;
-            } else if (battery > 0) {
+            } else if (battery > 0 && suitOk) {
                 on = true;
             }
+        }
+
+        if (!suitOk) {
+            on = false;
         }
 
         updateBattery();

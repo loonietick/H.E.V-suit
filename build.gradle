@@ -19,16 +19,17 @@ def mcVersionSelected = (findProperty('mcVersion') ?: project.findProperty('mine
 def supported = [
         // Keep these up to date as new Minecraft releases drop
         // ldl = LambDynamicLights API version, from https://maven.gegy.dev/releases (compile-only, optional flashlight integration)
-        '1.20.1' : [ yarn: '1.20.1+build.10', fabricApi: '0.92.11+1.20.1', loader: '0.19.3', modmenu: '7.2.2',           ldl: '4.4.0+1.20.1'],
-        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8',  loader: '0.17.2', modmenu: '15.0.0',          ldl: '4.8.7+1.21.8'],
-        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9',  loader: '0.17.2', modmenu: '16.0.0-rc.1',     ldl: '4.7.2+1.21.9'],
-        '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.3', modmenu: '16.0.0-rc.1',     ldl: '4.8.7+1.21.10'],
-        '1.21.11': [ yarn: '1.21.11+build.3', fabricApi: '0.140.2+1.21.11', loader: '0.18.4', modmenu: '17.0.0-beta.1',   ldl: '4.9.1+1.21.11'],
+        '1.20.1' : [ yarn: '1.20.1+build.10', fabricApi: '0.92.11+1.20.1', loader: '0.19.3', modmenu: '7.2.2', ldl: '4.4.0+1.20.1'],
+        '1.21.8' : [ yarn: '1.21.8+build.1',  fabricApi: '0.133.0+1.21.8',  loader: '0.17.2', modmenu: '15.0.0', ldl: '4.8.7+1.21.8'],
+        '1.21.9' : [ yarn: '1.21.9+build.1',  fabricApi: '0.134.0+1.21.9',  loader: '0.17.2', modmenu: '16.0.0-rc.1', ldl: '4.7.2+1.21.9'],
+        '1.21.10': [ yarn: '1.21.10+build.1', fabricApi: '0.135.0+1.21.10', loader: '0.17.3', modmenu: '16.0.0-rc.1', ldl: '4.8.7+1.21.10'],
+        '1.21.11': [ yarn: '1.21.11+build.3', fabricApi: '0.140.2+1.21.11', loader: '0.18.4', modmenu: '17.0.0-beta.1', ldl: '4.9.1+1.21.11'],
         // 26.1.x — Mojang official mappings (no Yarn published for these)
         '26.1'   : [ mojang: true, fabricApi: '0.145.1+26.1',   loader: '0.19.2', modmenu: '18.0.0-alpha.8', ldl: '4.10.0+26.1'],
         '26.1.1' : [ mojang: true, fabricApi: '0.145.4+26.1.1', loader: '0.19.2', modmenu: '18.0.0-alpha.8', ldl: '4.10.1+26.1.1'],
         '26.1.2' : [ mojang: true, fabricApi: '0.147.0+26.1.2', loader: '0.19.2', modmenu: '18.0.0-alpha.8', ldl: '4.11.0+26.1.2'],
-        '26.2'   : [ mojang: true, fabricApi: '0.155.2+26.2',   loader: '0.19.3', modmenu: '20.0.1',         ldl: '4.12.2+26.2'],
+        '26.2'   : [ mojang: true, fabricApi: '0.155.2+26.2',   loader: '0.19.3', modmenu: '20.0.1', ldl: '4.12.2+26.2'],
+        '26.3' : [ mojang: true, fabricApi: '0.161.0+26.3', loader: '0.19.5', modmenu: '21.0.0-beta.1', ldl: '4.13.0+26.3']
 ]
 
 if (!supported.containsKey(mcVersionSelected)) {

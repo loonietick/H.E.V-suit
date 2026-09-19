@@ -13,6 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SettingsManager {
     private static final Logger LOGGER = LogManager.getLogger("SettingsManager");
@@ -100,6 +101,16 @@ public class SettingsManager {
     public static int hudSecondaryColor = DEFAULT_HUD_SECONDARY_COLOR;
     public static float hevVolumeMul = DEFAULT_HEV_VOLUME_MUL;
     public static List<String> weaponKeywords = new ArrayList<>(DEFAULT_WEAPON_KEYWORDS);
+
+    private static final List<Runnable> changeListeners = new CopyOnWriteArrayList<>();
+
+    /** Notified after every {@link #saveSettings()} call -- i.e. whenever any setting changes,
+     *  whether via the config screen, /hev commands, or the dev API. */
+    public static void registerChangeListener(Runnable listener) {
+        if (listener != null) {
+            changeListeners.add(listener);
+        }
+    }
 
     public static void loadSettings() {
         if (!CONFIG_FILE.exists()) {
@@ -249,6 +260,14 @@ public class SettingsManager {
             GSON.toJson(json, writer);
         } catch (IOException e) {
             LOGGER.error("Failed to save settings", e);
+        }
+
+        for (Runnable listener : changeListeners) {
+            try {
+                listener.run();
+            } catch (Exception e) {
+                LOGGER.error("HEV settings change listener failed", e);
+            }
         }
     }
 

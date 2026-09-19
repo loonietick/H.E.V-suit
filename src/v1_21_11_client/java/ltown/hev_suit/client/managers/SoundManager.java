@@ -77,6 +77,16 @@ public class SoundManager {
         }
     }
 
+    /**
+     * Lets a companion mod add its own line id under an already-registered SoundEvent (the
+     * companion mod is responsible for registering the SoundEvent itself) so it can be played
+     * through {@link #queueSound} / {@link #playImmediateSound} like any built-in line.
+     */
+    public static void registerExternalSound(String id, SoundEvent event) {
+        if (id == null || id.isEmpty() || event == null) return;
+        SOUND_EVENTS.put(id, event);
+    }
+
     public static void processSoundQueue(MinecraftClient client) {
         maintainLoopingSounds(client);
         if (alertsSuppressed()) {

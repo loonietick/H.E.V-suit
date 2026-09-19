@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.HashSet;
 import java.util.Set;
 
+import ltown.hev_suit.client.api.HevSuitApi;
 import ltown.hev_suit.client.screen.HevSuitConfigScreen;
 import org.lwjgl.glfw.GLFW;
 
@@ -232,10 +233,19 @@ public class EventManager {
                 }
             }
 
-            if (!SettingsManager.hevSuitEnabled && !SettingsManager.pvpModeEnabled) return;
-
             PlayerEntity player = client.player;
             if (player == null) return;
+
+            // If a real, wearable suit exists (the companion item mod is installed), behavior
+            // requires actually wearing it -- matching HL1, where every suit system silently
+            // no-ops without the suit equipped. Standalone installs have no such item, so
+            // isRealSuitAvailable() is always false there and this falls back to the original
+            // toggle-only gate, unchanged.
+            if (HevSuitApi.isRealSuitAvailable()) {
+                if (!HevSuitApi.isWearingSuit(player)) return;
+            } else if (!SettingsManager.hevSuitEnabled && !SettingsManager.pvpModeEnabled) {
+                return;
+            }
 
             // Refresh the damage-source cache every tick (not just when we already see a health
             // drop) so a hurt event that lands this tick isn't lost if the health sync arrives late.
@@ -529,7 +539,10 @@ public class EventManager {
                 }
             }
         }
-          
+
+        // Additive: a companion mod's registered damage reactions, checked after every built-in
+        // check above. Never replaces or gates any of the built-in behavior.
+        HevSuitApi.dispatchDamageReactions(damageSource, damage);
     }
 
     private static boolean hasHealingSupplies(PlayerEntity player) {

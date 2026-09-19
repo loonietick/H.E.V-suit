@@ -47,6 +47,12 @@ public class SubtitleManager {
         CAPTIONS.put("power_level_is", "Power Level Is");
     }
 
+    /** Lets a companion mod add a caption for its own line id without touching this map directly. */
+    public static void registerCaption(String id, String text) {
+        if (id == null || id.isEmpty() || text == null || text.isEmpty()) return;
+        CAPTIONS.put(id, text);
+    }
+
     public static void toggleCaptions() {
         captionsEnabled = !captionsEnabled;
         SettingsManager.captionsEnabled = captionsEnabled;

@@ -2,41 +2,33 @@
 
 Adds Half-Life 1 hud and full hev suit sound effects to minecraft with a bunch of additional features
 
-## Features
 
-### Health & damage alerts
-Voiced alerts as your health drops, with distinct lines at each threshold (near-death, critical, seek-medical-attention, and an earlier "vital signs dropping" warning), plus a flatline sound.
-- **Fractures** — fall damage, minor or major depending on how hard you land
-- **Blood loss** — arrow, fireball, or other projectile hits
-- **Internal bleeding** — explosion damage
-- **Lacerations** — melee hits from hostile mobs (creepers excluded)
-- **Heat damage** — fire, lava, or other heat sources
-- **Shock damage** — lightning strikes
-- **Chemical damage** — poison or wither effects
-- **Morphine** — cosmetic alert on a single large hit
-- **Insufficient medical supplies** — warns when your health is low and you're not carrying food or potions
-- **HEV logon** — plays when you equip a chestplate named starting with "HEV"
+## Audible Alerts
+The suit contains most sound effects and as close of triggers as i could think of for it.
 
-### Environmental
-- **Radiation** — Basalt Deltas biome is treated as a radiation zone: a Geiger-counter loop plays while you're in one, with a one-time "radiation detected" alert on entry
-- **Totem of Undying** — detected via its status effect signature and treated as emergency medical intervention (an "administering medical" alert, followed by the morphine sound)
+These play whenever a trigger is met and plays the respective sound effect from Half Life.
 
-### Flashlight (requires [LambDynamicLights](https://modrinth.com/mod/lambdynamiclights))
-A real dynamic-lighting flashlight with battery drain and recharge, not just a HUD icon. Defaults to a Half-Life 1–style point light at your crosshair target; an experimental Half-Life 2–style cone floodlight attached to the player is available as a toggle. Default keybind: **G**.
+Here are some of the main ones
+- Fractures (when falling)
+- Health Alerts (when your health reaches a threshold)
+- Blood loss (whenever an arrow hits you instead of bullets)
+- Lacerations (general mob attacks)
+- Environment
+ - Geiger counter in basalt biomes
+ - Poison and Withering
+ - Lightning strikes
+ - Heat from fire and lava
+and more!
 
-### HUD
-Health, armor (with power percentage), ammo, directional damage indicators, and hostile-mob threat indicators, each independently toggleable. Colors are fully customizable. A "chatty suit" mode reverts alert cooldowns to older, more frequent timing if you prefer that over the more accurate one.
+There is additionally a bunch of disabled by default lines that you can enable by opening the config menu with H. These typically are either lines that were unused in the main game or reused to fit a new purpose in minecraft.
 
-### Config
-Open the config screen with the **H** key, or through [Mod Menu](https://modrinth.com/mod/modmenu) if installed.
+## HUD
+The hud is a somewhat accurate recreation of the hud from GoldSrc. You can toggle specific hud elements and theme it with the config menu (press h!).
 
-## Dependencies
-- **[Fabric API](https://modrinth.com/mod/fabric-api)** — required
-- **[Mod Menu](https://modrinth.com/mod/modmenu)** — optional, adds an in-game config screen
-- **[LambDynamicLights](https://modrinth.com/mod/lambdynamiclights)** — optional, enables the flashlight functionality.
+## Flashlight
+There is a built in flashlight, it requires LambDynamicLights to work. You can toggle it with G. There is also a experimental half life 2 style that you can toggle from in the configuration menu.
 
-## Build from source
-- Compile like any other Gradle project
-- Select a target version with `-PmcVersion=<version>`, e.g. `./gradlew build -PmcVersion=1.21.11`
-- Supported versions: `1.20.1`, `1.21.8`, `1.21.9`, `1.21.10`, `1.21.11`, `26.1`, `26.1.1`, `26.1.2`, `26.2`
-- Output jar lands in `./build/libs/`
+
+## Copyright
+The code is MIT licensed, sound effects and hud elements are owned by Valve Corporation, all rights go to them. 
+If they wish for this project to be taken down, it will be.

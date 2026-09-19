@@ -4,4 +4,8 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-tldr; do whatever you want just include this license :)
+Certain assets included with or used by this Software, including textures, sound effects, and other game assets, are the property of Valve Corporation and/or their respective owners.
+
+These assets are not licensed under the MIT License above. The MIT License applies only to the original software code and other materials authored for this project.
+
+Valve, Steam, Half-Life, and related names, logos, characters, textures, sounds, and other assets are trademarks and/or copyrighted works of Valve Corporation. This project is not affiliated with, endorsed by, or sponsored by Valve Corporation.
